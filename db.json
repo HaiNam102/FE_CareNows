@@ -1,0 +1,103 @@
+{
+  "profiles": [
+    {
+      "id": 1,
+      "name": "Thanh Hằng",
+      "gender": "Nữ",
+      "age": "28 tuổi",
+      "description": "Bảo mẫu có 5 năm kinh nghiệm, yêu trẻ và tận tâm.",
+      "price": "150.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/1Yyqv.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Minh Tuấn",
+      "gender": "Nam",
+      "age": "32 tuổi",
+      "description": "Bảo mẫu chuyên nghiệp, có chứng chỉ chăm sóc trẻ em.",
+      "price": "160.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/2BxNQ.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Ngọc Anh",
+      "gender": "Nữ",
+      "age": "26 tuổi",
+      "description": "Có kinh nghiệm 4 năm làm bảo mẫu tại các trường mầm non.",
+      "price": "140.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/3JzNt.jpg"
+    },
+    {
+      "id": 4,
+      "name": "Hữu Lộc",
+      "gender": "Nam",
+      "age": "30 tuổi",
+      "description": "Đã từng làm bảo mẫu tại trung tâm giáo dục sớm, kiên nhẫn và tận tâm.",
+      "price": "170.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/4RxPw.jpg"
+    },
+    {
+      "id": 5,
+      "name": "Phương Linh",
+      "gender": "Nữ",
+      "age": "24 tuổi",
+      "description": "Bảo mẫu vui vẻ, thân thiện, có kỹ năng tổ chức trò chơi cho trẻ.",
+      "price": "130.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/5AzQx.jpg"
+    },
+    {
+      "id": 6,
+      "name": "Quốc Bảo",
+      "gender": "Nam",
+      "age": "35 tuổi",
+      "description": "Chuyên viên giáo dục sớm, giúp trẻ phát triển tư duy.",
+      "price": "180.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/6GzRy.jpg"
+    },
+    {
+      "id": 7,
+      "name": "Lê Vy",
+      "gender": "Nữ",
+      "age": "27 tuổi",
+      "description": "Có chứng chỉ sơ cứu, từng làm bảo mẫu tại bệnh viện nhi.",
+      "price": "145.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/7XyQz.jpg"
+    },
+    {
+      "id": 8,
+      "name": "Hoài Nam",
+      "gender": "Nam",
+      "age": "29 tuổi",
+      "description": "Bảo mẫu nam giàu kinh nghiệm, có kỹ năng xử lý tình huống.",
+      "price": "155.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/8VzWp.jpg"
+    },
+    {
+      "id": 9,
+      "name": "Khánh Chi",
+      "gender": "Nữ",
+      "age": "25 tuổi",
+      "description": "Yêu trẻ, có khả năng dạy kèm các môn học cơ bản cho trẻ.",
+      "price": "135.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/9KxQy.jpg"
+    },
+    {
+      "id": 10,
+      "name": "Đình Phúc",
+      "gender": "Nam",
+      "age": "31 tuổi",
+      "description": "Bảo mẫu chuyên về chăm sóc trẻ đặc biệt, tận tâm và trách nhiệm.",
+      "price": "200.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/10LzR.jpg"
+    },
+    {
+      "id": 11,
+      "name": "Mai Phương",
+      "gender": "Nữ",
+      "age": "23 tuổi",
+      "description": "Bảo mẫu trẻ trung, sáng tạo, biết nhiều trò chơi giáo dục.",
+      "price": "125.000 VNĐ/1h",
+      "imageUrl": "https://i.imgur.com/11NzT.jpg"
+    }
+  ]
+}

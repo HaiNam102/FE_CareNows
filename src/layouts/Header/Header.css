@@ -1,0 +1,45 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: white; /* Adjust as needed */
+  }
+  
+  .logo {
+    font-size: 24px;
+  }
+  
+  .logo-green {
+    color: #00bcd4; /* Customize as needed */
+  }
+  
+  .logo-red {
+    color: pink; /* Customize as needed */
+  }
+  
+  .nav {
+    flex-grow: 1;
+  }
+  
+  .nav-list {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 0;
+  }
+  
+  .auth {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .register-button {
+    background-color: #004d00; /* Customize as needed */
+    color: white; /* Customize as needed */
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
