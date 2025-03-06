@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import ProfileCards from './component/ProfileCards/ProfileCards';
+import ProfileCards from './components/ProfileCards/ProfileCards';
 
 function App() {
   return (
