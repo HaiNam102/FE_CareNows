@@ -1,0 +1,82 @@
+.custom-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    min-width: 240px;
+    margin: 20px 0;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  /* Trạng thái mặc định - filled button */
+  .custom-button.default {
+    background-color: #00a884;
+    color: white;
+    border: none;
+  }
+  
+  /* Trạng thái hovering */
+  .custom-button.hovering {
+    background-color: transparent;
+    border: 2px solid #00a884;
+  }
+  
+  /* Nội dung button (text và mũi tên) */
+  .button-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    z-index: 2;
+    transition: opacity 0.3s ease;
+  }
+  
+  .button-content.hidden {
+    opacity: 0;
+  }
+  
+  .button-content.visible {
+    opacity: 1;
+  }
+  
+  /* Mũi tên */
+  .button-arrow {
+    margin-left: 16px;
+  }
+  
+  /* Hiệu ứng slide từ dưới lên */
+  .button-slide-effect {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background-color: #00a884;
+    transition: height 0s;
+    z-index: 1;
+  }
+  
+  .button-slide-effect.active {
+    animation: slideUpEffect 0.8s forwards;
+  }
+  
+  @keyframes slideUpEffect {
+    0% {
+      height: 0;
+    }
+    100% {
+      height: 100%;
+    }
+  }
+  
+  /* Reset animation khi không hover nữa */
+  .custom-button:not(.hovering) .button-slide-effect {
+    height: 0;
+    transition: height 0.3s ease;
+  }
