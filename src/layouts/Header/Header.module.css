@@ -1,0 +1,75 @@
+.header {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.93);
+  border-bottom: 0.7px solid #00a37d;
+  padding: 20px 24px;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0px;
+}
+
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoImage {
+  width: 140px;
+  height: 100%;
+}
+
+.now {
+  font-weight: bold;
+  color: #00a37d;
+  font-size: 18px;
+}
+
+.navMenu {
+  display: flex;
+  gap: 40px;
+}
+
+.navMenu a {
+  text-decoration: none;
+  color: #000;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.navMenu .active {
+  font-weight: 600;
+  color: #006b52;
+}
+
+.authButtons {
+  display: flex;
+  gap: 20px;
+}
+
+.button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.login {
+  background: none;
+  color: #121212;
+}
+
+.signup {
+  background: #00a37d;
+  color: white;
+}

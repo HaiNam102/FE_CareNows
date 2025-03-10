@@ -1,0 +1,142 @@
+.pageContainer {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 2rem 1rem;
+  }
+  
+  .wrapperContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+  }
+  
+  .loginRow {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: white;
+  }
+  
+  .formCol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: white;
+  }
+  
+  .loginForm {
+    width: 100%;
+    max-width: 450px;
+    padding: 0 1rem;
+  }
+  
+  /* Google button styling */
+  .form button.googleBtn,
+  .loginForm button.googleBtn {
+    width: 100%;
+    background-color: #4285F4;
+    border: none;
+    color: white;
+    padding: 0.7rem 1rem;
+    border-radius: 0.3rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .form button.googleBtn:hover,
+  .loginForm button.googleBtn:hover {
+    background-color: #3367d6;
+  }
+  
+  .googleIcon {
+    margin-right: 0.5rem;
+  }
+  
+  .divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    color: #6c757d;
+    position: relative;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: #dee2e6;
+  }
+  
+  .divider span {
+    padding: 0 0.5rem;
+  }
+  
+  .formLabel {
+    text-align: left;
+    display: block;
+    width: 100%;
+    /* font-weight: 500; Nếu muốn chữ đậm hơn */
+  }
+  
+  /* Form control styling with higher specificity */
+  .form .formControl,
+  .loginForm .formControl {
+    border-radius: 0.3rem;
+    padding: 0.7rem;
+    border: 1px solid #ced4da;
+    margin-top: 0.3rem;
+  }
+  
+  /* Login button styling with higher specificity */
+  .form button.loginBtn,
+  .loginForm button.loginBtn {
+    width: 100%;
+    background-color: #00a884;
+    border: none;
+    color: white;
+    padding: 0.7rem;
+    border-radius: 0.3rem;
+    font-weight: 500;
+  }
+  
+  .form button.loginBtn:hover,
+  .loginForm button.loginBtn:hover {
+    background-color: #008f71;
+  }
+  
+  .imageCol {
+    background-repeat: no-repeat;
+    /* background-position: center; */
+    background-size:cover;
+    min-height: 400px;
+    
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 767.98px) {
+    .loginRow {
+      height: auto;
+    }
+    
+    .imageCol {
+      min-height: 300px;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .loginRow {
+      height: 600px;
+    }
+  }

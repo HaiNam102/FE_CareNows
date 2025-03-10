@@ -1,0 +1,105 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Roboto', sans-serif;
+    background-color: white;
+  }
+  
+  .header {
+    margin-bottom: 2rem;
+  }
+  
+  .logo {
+    margin: 0 auto;
+    display: block;
+  }
+  
+  .main {
+    text-align: center;
+  }
+  
+  .title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+  }
+  
+  .roleOptions {
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+  
+  .optionCol {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .roleCard {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .roleCard:hover {
+    border-color: #319795;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .roleCard.selected {
+    border-color: #319795;
+    background-color: rgba(49, 151, 149, 0.05);
+  }
+  
+  .roleInfo {
+    display: flex;
+    align-items: center;
+  }
+  
+  .roleIcon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: #2d3748;
+  }
+  
+  .roleText {
+    font-size: 1.125rem;
+    margin: 0;
+    text-align: left;
+  }
+  
+  .radioInput {
+    cursor: pointer;
+  }
+  
+  .backButton {
+    background-color: #edf2f7;
+    color: #4a5568;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+  }
+  
+  .backButton:hover {
+    background-color: #e2e8f0;
+  }
+  
+  @media (max-width: 768px) {
+    .title {
+      font-size: 1.5rem;
+    }
+    
+    .roleCard {
+      width: 100%;
+    }
+  }

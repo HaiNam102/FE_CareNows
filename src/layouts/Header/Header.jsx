@@ -1,23 +1,23 @@
-import React from 'react';
-import './Header.css'; // Make sure to create an App.css file for styles
+import React from "react";
+import styles from "./Header.module.css"; // Import CSS Module
+import logo from "../../assets/images/Logo.png"; // Import logo từ thư mục assets
 
 const Header = () => {
   return (
-    <header className="header">
-      <div className="logo">
-        <span className="logo-green">Care</span>
-        <span className="logo-red">Now</span>
-      </div>
-      <nav className="nav">
-        <ul className="nav-list">
-          <li>Trang chủ</li>
-          <li>Lịch của tôi</li>
-          <li>Về CareNow</li>
-        </ul>
-      </nav>
-      <div className="auth">
-        <span>Đăng nhập</span>
-        <button className="register-button">Đăng ký ngay</button>
+    <header className={styles.header}>
+      <div className={styles.container}>
+        <div className={styles.logoWrapper}>
+          <img src={logo} alt="CareNow" className={styles.logoImage} />
+        </div>
+        <nav className={styles.navMenu}>
+          <a href="#" className={styles.active}>Trang chủ</a>
+          <a href="#">Lịch của tôi</a>
+          <a href="#">Về CareNow</a>
+        </nav>
+        <div className={styles.authButtons}>
+          <button className={`${styles.button} ${styles.login}`}>Đăng nhập</button>
+          <button className={`${styles.button} ${styles.signup}`}>Đăng ký ngay</button>
+        </div>
       </div>
     </header>
   );

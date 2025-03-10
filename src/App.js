@@ -3,6 +3,8 @@ import './App.css';
 import ProfileCards from './components/ProfileCards/ProfileCards';
 import Header from './layouts/Header/Header';
 import CareService from './components/CareService/CareService';
+import Login from './pages/Authenticate/Login/Login';
+import Register from './pages/Authenticate/Register/Register';
 
 function App() {
   return (
@@ -10,7 +12,12 @@ function App() {
       {/* <ProfileCards /> */}
       <Header />
 
-      <CareService />
+      {/* <CareService /> */}
+
+      <Login/>
+    
+      {/* <Register/> */}
+
     </div>
   );
 }
