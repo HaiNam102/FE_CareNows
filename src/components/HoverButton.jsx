@@ -4,7 +4,7 @@ const sizes = {
   small: { fontSize: "12px", height: "36px", arrowFontSize: "20px" },
   medium: { fontSize: "16px", height: "44px", arrowFontSize: "24px" },
   large: { fontSize: "20px", height: "56px", arrowFontSize: "24px" }
-};
+}; 
 
 const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
   const [hovered, setHovered] = useState(false);
@@ -15,10 +15,11 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        display: "flex",
+        display: "inline-flex", // Giữ kích thước nguyên vẹn
         alignItems: "center",
-        gap: hovered && showArrow ? "10px" : "2px",
-        transition: "gap 0.4s ease-in-out",
+        gap: "2px", // Không thay đổi gap khi hover để tránh ảnh hưởng layout
+        transition: "none", // Loại bỏ animation gap
+        flexShrink: 0, // Ngăn việc co giãn layout
       }}
     >
       {/* Button chính */}
