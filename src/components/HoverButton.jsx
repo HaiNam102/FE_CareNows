@@ -2,8 +2,8 @@ import React, { useState } from "react";
 
 const sizes = {
   small: { fontSize: "12px", height: "36px", arrowFontSize: "20px" },
-  medium: { fontSize: "16px", height: "44px", arrowFontSize: "24px" },
-  large: { fontSize: "20px", height: "56px", arrowFontSize: "24px" }
+  medium: { fontSize: "16px", height: "44px", arrowFontSize: "24px"},
+  large: { fontSize: "20px", height: "56px", arrowFontSize: "24px"}
 }; 
 
 const HoverButton = ({ text, showArrow = true, size = "medium" }) => {

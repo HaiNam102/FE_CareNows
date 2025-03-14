@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 // Import the background image
-import loginBg from "../../assets/images/HeroLogin.png";
+import loginBg from "../../../assets/images/HeroLogin.png";
 
 const Login = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -28,7 +28,7 @@ const Login = () => {
               </button>
               
               {/* Divider */}
-              <div className="relative flex items-center my-6">
+              <div className="relatilave flex items-center my-6">
                 <div className="flex-grow border-t border-gray-300"></div>
                 <span className="flex-shrink mx-4 text-gray-600 text-sm md:text-base">hoặc</span>
                 <div className="flex-grow border-t border-gray-300"></div>

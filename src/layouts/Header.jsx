@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import logo from "../assets/images/Logo.png";
 import HoverButton from "../components/HoverButton";
+import {useNavigate } from "react-router-dom";
 
 function Header() {
   const [activeLink, setActiveLink] = useState("Trang chủ");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const navigate =useNavigate();
 
   // Kiểm tra kích thước màn hình
   useEffect(() => {
@@ -32,7 +34,8 @@ function Header() {
   };
 
   return (
-    <header className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between py-4 border-b border-teal-500 relative">
+    <div className="border-b border-teal-500 w-full relative">
+    <header className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between py-4  ">
       {/* Logo và navigation desktop */}
       <div className="w-full md:w-auto flex items-center justify-between">
         <div className="flex items-center">
@@ -71,9 +74,9 @@ function Header() {
         )}
       </div>
 
-      {/* Mobile menu với animation - absolute positioning */}
+      {/* Mobile menu với animation - fixed positioning */}
       <div 
-        className={`md:hidden fixed top-0 left-0 h-screen bg-white shadow-lg w-64 transform transition-transform duration-300 ease-in-out z-10 p-6 pt-20 ${
+        className={`md:hidden fixed top-0 left-0 h-screen bg-white shadow-lg w-64 transform transition-transform duration-300 ease-in-out z-20 p-6 pt-20 ${
           isMenuOpen && isMobile ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -102,7 +105,9 @@ function Header() {
         </nav>
         
         <div className="flex flex-col items-start space-y-6 mt-10 w-full">
-          <a href="#" className="text-black font-semibold">
+          <a href="#" className="text-black font-semibold" onClick={() => {
+            navigate("/login");
+          }}>
             Đăng nhập
             <div className="w-20 h-0.5 bg-black mt-0.5"></div>
           </a>
@@ -122,7 +127,9 @@ function Header() {
 
       {/* Desktop buttons */}
       <div className="hidden md:flex md:items-center md:space-x-6">
-        <a href="#" className="text-black font-semibold border-b border-black">
+        <a href="#" className="text-black font-semibold border-b border-black" onClick={() => {
+          navigate("/login");
+        }}>
           Đăng nhập
         </a>
         <div className="flex-shrink-0 min-w-[180px]">
@@ -130,10 +137,7 @@ function Header() {
         </div>
       </div>
     </header>
-    
-    
-
-    
+</div>
   );
 }
 
