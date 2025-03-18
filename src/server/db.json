@@ -1,0 +1,82 @@
+{
+  "customers": [
+    {
+      "customer_id": 1,
+      "name_of_customer": "Nguyễn Văn A",
+      "email": "example@gmail.com",
+      "phone_number": "0123456789",
+      "city": "Đà Nẵng",
+      "district": "Hải Châu",
+      "ward": "Hải Châu 1",
+      "imgProfile": "none",
+      "account_id": 1,
+      "id": "fd9b"
+    },
+    {
+      "id": "7f62",
+      "customer_id": 2,
+      "name_of_customer": "Nhật Tân Nguyễn",
+      "email": "vananhbvt2k3@gmail.com",
+      "phone_number": "0899229928",
+      "city": "Đà Nẵng",
+      "districts": "Hải Châu",
+      "imgProfile": "none",
+      "username": "vananhbvt2k3",
+      "password": "Tanpro221103"
+    },
+    {
+      "id": "2d57",
+      "customer_id": 3,
+      "name_of_customer": "Nhật Tân Nguyễn",
+      "email": "vananhbvt2k3@gmail.com",
+      "phone_number": "0899229928",
+      "city": "Đà Nẵng",
+      "districts": "Hải Châu",
+      "imgProfile": "none",
+      "username": "tan123",
+      "password": "tanpro2211"
+    }
+  ],
+  "districts": [
+    {
+      "id": "1",
+      "name": "Hải Châu"
+    },
+    {
+      "id": "2",
+      "name": "Thanh Khê"
+    },
+    {
+      "id": "3",
+      "name": "Sơn Trà"
+    },
+    {
+      "id": "4",
+      "name": "Ngũ Hành Sơn"
+    },
+    {
+      "id": "5",
+      "name": "Liên Chiểu"
+    },
+    {
+      "id": "6",
+      "name": "Cẩm Lệ"
+    },
+    {
+      "id": "7",
+      "name": "Hòa Vang"
+    }
+  ],
+  "wards": [
+    {
+      "id": "1",
+      "districtId": 1,
+      "name": "Hải Châu 1"
+    },
+    {
+      "id": "2",
+      "districtId": 1,
+      "name": "Hải Châu 2"
+    }
+  ]
+}

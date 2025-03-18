@@ -42,7 +42,7 @@ function App() {
         <Route path="/login" element={<Login1 />} />
         <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />\
         <Route path="/signup-client" element={<MainLayout headerType="logoOnly"><SignUpClient/></MainLayout>} />
-        <Route path="/signup-care-taker" element={<MainLayout headerType="logoOnly"><SignUpCareTaker/></MainLayout>} />
+        <Route path="/signup-care-taker" element={<MainLayout headerType="logoOnly"><SignUpClient/></MainLayout>} />
           {/* <Route path="/about" element={<About />} /> */}
           {/* <Route path="/contact" element={<Contact />} /> */}
         </Routes>

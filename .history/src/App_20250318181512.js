@@ -40,9 +40,14 @@ function App() {
         <Routes>
         <Route path="/" element={<MainLayout><Home /></MainLayout>} />
         <Route path="/login" element={<Login1 />} />
-        <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />\
-        <Route path="/signup-client" element={<MainLayout headerType="logoOnly"><SignUpClient/></MainLayout>} />
-        <Route path="/signup-care-taker" element={<MainLayout headerType="logoOnly"><SignUpCareTaker/></MainLayout>} />
+        <Route path="/signup" element={
+          <div className="flex flex-col min-h-screen">
+            <Routes>
+              <Route path="client" element={<SignUpClient />} />
+              <Route path="caretaker" element={<SignUpCareTaker />} />
+            </Routes>
+          </div>
+        } />
           {/* <Route path="/about" element={<About />} /> */}
           {/* <Route path="/contact" element={<Contact />} /> */}
         </Routes>

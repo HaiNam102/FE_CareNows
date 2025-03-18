@@ -2,68 +2,17 @@ import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 // Import the background image
 import loginBg from "../../../assets/images/HeroLogin.png";
-import { useNavigate } from "react-router-dom";
-import axios from 'axios';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: "", password: "" });
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const response = await axios.post('http://localhost:8080/api/auths/login', {
-        username: formData.username,
-        password: formData.password
-      });
-
-      // Nếu đăng nhập thành công
-      if (response.data && response.data.token) {
-        // Lưu token vào localStorage
-        localStorage.setItem('token', response.data.token);
-        
-        // Hiển thị thông báo thành công
-        toast.success('Đăng nhập thành công!');
-        
-        // Chờ 1 giây rồi chuyển hướng
-        setTimeout(() => {
-          navigate('/'); // Hoặc trang dashboard tương ứng
-        }, 1000);
-      }
-    } catch (error) {
-      // Xử lý các loại lỗi
-      if (error.response) {
-        switch (error.response.data.code) {
-          case 40001:
-            toast.error('Tên đăng nhập không tồn tại');
-            break;
-          case 40002:
-            toast.error('Mật khẩu không chính xác');
-            break;
-          case 40003:
-            toast.error('Tài khoản không hợp lệ');
-            break;
-          case 40004:
-            toast.error('Quyền truy cập không hợp lệ');
-            break;
-          default:
-            toast.error('Đăng nhập thất bại. Vui lòng thử lại!');
-        }
-      } else {
-        toast.error('Có lỗi xảy ra. Vui lòng thử lại sau!');
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    console.log("User Data:", formData);
   };
 
   return (
@@ -119,10 +68,9 @@ const Login = () => {
                 
                 <button 
                   type="submit" 
-                  className={`w-full bg-green-600 hover:bg-green-700 text-white py-2 md:py-3 px-4 rounded font-medium text-sm md:text-base ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  disabled={isLoading}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-2 md:py-3 px-4 rounded font-medium text-sm md:text-base"
                 >
-                  {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                  Đăng nhập
                 </button>
               </form>
               
@@ -143,7 +91,6 @@ const Login = () => {
           </div>
         </div>
       </div>
-      <ToastContainer />
     </div>
   );
 };
