@@ -34,15 +34,18 @@ const Login = () => {
         password: formData.password
       });
 
+      // Kiểm tra jwt token thay vì token thông thường
       if (response.data.jwt) {
+        // Lưu JWT token
         localStorage.setItem('token', response.data.jwt);
         
-        // Sử dụng jwtDecode
+        // Decode JWT để lấy role
         const decodedToken = jwtDecode(response.data.jwt);
         const userRole = decodedToken.role;
         
-        console.log('User Role:', userRole);
+        console.log('User Role:', userRole); // Debug log
         
+        // Điều hướng trực tiếp dựa vào role
         if (userRole === 'ADMIN') {
           navigate('/admin/home', { replace: true });
         } else if (userRole === 'CARE_TAKER') {
@@ -56,6 +59,7 @@ const Login = () => {
         toast.success('Đăng nhập thành công!');
       }
     } catch (error) {
+      // Đơn giản hóa xử lý lỗi
       toast.error('Đăng nhập thất bại, vui lòng kiểm tra lại tài khoản và mật khẩu!');
       console.error('Login error:', error);
     } finally {

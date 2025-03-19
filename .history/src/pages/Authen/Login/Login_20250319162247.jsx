@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { jwtDecode } from "jwt-decode";
+import { getRole } from '../../../utils/auth';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,16 +18,9 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    // Kiểm tra input trước khi gửi request
-    if (!formData.username || !formData.password) {
-      toast.error("Vui lòng điền đầy đủ thông tin!");
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await axios.post('http://localhost:8080/api/auths/login', {
@@ -34,30 +28,58 @@ const Login = () => {
         password: formData.password
       });
 
-      if (response.data.jwt) {
-        localStorage.setItem('token', response.data.jwt);
+      if (response.data && response.data.token) {
+        // Lưu token trước
+        localStorage.setItem('token', response.data.token);
         
-        // Sử dụng jwtDecode
-        const decodedToken = jwtDecode(response.data.jwt);
-        const userRole = decodedToken.role;
+        // Giải mã và xử lý navigation
+        const decoded = jwtDecode(response.data.token);
+        const role = decoded.role.toLowerCase(); // Chuyển về lowercase
         
-        console.log('User Role:', userRole);
-        
-        if (userRole === 'ADMIN') {
-          navigate('/admin/home', { replace: true });
-        } else if (userRole === 'CARE_TAKER') {
-          navigate('/caretaker/home', { replace: true });
-        } else if (userRole === 'CUSTOMER') {
-          navigate('/customer/home', { replace: true });
-        } else {
-          navigate('/', { replace: true });
+        // Loại bỏ setTimeout và thêm try-catch
+        try {
+          switch (role) {
+            case 'care_taker':
+              navigate('/caretaker/home', { replace: true });
+              break;
+            case 'customer':
+              navigate('/customer/home', { replace: true });
+              break;
+            case 'admin':
+              navigate('/admin/home', { replace: true });
+              break;
+            default:
+              navigate('/', { replace: true });
+          }
+          toast.success('Đăng nhập thành công!');
+        } catch (navError) {
+          console.error('Navigation error:', navError);
+          toast.error('Có lỗi khi chuyển trang');
         }
-        
-        toast.success('Đăng nhập thành công!');
       }
     } catch (error) {
-      toast.error('Đăng nhập thất bại, vui lòng kiểm tra lại tài khoản và mật khẩu!');
       console.error('Login error:', error);
+      // Xử lý các loại lỗi
+      if (error.response) {
+        switch (error.response.data.code) {
+          case 40001:
+            toast.error('Tên đăng nhập không tồn tại');
+            break;
+          case 40002:
+            toast.error('Mật khẩu không chính xác');
+            break;
+          case 40003:
+            toast.error('Tài khoản không hợp lệ');
+            break;
+          case 40004:
+            toast.error('Quyền truy cập không hợp lệ');
+            break;
+          default:
+            toast.error('Đăng nhập thất bại. Vui lòng thử lại!');
+        }
+      } else {
+        toast.error('Có lỗi xảy ra. Vui lòng thử lại sau!');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +105,7 @@ const Login = () => {
               </div>
               
               {/* Login Form */}
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleLogin}>
                 <div className="mb-4">
                   <label htmlFor="username" className="block text-left w-full mb-1 text-sm md:text-base">
                     Tên đăng nhập
@@ -122,6 +144,19 @@ const Login = () => {
                   {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                 </button>
               </form>
+
+              {/* Thêm phần đăng ký */}
+              <div className="text-center mt-6">
+                <p className="text-gray-600 text-sm md:text-base">
+                  Chưa có tài khoản? {" "}
+                  <span 
+                    onClick={() => navigate('/signup')} 
+                    className="text-teal-600 hover:text-teal-700 cursor-pointer font-medium"
+                  >
+                    Đăng ký ngay
+                  </span>
+                </p>
+              </div>
               
               {/* Image displayed below the form on mobile, hidden on desktop */}
               <div 
@@ -140,6 +175,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+     
       <ToastContainer />
     </div>
   );

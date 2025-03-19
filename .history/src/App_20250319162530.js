@@ -24,7 +24,7 @@
 
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home/Home';
 import SignUpRoleSelection from './pages/Authen/SignUp/SignUpRoleSelection';
 import SignUpClient from './pages/Authen/SignUp/SignUpClient';
@@ -36,7 +36,7 @@ import Login1 from './pages/Authen/Login/Login1';
 import AdminHome from './pages/Home/AdminHome';
 import CareTakerHome from './pages/Home/CareTakerHome';
 import CustomerHome from './pages/Home/CustomerHome';
-import { jwtDecode } from "jwt-decode";
+import jwtDecode from 'jwt-decode';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -56,8 +56,8 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Router>
+        <Routes>
         <Route path="/" element={<MainLayout><Home /></MainLayout>} />
         <Route path="/login" element={<Login1 />} />
         <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />
@@ -90,10 +90,17 @@ function App() {
           } 
         />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
 export default App;
 
 
+
+{/* <Routes>
+  <Route path="/login" element={<Login />} />
+  <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+  <Route path="/about" element={<MainLayout><About /></MainLayout>} />
+  <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
+</Routes> */}

@@ -38,13 +38,7 @@ function Header({ logoOnly = false }) {
       <div className="w-full">
         <header className="max-w-[1200px] mx-auto">
           <div className="flex justify-center pt-[42px]">
-            <img 
-              src={logo} 
-              alt="CareNow logo" 
-              className="h-[35px] w-[180px] object-contain" 
-              onClick={() => navigate('/')}
-              style={{ cursor: 'pointer' }}
-            />
+            <img src={logo} alt="CareNow logo" className="h-[35px] w-[180px] object-contain" />
           </div>
         </header>
       </div>
@@ -57,13 +51,7 @@ function Header({ logoOnly = false }) {
       {/* Logo và navigation desktop */}
       <div className="w-full md:w-auto flex items-center justify-between">
         <div className="flex items-center">
-          <img 
-            src={logo} 
-            alt="CareNow logo" 
-            className="h-[35px] w-[180px] object-contain" 
-            onClick={() => navigate('/')}
-            style={{ cursor: 'pointer' }}
-          />
+          <img src={logo} alt="CareNow logo" className="h-[35px] w-[180px] object-contain" />
           
           {/* Desktop navigation - với khoảng cách 40px từ logo */}
           <nav className="hidden md:flex items-center ml-10 space-x-10">

@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { jwtDecode } from "jwt-decode";
+import jwtDecode from 'jwt-decode';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -34,30 +34,70 @@ const Login = () => {
         password: formData.password
       });
 
+      // Kiểm tra jwt token thay vì token thông thường
       if (response.data.jwt) {
+        // Lưu JWT token
         localStorage.setItem('token', response.data.jwt);
         
-        // Sử dụng jwtDecode
+        // Decode JWT để lấy role
         const decodedToken = jwtDecode(response.data.jwt);
         const userRole = decodedToken.role;
         
-        console.log('User Role:', userRole);
+        console.log('User Role:', userRole); // Debug log
+      // Nếu đăng nhập thành công
+      if (response.data && response.data.token) {
+        // Lưu token vào localStorage
+        localStorage.setItem('token', response.data.token);
         
-        if (userRole === 'ADMIN') {
-          navigate('/admin/home', { replace: true });
-        } else if (userRole === 'CARE_TAKER') {
-          navigate('/caretaker/home', { replace: true });
-        } else if (userRole === 'CUSTOMER') {
-          navigate('/customer/home', { replace: true });
-        } else {
-          navigate('/', { replace: true });
+        // Lấy role từ response
+        const userRole = response.data.role; // Giả sử API trả về role trong response
+        
+        // Điều hướng dựa theo role
+        let redirectPath = '/';
+        switch(userRole) {
+          case 'ADMIN':
+            redirectPath = '/admin/home';
+            break;
+          case 'CARE_TAKER':
+            redirectPath = '/caretaker/home';
+            break;
+          case 'CUSTOMER':
+            redirectPath = '/customer/home';
+            break;
+          default:
+            redirectPath = '/';
         }
         
+        // Hiển thị thông báo thành công
         toast.success('Đăng nhập thành công!');
+        
+        // Chờ 1 giây rồi chuyển hướng
+        setTimeout(() => {
+          navigate(redirectPath);
+        }, 1000);
       }
     } catch (error) {
-      toast.error('Đăng nhập thất bại, vui lòng kiểm tra lại tài khoản và mật khẩu!');
-      console.error('Login error:', error);
+      // Xử lý các loại lỗi
+      if (error.response) {
+        switch (error.response.data.code) {
+          case 40001:
+            toast.error('Tên đăng nhập không tồn tại');
+            break;
+          case 40002:
+            toast.error('Mật khẩu không chính xác');
+            break;
+          case 40003:
+            toast.error('Tài khoản không hợp lệ');
+            break;
+          case 40004:
+            toast.error('Quyền truy cập không hợp lệ');
+            break;
+          default:
+            toast.error('Đăng nhập thất bại. Vui lòng thử lại!');
+        }
+      } else {
+        toast.error('Có lỗi xảy ra. Vui lòng thử lại sau!');
+      }
     } finally {
       setIsLoading(false);
     }
