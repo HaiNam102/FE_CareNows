@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faStar, 
-  faArrowRight, 
-  faCalendarAlt, 
-  faMapMarkerAlt, 
-  faHome, 
-  faChevronDown, 
-  faSearch 
+import {
+    faStar,
+    faArrowRight,
+    faCalendarAlt,
+    faMapMarkerAlt,
+    faHome,
+    faChevronDown,
+    faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import Pagination from '../../components/Pagination';
-import ProfilePage from '../ProfilePage';
+import ProfilePage from '../ProfilePage/ProfilePage';
 
 const SearchResult = () => {
     const location = useLocation();
@@ -21,7 +21,7 @@ const SearchResult = () => {
         const savedDistrict = localStorage.getItem('selectedDistrict');
         return savedDistrict ? savedDistrict : null;
     };
-    
+
     const getInitialDateRange = () => {
         if (location.state?.dateRange) return location.state.dateRange;
         const savedDateRange = localStorage.getItem('selectedDateRange');
@@ -36,7 +36,7 @@ const SearchResult = () => {
     const [district, setDistrict] = useState(getInitialDistrict());
     const [dateRange, setDateRange] = useState(getInitialDateRange());
     const itemsPerPage = 8;
-    
+
     // Lưu district và dateRange vào localStorage khi thay đổi
     useEffect(() => {
         if (district) {
@@ -49,9 +49,9 @@ const SearchResult = () => {
 
     useEffect(() => {
         fetch("http://localhost:5000/profiles")
-          .then(res => res.json())
-          .then(data => setProfiles(data))
-          .catch(err => console.error("Lỗi fetch dữ liệu:", err));
+            .then(res => res.json())
+            .then(data => setProfiles(data))
+            .catch(err => console.error("Lỗi fetch dữ liệu:", err));
     }, []);
 
     // Cập nhật state khi location.state thay đổi
@@ -72,9 +72,9 @@ const SearchResult = () => {
     const createDisplayItems = () => {
         const displayItems = [...currentProfiles];
         const placeholdersNeeded = itemsPerPage - displayItems.length;
-      
+
         for (let i = 0; i < placeholdersNeeded; i++) {
-            displayItems.push({ id: `placeholder-${i}`, isPlaceholder: true });
+            displayItems.push({ care_taker_id: `placeholder-${i}`, isPlaceholder: true });
         }
         return displayItems;
     };
@@ -124,24 +124,27 @@ const SearchResult = () => {
         }
 
         return (
-            <div 
+            <div
                 className="w-full h-full p-3 bg-white rounded-lg border border-gray-400 flex flex-col justify-center items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow duration-300"
                 onClick={() => handleProfileClick(profile)}
             >
-                <div className="self-stretch text-black text-2xl font-semibold">{profile.name}</div>
-                <div className="text-[#8C8C8C] text-lg font-semibold">{profile.role}</div>
-                <img className="w-36 h-36 rounded-full" src={profile.image} alt={profile.name} />
-                <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.location}</div>
+                <div className="self-stretch text-black text-2xl font-semibold">{profile.nameOfCareTaker}</div>
+                <div className="text-[#8C8C8C] text-lg self-stretch text-[#8C8C8C] text-2xl" >
+                    {profile.experienceYear} năm kinh nghiệm
+                </div>
+
+                <img className="w-36 h-36 rounded-full" src={profile.imgProfile} alt={profile.nameOfCareTaker} />
+                <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.ward} - {profile.district}</div>
                 <div className="self-stretch flex justify-between items-center">
                     <div className="flex justify-center items-center">
                         <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
                         <span className="text-[#121212] text-sm font-bold ml-1">{profile.rating}</span>
-                        <span className="text-[#BCB9C5] text-sm font-bold">({profile.reviews})</span>
+                        <span className="text-[#BCB9C5] text-sm font-bold">({profile.totalReviewers})</span>
                     </div>
                     <div className="flex justify-start items-center gap-10">
                         <div className="p-1 bg-white flex justify-center items-center gap-2.5">
                             <div>
-                                <span className="text-[#00a37d] text-lg font-semibold">{profile.hourlyRate}</span>
+                                <span className="text-[#00a37d] text-lg font-semibold">{profile.servicePrice}</span>
                                 <span className="text-[#121212] text-2xl font-semibold">/</span>
                                 <span className="text-[#121212] text-sm font-semibold">h</span>
                             </div>
@@ -211,35 +214,33 @@ const SearchResult = () => {
             <div className="container mx-auto py-4">
                 <div className="min-h-[800px]">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {displayItems.map(item => <ProfileCard key={item.id} profile={item} />)}
+                        {displayItems.map(item => <ProfileCard key={item.care_taker_id} profile={item} />)}
                     </div>
                 </div>
                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
-            
+
             {/* Profile Page Overlay and Slide-in */}
             {(isProfileOpen || selectedProfile) && (
                 <div className="fixed inset-0 z-50 overflow-hidden">
                     {/* Overlay */}
-                    <div 
-                        className={`absolute inset-0 bg-black transition-opacity duration-300 ease-in-out ${
-                            isProfileOpen ? 'opacity-50' : 'opacity-0'
-                        }`}
+                    <div
+                        className={`absolute inset-0 bg-black transition-opacity duration-300 ease-in-out ${isProfileOpen ? 'opacity-50' : 'opacity-0'
+                            }`}
                         onClick={handleCloseProfile}
                     ></div>
-                    
+
                     {/* Profile Container */}
                     <div className="absolute inset-y-0 right-0 max-w-full flex">
-                        <div 
-                            className={`transform transition-transform duration-300 ease-in-out ${
-                                isProfileOpen ? 'translate-x-0' : 'translate-x-full'
-                            }`}
+                        <div
+                            className={`transform transition-transform duration-300 ease-in-out ${isProfileOpen ? 'translate-x-0' : 'translate-x-full'
+                                }`}
                             style={{ marginTop: '15px', marginRight: '15px' }}
                         >
                             {selectedProfile && (
-                                <ProfilePage 
-                                    profile={selectedProfile} 
-                                    onClose={handleCloseProfile} 
+                                <ProfilePage
+                                    profile={selectedProfile}
+                                    onClose={handleCloseProfile}
                                     onNavigate={handleNavigate}
                                     district={district}
                                     dateRange={dateRange}

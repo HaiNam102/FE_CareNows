@@ -5,7 +5,9 @@ import MainLayout from './layouts/MainLayout';
 import Login1 from './pages/Authen/Login/Login1';
 import SearchResult from './pages/SearchResult/SearchResult';
 import Calendar from './components/Calendar';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import TasksAccordion from './pages/ProfilePage/TasksAccordion';
+import ReviewsSection from './pages/ProfilePage/ReviewsSection';
 function App() {
   return (
     <Router>
@@ -16,6 +18,9 @@ function App() {
         {/* <Route path="/timepicker" element={<MainLayout><DateRangePickerDisabledDatesExample/></MainLayout>} /> */}
         <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} /> 
         <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
+        <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
+
+        
         </Routes>
     </Router> 
   ); 
