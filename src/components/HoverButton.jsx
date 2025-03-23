@@ -6,9 +6,25 @@ const sizes = {
   large: { fontSize: "20px", height: "56px", arrowFontSize: "24px"}
 }; 
 
-const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
+const variants = {
+  primary: {
+    borderColor: "#00A37D",
+    backgroundColor: "#00A37D",
+    textColor: "white",
+    hoverTextColor: "#00A37D"
+  },
+  secondary: {
+    borderColor: "#7F798F",
+    backgroundColor: "#7F798F",
+    textColor: "white",
+    hoverTextColor: "#7F798F"
+  }
+};
+
+const HoverButton = ({ text, showArrow = true, size = "medium", variant = "primary", onClick, className }) => {
   const [hovered, setHovered] = useState(false);
   const { fontSize, height, arrowFontSize } = sizes[size] || sizes.medium;
+  const { borderColor, backgroundColor, textColor, hoverTextColor } = variants[variant] || variants.primary;
 
   return (
     <div
@@ -24,6 +40,7 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
     >
       {/* Button chính */}
       <button
+        onClick={onClick}
         style={{
           fontSize,
           fontWeight: 500,
@@ -31,9 +48,9 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
           position: "relative",
           transition: "all 0.3s ease-in-out",
           borderRadius: "4px",
-          border: "1.5px solid #00A37D",
+          border: `1.5px solid ${borderColor}`,
           backgroundColor: "transparent", // Background sẽ được xử lý bằng span
-          color: hovered ? "#00A37D" : "white",
+          color: hovered ? hoverTextColor : textColor,
           cursor: "pointer",
           height, // Chiều cao cố định, không bị padding ảnh hưởng
           display: "flex",
@@ -43,13 +60,14 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
           overflow: "hidden",
           boxSizing: "border-box",
         }}
+        className={`${className}`}
       >
         {/* Lớp phủ */}
         <span
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "#00A37D",
+            backgroundColor: backgroundColor,
             transition: "transform 0.3s ease-in-out",
             transform: hovered ? "translateY(-100%)" : "translateY(0)",
           }}
@@ -60,7 +78,7 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
             position: "relative",
             zIndex: 10,
             transition: "color 0.3s ease-in-out",
-            color: hovered ? "#00A37D" : "white",
+            color: hovered ? hoverTextColor : textColor,
           }}
         >
           {text}
@@ -77,7 +95,7 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "4px",
-            border: "1.5px solid #00A37D",
+            border: `1.5px solid ${borderColor}`,
             backgroundColor: "transparent", // Background sẽ xử lý bằng span
             transition: "all 0.3s ease-in-out",
             overflow: "hidden",
@@ -90,7 +108,7 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
             style={{
               position: "absolute",
               inset: 0,
-              backgroundColor: "#00A37D",
+              backgroundColor: backgroundColor,
               transition: "transform 0.3s ease-in-out",
               transform: hovered ? "translateY(-100%)" : "translateY(0)",
             }}
@@ -100,7 +118,7 @@ const HoverButton = ({ text, showArrow = true, size = "medium" }) => {
             style={{
               position: "relative",
               zIndex: 10,
-              color: hovered ? "#00A37D" : "white",
+              color: hovered ? hoverTextColor : textColor,
               fontSize: arrowFontSize,
               fontWeight: "bold",
               transition: "color 0.3s ease-in-out",

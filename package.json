@@ -20,6 +20,8 @@
     "animate.css": "^4.1.1",
     "aos": "^2.3.4",
     "dayjs": "^1.11.13",
+    "axios": "^1.8.3",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.479.0",
     "moment": "^2.30.1",
     "react": "^19.0.0",
@@ -28,6 +30,7 @@
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.3.0",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.5",
     "web-vitals": "^2.1.4",
     "wow.js": "^1.2.2"
   },
