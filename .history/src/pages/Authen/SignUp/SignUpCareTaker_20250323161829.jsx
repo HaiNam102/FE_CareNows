@@ -10,7 +10,7 @@ import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
 import FormSelect from '../../../components/Form/FormSelect';
-import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
+import { DANANG_DISTRICTS, DANANG_WARDS } from '../';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
