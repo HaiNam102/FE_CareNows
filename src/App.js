@@ -1,42 +1,19 @@
-// import React from "react";
-// import "./App.css";
-// import Login from "./pages/Authen/Login";
-// import Header from "./layouts/Header";
-// import RegisterButton from "../src/components/HoverButton"; // Import nút đăng ký
-// import Footer from "./layouts/Footer";
-// import HeroSection from "./layouts/HeroSection";
-
-// const App = () => {
-//   return ( 
-//     <>
-//        <Header/>
-//        {/* <Login/>   */}
-//        <HeroSection/>
-//        <Footer/>
-
-//        {/* <RegisterButton /> */}
-//     </>
-//   );
-// };
-
-// export default App;
-
-
-
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home/Home';
+import Login1 from './pages/Authen/Login/Login1';
 import SignUpRoleSelection from './pages/Authen/SignUp/SignUpRoleSelection';
 import SignUpClient from './pages/Authen/SignUp/SignUpClient';
 import SignUpCareTaker from './pages/Authen/SignUp/SignUpCareTaker';
-// import About from './pages/About';
-// import Contact from './pages/Contact';
-import MainLayout from './layouts/MainLayout';
-import Login1 from './pages/Authen/Login/Login1';
 import AdminHome from './pages/Home/AdminHome';
 import CareTakerHome from './pages/Home/CareTakerHome';
 import CustomerHome from './pages/Home/CustomerHome';
-import { jwtDecode } from "jwt-decode";
+import SearchResult from './pages/SearchResult/SearchResult';
+import Calendar from './components/Calendar';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ReviewsSection from './pages/ProfilePage/ReviewsSection';
+import { jwtDecode } from 'jwt-decode';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -58,6 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<MainLayout><Home /></MainLayout>} />
         <Route path="/login" element={<Login1 />} />
         <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />
@@ -89,11 +67,15 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        
+        {/* Other Routes */}
+        <Route path="/searchResult" element={<MainLayout><SearchResult /></MainLayout>} />
+        <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
+        <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
+        <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-
-
