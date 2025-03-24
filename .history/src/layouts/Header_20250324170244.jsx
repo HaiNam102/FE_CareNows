@@ -80,7 +80,7 @@ function Header({ logoOnly = false }) {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[40px] bg-white/[0.95] border-b border-teal-500">
+    <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-[40px] bg-white/40 border-b border-teal-500">
       <header className="max-w-[1200px] mx-auto flex flex-col md:flex-row items-center justify-between py-4">
         {/* Logo và navigation desktop */}
         <div className="w-full md:w-auto flex items-center justify-between">

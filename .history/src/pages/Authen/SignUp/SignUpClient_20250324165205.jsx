@@ -110,7 +110,7 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // Tạo registerDTO
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -122,26 +122,32 @@ const SignUpClient = () => {
         ward: formData.ward,
         address: formData.address,
         roleName: "Customer",
-        experienceYear: 0,
-        // Thêm thông tin care recipient
-        careRecipient: {
-          name: formData.careRecipient.name,
-          gender: formData.careRecipient.gender,
-          yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
-        }
+        experienceYear: 0
       };
 
-      // Tạo FormData để gửi file
+      // Tạo careRecipientDTO riêng
+      const careRecipientDTO = {
+        name: formData.careRecipient.name,
+        gender: formData.careRecipient.gender,
+        yearOld: parseInt(formData.careRecipient.yearOld),
+        phoneNumber: formData.careRecipient.phoneNumber || "",
+        specialDetail: formData.careRecipient.specialDetail || ""
+      };
+
+      // Log để kiểm tra dữ liệu
+      console.log("Customer Data:", registerDTO);
+      console.log("Care Recipient Data:", careRecipientDTO);
+
       const formDataToSend = new FormData();
       
-      // Thêm registerDTO dưới dạng JSON Blob
+      // Gửi cả 2 DTO riêng biệt
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
+      formDataToSend.append('careRecipientDTO', 
+        new Blob([JSON.stringify(careRecipientDTO)], { type: 'application/json' })
+      );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,7 +155,12 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
+      // Log toàn bộ dữ liệu trước khi gửi
+      console.log("FormData entries:");
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,8 +171,25 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      console.log("Server Response:", response.data);
+
       if (response.data.code === 20000) {
+        // Sau khi đăng ký customer thành công, gửi thông tin care recipient
+        const customerId = response.data.customerId; // Giả sử server trả về customerId
+        
+        if (customerId) {
+          // Thêm customerId vào careRecipientDTO
+          careRecipientDTO.customerId = customerId;
+          
+          // Gửi request thứ 2 để tạo care recipient
+          const careRecipientResponse = await axios.post(
+            'http://localhost:8080/api/care-recipients/create',
+            careRecipientDTO
+          );
+          
+          console.log("Care Recipient Response:", careRecipientResponse.data);
+        }
+
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
       } else {
@@ -170,8 +198,8 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      console.log('Error details:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 
