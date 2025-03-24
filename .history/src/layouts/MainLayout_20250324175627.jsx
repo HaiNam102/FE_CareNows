@@ -5,13 +5,11 @@ import ToRegister from '../components/ToRegister';
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="pt-32">
-        <div className="container">{children}</div>
-      </main>
-      <Footer />
-    </div>
+    <>
+    <Header />
+      <div className="container">{children}</div>
+    <Footer />
+    </>
   );
 };
 

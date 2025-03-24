@@ -29,35 +29,22 @@ const Login = () => {
 
       console.log('Login Response:', response.data);
 
-      if (response.data.message === "Login success") {
-        const { jwt, roleName } = response.data.data;
+      // Kiểm tra response
+      if (response.data.message === "Login success") {  // Thay đổi điều kiện này
+        // Lấy token từ response
+        const token = response.data.data;  // Điều chỉnh theo cấu trúc response thực tế
         
-        // Lưu token và role
-        localStorage.setItem('token', jwt);
-        localStorage.setItem('roleName', roleName);
+        // Lưu token
+        localStorage.setItem('token', token);
         
-        // Xác định trang chuyển hướng dựa theo role
-        let redirectPath;
-        switch(roleName?.toUpperCase()) {
-          case 'ADMIN':
-            redirectPath = '/admin/dashboard';
-            break;
-          case 'CARETAKER':
-            redirectPath = '/caretaker/home';
-            break;
-          case 'CUSTOMER':
-            redirectPath = '/customer/home';
-            break;
-          default:
-            redirectPath = '/';
-        }
-
+        // Thông báo thành công
         toast.success('Đăng nhập thành công!');
         
-        // Đợi toast hiển thị xong rồi chuyển hướng
-        setTimeout(() => {
-          window.location.href = redirectPath;
-        }, 1000);
+        // Đợi 1 giây
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Chuyển hướng (có thể điều chỉnh theo role nếu cần)
+        window.location.href = '/';  // hoặc trang mặc định khác
       } else {
         toast.error('Đăng nhập không thành công');
       }

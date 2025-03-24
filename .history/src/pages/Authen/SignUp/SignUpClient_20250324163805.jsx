@@ -110,7 +110,7 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // 1. Đầu tiên đăng ký customer
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -122,26 +122,14 @@ const SignUpClient = () => {
         ward: formData.ward,
         address: formData.address,
         roleName: "Customer",
-        experienceYear: 0,
-        // Thêm thông tin care recipient
-        careRecipient: {
-          name: formData.careRecipient.name,
-          gender: formData.careRecipient.gender,
-          yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
-        }
+        experienceYear: 0
       };
 
-      // Tạo FormData để gửi file
       const formDataToSend = new FormData();
-      
-      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,8 +137,8 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
-      const response = await axios.post(
+      // Gửi request đăng ký customer
+      const customerResponse = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
         {
@@ -160,18 +148,42 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
-      if (response.data.code === 20000) {
-        toast.success('Đăng ký thành công!');
-        setTimeout(() => navigate('/login'), 2000);
+      // 2. Sau khi đăng ký customer thành công, lấy customer_id và tạo care_recipient
+      if (customerResponse.data.code === 20000) {
+        const customerId = customerResponse.data.data.customerId; // Lấy customer_id từ response
+
+        // Tạo care_recipient với customer_id
+        const careRecipientData = {
+          name: formData.careRecipient.name,
+          gender: formData.careRecipient.gender,
+          yearOld: parseInt(formData.careRecipient.yearOld),
+          specialDetail: formData.careRecipient.specialDetail || "",
+          customerId: customerId // Quan trọng: Liên kết với customer
+        };
+
+        // Gửi request tạo care_recipient
+        const careRecipientResponse = await axios.post(
+          'http://localhost:8080/api/care-recipients',
+          careRecipientData
+        );
+
+        if (careRecipientResponse.data.code === 20000) {
+          toast.success('Đăng ký thành công!');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          throw new Error('Không thể tạo thông tin người cần chăm sóc');
+        }
       } else {
-        throw new Error(response.data.message || 'Đăng ký thất bại');
+        throw new Error(customerResponse.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      // Log chi tiết lỗi để debug
+      if (error.response) {
+        console.log('Error response:', error.response.data);
+      }
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 

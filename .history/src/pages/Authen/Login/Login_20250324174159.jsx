@@ -27,20 +27,21 @@ const Login = () => {
         password: formData.password
       });
 
+      // Log để debug
       console.log('Login Response:', response.data);
 
-      if (response.data.message === "Login success") {
-        const { jwt, roleName } = response.data.data;
+      // Kiểm tra response theo đúng format từ BE
+      if (response.data.code === 20000) { // Mã thành công
+        const { jwt, userId, roleName } = response.data.data;
         
-        // Lưu token và role
+        // Lưu token
         localStorage.setItem('token', jwt);
-        localStorage.setItem('roleName', roleName);
         
-        // Xác định trang chuyển hướng dựa theo role
-        let redirectPath;
-        switch(roleName?.toUpperCase()) {
+        // Điều hướng dựa theo role
+        let redirectPath = '/';
+        switch(roleName.toUpperCase()) {
           case 'ADMIN':
-            redirectPath = '/admin/dashboard';
+            redirectPath = '/admin/home';
             break;
           case 'CARETAKER':
             redirectPath = '/caretaker/home';
@@ -51,19 +52,42 @@ const Login = () => {
           default:
             redirectPath = '/';
         }
-
+        
         toast.success('Đăng nhập thành công!');
         
-        // Đợi toast hiển thị xong rồi chuyển hướng
+        // Chờ 1 giây rồi chuyển hướng
         setTimeout(() => {
-          window.location.href = redirectPath;
+          navigate(redirectPath);
         }, 1000);
       } else {
-        toast.error('Đăng nhập không thành công');
+        throw new Error(response.data.message || 'Đăng nhập thất bại');
       }
     } catch (error) {
       console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập');
+      console.log('Error response:', error.response?.data);
+
+      // Xử lý các loại lỗi theo ErrorCode từ BE
+      if (error.response?.data) {
+        const errorCode = error.response.data.code;
+        switch (errorCode) {
+          case 40001:
+            toast.error('Tên đăng nhập không tồn tại');
+            break;
+          case 40002:
+            toast.error('Mật khẩu không chính xác');
+            break;
+          case 40003:
+            toast.error('Tài khoản không hợp lệ');
+            break;
+          case 40004:
+            toast.error('Quyền truy cập không hợp lệ');
+            break;
+          default:
+            toast.error(error.response.data.message || 'Đăng nhập thất bại');
+        }
+      } else {
+        toast.error('Có lỗi xảy ra khi đăng nhập');
+      }
     } finally {
       setIsLoading(false);
     }

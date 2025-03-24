@@ -110,8 +110,8 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
-      const registerDTO = {
+      // Tạo dữ liệu đăng ký
+      const registerData = {
         userName: formData.username,
         password: formData.password,
         email: formData.email,
@@ -123,25 +123,23 @@ const SignUpClient = () => {
         address: formData.address,
         roleName: "Customer",
         experienceYear: 0,
-        // Thêm thông tin care recipient
+        // Thêm thông tin care recipient trực tiếp vào request
         careRecipient: {
           name: formData.careRecipient.name,
           gender: formData.careRecipient.gender,
           yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          specialDetail: formData.careRecipient.specialDetail || ""
         }
       };
 
-      // Tạo FormData để gửi file
+      // Log dữ liệu trước khi gửi
+      console.log('Dữ liệu gửi đi:', registerData);
+
       const formDataToSend = new FormData();
-      
-      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
+        new Blob([JSON.stringify(registerData)], { type: 'application/json' })
       );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,7 +147,6 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,7 +157,9 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      // Log response
+      console.log('Response từ server:', response.data);
+
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -169,9 +168,21 @@ const SignUpClient = () => {
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      console.error('Lỗi đăng ký:', {
+        error: error,
+        response: error.response?.data,
+        message: error.message
+      });
+
+      // Xử lý lỗi chi tiết hơn
+      if (error.response) {
+        const errorMessage = error.response.data?.message || 'Có lỗi xảy ra';
+        toast.error(errorMessage);
+      } else if (error.request) {
+        toast.error('Không thể kết nối đến server');
+      } else {
+        toast.error('Có lỗi xảy ra khi đăng ký');
+      }
     }
   };
 

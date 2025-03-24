@@ -78,7 +78,7 @@ const SignUpClient = () => {
     
     if (name === 'district') {
       setFormData(prev => ({ ...prev, ward: '' }));
-      // Lấy danh sách phường dựa trên quận được chọn
+      // Lấy trực tiếp mảng phường từ DANANG_WARDS
       const wardsList = DANANG_WARDS[value] || [];
       setAvailableWards(wardsList);
     }
@@ -101,16 +101,21 @@ const SignUpClient = () => {
   // Hàm xử lý đăng ký
   const handleSubmit = async () => {
     try {
-      // Validation
+      // 1. Kiểm tra form
       if (!formData.name || !formData.username || !formData.email || 
-          !formData.phone || !formData.district || !formData.password ||
-          !formData.careRecipient.name || !formData.careRecipient.gender ||
-          !formData.careRecipient.yearOld) {
+          !formData.phone || !formData.district || !formData.password) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // Kiểm tra thêm thông tin người cần chăm sóc
+      if (!formData.careRecipient.name || !formData.careRecipient.gender || 
+          !formData.careRecipient.phoneNumber || !formData.careRecipient.yearOld) {
+        toast.error('Vui lòng điền đầy đủ thông tin người cần chăm sóc!');
+        return;
+      }
+
+      // 2. Tạo đối tượng RegisterDTO
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -118,25 +123,24 @@ const SignUpClient = () => {
         phoneNumber: formData.phone,
         nameOfUser: formData.name,
         city: "Đà Nẵng",
+        roleName: "customer",
+        experienceYear: 0,
         district: formData.district,
         ward: formData.ward,
         address: formData.address,
-        roleName: "Customer",
-        experienceYear: 0,
-        // Thêm thông tin care recipient
         careRecipient: {
           name: formData.careRecipient.name,
           gender: formData.careRecipient.gender,
+          phoneNumber: formData.careRecipient.phoneNumber,
           yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          specialDetail: formData.careRecipient.specialDetail || ""
         }
       };
 
-      // Tạo FormData để gửi file
+      // 3. Tạo FormData và thêm các thành phần
       const formDataToSend = new FormData();
       
-      // Thêm registerDTO dưới dạng JSON Blob
+      // Thêm registerDTO dưới dạng JSON string
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
@@ -149,7 +153,7 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
+      // 4. Gửi request
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,8 +164,8 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
-      if (response.data.code === 20000) {
+      // 5. Xử lý response
+      if (response.data.code === 20000) { // Mã thành công
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
       } else {
@@ -170,8 +174,7 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 
@@ -257,7 +260,7 @@ const SignUpClient = () => {
 
   // Thêm useEffect để load districts
   useEffect(() => {
-    // Lấy danh sách quận từ constants
+    // Chỉ lấy tên quận để hiển thị
     const districtNames = DANANG_DISTRICTS.map(district => district.name);
     setAvailableDistricts(districtNames);
   }, []);
@@ -360,7 +363,7 @@ const SignUpClient = () => {
                 name="district"
                 value={formData.district}
                 onChange={handleChange}
-                options={availableDistricts}
+                options={DANANG_DISTRICTS.map(district => district.name)}
                 placeholder="Chọn quận"
                 error={errors.district}
               />
@@ -370,7 +373,7 @@ const SignUpClient = () => {
                 name="ward"
                 value={formData.ward}
                 onChange={handleChange}
-                options={availableWards}
+                options={DANANG_WARDS[formData.district] || []}
                 placeholder="Chọn phường"
                 error={errors.ward}
                 disabled={!formData.district}
@@ -413,8 +416,8 @@ const SignUpClient = () => {
                 value={formData.careRecipient.gender}
                 onChange={handleCareRecipientChange}
                 options={[
-                  { value: "MALE", label: "Nam" },
-                  { value: "FEMALE", label: "Nữ" }
+                  "MALE",
+                  "FEMALE"
                 ]}
                 placeholder="Chọn giới tính"
                 error={errors.careRecipient.gender}
