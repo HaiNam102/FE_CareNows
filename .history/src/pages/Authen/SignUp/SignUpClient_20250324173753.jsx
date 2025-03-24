@@ -160,8 +160,25 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      console.log("Server Response:", response.data);
+
       if (response.data.code === 20000) {
+        // Sau khi đăng ký customer thành công, gửi thông tin care recipient
+        const customerId = response.data.customerId; // Giả sử server trả về customerId
+        
+        if (customerId) {
+          // Thêm customerId vào careRecipientDTO
+          careRecipientDTO.customerId = customerId;
+          
+          // Gửi request thứ 2 để tạo care recipient
+          const careRecipientResponse = await axios.post(
+            'http://localhost:8080/api/care-recipients/create',
+            careRecipientDTO
+          );
+          
+          console.log("Care Recipient Response:", careRecipientResponse.data);
+        }
+
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
       } else {
@@ -170,8 +187,8 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      console.log('Error details:', error.response?.data);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 

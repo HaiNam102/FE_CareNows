@@ -21,26 +21,38 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Log dữ liệu gửi đi
+    console.log('Sending login data:', {
+      username: formData.username,
+      password: formData.password
+    });
+
     try {
       const response = await axios.post('http://localhost:8080/api/auths/login', {
         username: formData.username,
         password: formData.password
+      }, {
+        // Thêm headers
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      console.log('Login Response:', response.data);
+      // Log response để kiểm tra
+      console.log('Server response:', response.data);
 
-      if (response.data.message === "Login success") {
-        const { jwt, roleName } = response.data.data;
+      // Kiểm tra response theo đúng format từ BE
+      if (response.data.code === 20000) { // Mã thành công
+        const { jwt, userId, roleName } = response.data.data;
         
-        // Lưu token và role
+        // Lưu token
         localStorage.setItem('token', jwt);
-        localStorage.setItem('roleName', roleName);
         
-        // Xác định trang chuyển hướng dựa theo role
-        let redirectPath;
-        switch(roleName?.toUpperCase()) {
+        // Điều hướng dựa theo role
+        let redirectPath = '/';
+        switch(roleName.toUpperCase()) {
           case 'ADMIN':
-            redirectPath = '/admin/dashboard';
+            redirectPath = '/admin/home';
             break;
           case 'CARETAKER':
             redirectPath = '/caretaker/home';
@@ -51,19 +63,46 @@ const Login = () => {
           default:
             redirectPath = '/';
         }
-
+        
         toast.success('Đăng nhập thành công!');
         
-        // Đợi toast hiển thị xong rồi chuyển hướng
+        // Chờ 1 giây rồi chuyển hướng
         setTimeout(() => {
-          window.location.href = redirectPath;
+          navigate(redirectPath);
         }, 1000);
       } else {
-        toast.error('Đăng nhập không thành công');
+        throw new Error(response.data.message || 'Đăng nhập thất bại');
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng nhập');
+      // Log chi tiết lỗi
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Xử lý các loại lỗi theo ErrorCode từ BE
+      if (error.response?.data) {
+        const errorCode = error.response.data.code;
+        switch (errorCode) {
+          case 40001:
+            toast.error('Tên đăng nhập không tồn tại');
+            break;
+          case 40002:
+            toast.error('Mật khẩu không chính xác');
+            break;
+          case 40003:
+            toast.error('Tài khoản không hợp lệ');
+            break;
+          case 40004:
+            toast.error('Quyền truy cập không hợp lệ');
+            break;
+          default:
+            toast.error(error.response.data.message || 'Đăng nhập thất bại');
+        }
+      } else {
+        toast.error('Có lỗi xảy ra khi đăng nhập');
+      }
     } finally {
       setIsLoading(false);
     }
