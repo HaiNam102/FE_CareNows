@@ -101,7 +101,10 @@ const SignUpClient = () => {
   // Hàm xử lý đăng ký
   const handleSubmit = async () => {
     try {
-      // Validation
+      // Kiểm tra dữ liệu trước khi gửi
+      console.log("Care Recipient Data:", formData.careRecipient);
+      
+      // 1. Kiểm tra form
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.district || !formData.password ||
           !formData.careRecipient.name || !formData.careRecipient.gender ||
@@ -110,38 +113,37 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // Tạo registerDTO mới với cấu trúc phù hợp
       const registerDTO = {
-        userName: formData.username,
-        password: formData.password,
-        email: formData.email,
-        phoneNumber: formData.phone,
-        nameOfUser: formData.name,
-        city: "Đà Nẵng",
-        district: formData.district,
-        ward: formData.ward,
-        address: formData.address,
-        roleName: "Customer",
-        experienceYear: 0,
-        // Thêm thông tin care recipient
-        careRecipient: {
+        customerDTO: {
+          userName: formData.username,
+          password: formData.password,
+          email: formData.email,
+          phoneNumber: formData.phone,
+          nameOfUser: formData.name,
+          city: "Đà Nẵng",
+          district: formData.district,
+          ward: formData.ward,
+          address: formData.address,
+          roleName: "CUSTOMER"
+        },
+        careRecipientDTO: {
           name: formData.careRecipient.name,
           gender: formData.careRecipient.gender,
           yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          phoneNumber: formData.careRecipient.phoneNumber || "",
+          specialDetail: formData.careRecipient.specialDetail || ""
         }
       };
 
-      // Tạo FormData để gửi file
+      // Log để kiểm tra dữ liệu trước khi gửi
+      console.log("Data being sent:", registerDTO);
+
       const formDataToSend = new FormData();
-      
-      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,7 +151,12 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
+      // Log request configuration
+      console.log("Request URL:", 'http://localhost:8080/api/auths/register');
+      console.log("Request Headers:", {
+        'Content-Type': 'multipart/form-data'
+      });
+
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,7 +167,9 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      // Log response
+      console.log("Server Response:", response.data);
+
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -170,8 +179,11 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      // Log chi tiết lỗi
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      }
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 

@@ -101,7 +101,7 @@ const SignUpClient = () => {
   // Hàm xử lý đăng ký
   const handleSubmit = async () => {
     try {
-      // Validation
+      // 1. Kiểm tra form
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.district || !formData.password ||
           !formData.careRecipient.name || !formData.careRecipient.gender ||
@@ -110,7 +110,7 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // 2. Tạo đối tượng RegisterDTO và CareRecipientDTO
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -121,22 +121,22 @@ const SignUpClient = () => {
         district: formData.district,
         ward: formData.ward,
         address: formData.address,
-        roleName: "Customer",
+        roleName: "CUSTOMER",
         experienceYear: 0,
         // Thêm thông tin care recipient
         careRecipient: {
           name: formData.careRecipient.name,
           gender: formData.careRecipient.gender,
           yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          phoneNumber: formData.careRecipient.phoneNumber || "",
+          specialDetail: formData.careRecipient.specialDetail || ""
         }
       };
 
-      // Tạo FormData để gửi file
+      // 3. Tạo FormData và thêm các thành phần
       const formDataToSend = new FormData();
       
-      // Thêm registerDTO dưới dạng JSON Blob
+      // Thêm registerDTO dưới dạng JSON string
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
@@ -149,7 +149,7 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
+      // 4. Gửi request
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,7 +160,7 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      // 5. Xử lý response
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -170,8 +170,7 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 

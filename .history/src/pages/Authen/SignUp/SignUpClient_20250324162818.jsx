@@ -110,7 +110,7 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
+      // Tạo registerDTO với cấu trúc mới
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -123,25 +123,23 @@ const SignUpClient = () => {
         address: formData.address,
         roleName: "Customer",
         experienceYear: 0,
-        // Thêm thông tin care recipient
+        // Thông tin care recipient
         careRecipient: {
           name: formData.careRecipient.name,
           gender: formData.careRecipient.gender,
           yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          phoneNumber: formData.careRecipient.phoneNumber || "",
+          specialDetail: formData.careRecipient.specialDetail || ""
         }
       };
 
-      // Tạo FormData để gửi file
+      console.log("Sending data:", registerDTO); // Log để kiểm tra
+
       const formDataToSend = new FormData();
-      
-      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,7 +147,6 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -160,7 +157,8 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
+      console.log("Response:", response.data); // Log response
+
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -170,8 +168,8 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      console.log('Error details:', error.response?.data); // Log chi tiết lỗi
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
 

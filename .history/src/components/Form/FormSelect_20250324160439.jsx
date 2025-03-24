@@ -8,24 +8,6 @@ const FormSelect = ({
   error, 
   disabled 
 }) => {
-  const renderOption = (option) => {
-    // Nếu option là object (cho gender)
-    if (typeof option === 'object' && option.value) {
-      return (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      );
-    }
-    
-    // Nếu option là string (cho quận/phường)
-    return (
-      <option key={option} value={option}>
-        {option}
-      </option>
-    );
-  };
-
   return (
     <div>
       <label className="block text-[14px] font-medium text-gray-700 mb-1">
@@ -41,7 +23,14 @@ const FormSelect = ({
         }`}
       >
         <option value="">{placeholder}</option>
-        {Array.isArray(options) && options.map(renderOption)}
+        {options.map((option, index) => (
+          <option 
+            key={index} 
+            value={typeof option === 'object' ? option.value : option}
+          >
+            {typeof option === 'object' ? option.label : option === 'MALE' ? 'Nam' : 'Nữ'}
+          </option>
+        ))}
       </select>
       {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
     </div>

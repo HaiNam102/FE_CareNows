@@ -4,6 +4,7 @@ import Image2 from "../assets/images/Nanny Picture.png";
 import Image1 from "../assets/images/Nanny Picture (1).png";
 import { useNavigate } from "react-router-dom";
 import CalendarComponent from '../components/Calendar';
+import axios from 'axios';
 
 const districts = [
   "Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ", "Hòa Vang", "Hoàng Sa"
@@ -11,10 +12,12 @@ const districts = [
 
 const BookService = () => {
   const [careType, setCareType] = useState("home");
-  const [selectedDistrict, setSelectedDistrict] = useState("Quận");
+  const [selectedDistrict, setSelectedDistrict] = useState("Hải Châu"); // Mặc định là Hải Châu
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
-  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
-  const [selectedDateRange, setSelectedDateRange] = useState([null, null]);
+  const [selectedDateRange, setSelectedDateRange] = useState([
+    new Date('2025-03-20'), 
+    new Date('2025-03-30')
+  ]); // Mặc định ngày 20/03/2025 đến 30/03/2025
   const [searchInput, setSearchInput] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const navigate = useNavigate();
@@ -47,21 +50,43 @@ const BookService = () => {
     return "Chọn thời gian";
   };
 
-  // Format date as DD/MM/YYYY
+  // Format date as YYYY-MM-DD
   const formatDate = (date) => {
     if (!date) return "";
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
   };
 
-  // Handle search submission
+  // Hàm gọi API để tìm kiếm bảo mẫu
+  const fetchCareTakers = async () => {
+    try {
+      // Tạo URL trực tiếp để đảm bảo format chính xác
+      const startDate = formatDate(selectedDateRange[0]);
+      const endDate = formatDate(selectedDateRange[1]);
+      
+      // Tạo URL với format cố định
+      const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(selectedDistrict)}&dayStart=${startDate}&dayEnd=${endDate}`;
+      
+      // Gọi API với URL đã định sẵn
+      const response = await axios.get(url);
+      console.log("API Response:", response.data);
+      console.log("Request URL:", url);
+      
+      // Chuyển hướng đến SearchResult với dữ liệu
+      navigate('/searchResult', { 
+        state: { 
+          profiles: response.data.data,
+          district: selectedDistrict,
+          dateRange: selectedDateRange
+        } 
+      });
+    } catch (error) {
+      console.error("Error fetching care takers:", error);
+    }
+  };
+
+  // Cập nhật hàm handleSearch để gọi fetchCareTakers
   const handleSearch = () => {
-    // Navigate to SearchResult with selected parameters
-    navigate('/searchResult', { state: { 
-        district: selectedDistrict, 
-        dateRange: selectedDateRange, 
-        caregiverName: searchInput, 
-        careType 
-    }});
+    fetchCareTakers(); // Gọi hàm fetchCareTakers
   };
 
   // Hàm để mở Calendar
@@ -259,6 +284,7 @@ const BookService = () => {
             <CalendarComponent 
               onClose={() => setShowCalendar(false)} 
               onSelectDateRange={handleDateRangeSelection} 
+              initialDateRange={selectedDateRange}
             />
           </div>
         </div>

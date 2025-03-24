@@ -110,8 +110,8 @@ const SignUpClient = () => {
         return;
       }
 
-      // Tạo registerDTO với thông tin care recipient
-      const registerDTO = {
+      // 1. Đăng ký customer trước
+      const registerData = {
         userName: formData.username,
         password: formData.password,
         email: formData.email,
@@ -122,26 +122,14 @@ const SignUpClient = () => {
         ward: formData.ward,
         address: formData.address,
         roleName: "Customer",
-        experienceYear: 0,
-        // Thêm thông tin care recipient
-        careRecipient: {
-          name: formData.careRecipient.name,
-          gender: formData.careRecipient.gender,
-          yearOld: parseInt(formData.careRecipient.yearOld),
-          specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
-        }
+        experienceYear: 0
       };
 
-      // Tạo FormData để gửi file
       const formDataToSend = new FormData();
-      
-      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
+        new Blob([JSON.stringify(registerData)], { type: 'application/json' })
       );
 
-      // Thêm các file nếu có
       if (formData.imgProfile) {
         formDataToSend.append('imgProfile', formData.imgProfile);
       }
@@ -149,8 +137,8 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // Gửi request với Content-Type: multipart/form-data
-      const response = await axios.post(
+      // Đăng ký customer
+      const customerResponse = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
         {
@@ -160,18 +148,56 @@ const SignUpClient = () => {
         }
       );
 
-      // Xử lý response
-      if (response.data.code === 20000) {
-        toast.success('Đăng ký thành công!');
-        setTimeout(() => navigate('/login'), 2000);
+      console.log('Customer Response:', customerResponse.data);
+
+      if (customerResponse.data.code === 20000) {
+        // 2. Lấy customer_id từ response
+        const customerId = customerResponse.data.data.customerId; // Điều chỉnh theo cấu trúc response thực tế
+
+        // 3. Tạo care_recipient với customer_id
+        const careRecipientData = {
+          name: formData.careRecipient.name,
+          gender: formData.careRecipient.gender,
+          yearOld: parseInt(formData.careRecipient.yearOld),
+          specialDetail: formData.careRecipient.specialDetail || "",
+          customerId: customerId // Quan trọng: Liên kết với customer
+        };
+
+        console.log('Care Recipient Data:', careRecipientData);
+
+        // Gọi API tạo care_recipient
+        const careRecipientResponse = await axios.post(
+          'http://localhost:8080/api/care-recipients/create', // Điều chỉnh endpoint theo API thực tế
+          careRecipientData
+        );
+
+        console.log('Care Recipient Response:', careRecipientResponse.data);
+
+        if (careRecipientResponse.data.code === 20000) {
+          toast.success('Đăng ký thành công!');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          throw new Error('Không thể tạo thông tin người cần chăm sóc');
+        }
       } else {
-        throw new Error(response.data.message || 'Đăng ký thất bại');
+        throw new Error(customerResponse.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      console.error('Lỗi đăng ký:', {
+        error: error,
+        response: error.response?.data,
+        message: error.message
+      });
+
+      if (error.response) {
+        const errorMessage = error.response.data?.message || 'Có lỗi xảy ra';
+        toast.error(errorMessage);
+      } else if (error.request) {
+        toast.error('Không thể kết nối đến server');
+      } else {
+        toast.error('Có lỗi xảy ra khi đăng ký');
+      }
     }
   };
 
