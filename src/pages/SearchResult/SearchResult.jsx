@@ -19,13 +19,15 @@ const SearchResult = () => {
     const getInitialDistrict = () => {
         if (location.state?.district) return location.state.district;
         const savedDistrict = localStorage.getItem('selectedDistrict');
-        return savedDistrict ? savedDistrict : null;
+        return savedDistrict ? savedDistrict : "Hải Châu"; // Mặc định là "Hải Châu"
     };
 
     const getInitialDateRange = () => {
         if (location.state?.dateRange) return location.state.dateRange;
         const savedDateRange = localStorage.getItem('selectedDateRange');
-        return savedDateRange ? JSON.parse(savedDateRange) : null;
+        if (savedDateRange) return JSON.parse(savedDateRange);
+        // Mặc định là từ 20/03/2025 đến 30/03/2025
+        return [new Date('2025-03-20'), new Date('2025-03-30')];
     };
 
     const [profiles, setProfiles] = useState([]);
@@ -47,12 +49,41 @@ const SearchResult = () => {
         }
     }, [district, dateRange]);
 
+    // Format date as YYYY-MM-DD
+    const formatDateForAPI = (date) => {
+        if (!date) return "";
+        if (typeof date === 'string') {
+            date = new Date(date);
+        }
+        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    };
+
+    // In SearchResult.js, update your useEffect fetch:
     useEffect(() => {
-        fetch("http://localhost:5000/profiles")
+        // Tạo URL trực tiếp để đảm bảo format chính xác
+        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-03-20";
+        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-03-30";
+        const districtValue = district || "Hải Châu";
+        
+        // Tạo URL với format cố định
+        const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
+        
+        console.log("Fetching from URL:", url);
+        
+        // Gọi API với URL đã định sẵn
+        fetch(url)
             .then(res => res.json())
-            .then(data => setProfiles(data))
+            .then(data => {
+                console.log("API Response:", data);
+                // Check API response structure based on Postman example
+                if (data.data) {
+                    setProfiles(data.data);
+                } else {
+                    setProfiles(data); // Fallback in case response structure is different
+                }
+            })
             .catch(err => console.error("Lỗi fetch dữ liệu:", err));
-    }, []);
+    }, [district, dateRange]);
 
     // Cập nhật state khi location.state thay đổi
     useEffect(() => {
@@ -61,6 +92,9 @@ const SearchResult = () => {
         }
         if (location.state?.dateRange) {
             setDateRange(location.state.dateRange);
+        }
+        if (location.state?.profiles) {
+            setProfiles(location.state.profiles);
         }
     }, [location.state]);
 
@@ -96,6 +130,7 @@ const SearchResult = () => {
         setIsProfileOpen(true);
         // Thêm class để ngăn scroll khi profile đang mở
         document.body.classList.add('no-scroll');
+        // Đảm bảo rằng profile chứa tất cả thông tin cần thiết, bao gồm cả imgProfile
     };
 
     const handleCloseProfile = () => {
@@ -115,6 +150,31 @@ const SearchResult = () => {
         if (currentDateRange) {
             setDateRange(currentDateRange);
         }
+    };
+
+    // Hàm gọi API với URL cố định cho nút tìm kiếm
+    const handleSearch = () => {
+        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-03-20";
+        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-03-30";
+        const districtValue = district || "Hải Châu";
+        
+        // Tạo URL với format cố định
+        const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
+        
+        console.log("Searching with URL:", url);
+        
+        // Gọi API với URL đã định sẵn
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                console.log("Search API Response:", data);
+                if (data.data) {
+                    setProfiles(data.data);
+                } else {
+                    setProfiles(data);
+                }
+            })
+            .catch(err => console.error("Lỗi fetch dữ liệu tìm kiếm:", err));
     };
 
     // Component ProfileCard với event handler
@@ -198,7 +258,10 @@ const SearchResult = () => {
                     <div className="flex items-center border border-[#00a37d] rounded-full px-2 py-2">
                         <input type="text" placeholder="Tên bảo mẫu/Url" className="outline-none text-gray-700 w-full" />
                     </div>
-                    <button className="bg-[#00a37d] text-white rounded-full px-4 py-2 flex items-center">
+                    <button 
+                        className="bg-[#00a37d] text-white rounded-ful0l px-4 py-2 flex items-center"
+                        onClick={handleSearch}
+                    >
                         <FontAwesomeIcon icon={faSearch} className="mr-2" /> Tìm kiếm
                     </button>
                 </div>
@@ -207,7 +270,6 @@ const SearchResult = () => {
     };
 
     const displayItems = createDisplayItems();
-
     return (
         <div className="bg-gray-10">
             <SearchFilters />

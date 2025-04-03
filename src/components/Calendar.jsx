@@ -209,7 +209,7 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-xl p-4 w-full max-w-3xl">
+    <div className=" rounded-lg shadow-l border-1px p-4 w-full max-w-3xl">
       <div className="flex justify-between items-center mb-6">
         <button 
           onClick={() => navigateMonths(-1)}
@@ -234,12 +234,12 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className="text-sm text-gray-600">
+        <div className=" flex text-sm text-gray-600 gap-6">
           {selectedStartDate && 
             <span>Từ: {formatDate(selectedStartDate)} </span>
           }
           {selectedEndDate && 
-            <span>Đến: {formatDate(selectedEndDate)}</span>
+            <span>đến: {formatDate(selectedEndDate)}</span>
           }
         </div>
         
