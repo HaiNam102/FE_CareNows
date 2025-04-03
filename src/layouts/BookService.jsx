@@ -66,8 +66,8 @@ const BookService = () => {
       // Tạo URL với format cố định
       const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(selectedDistrict)}&dayStart=${startDate}&dayEnd=${endDate}`;
       
-      // Gọi API với URL đã định sẵn
-      const response = await axios.get(url);
+      // Gọi API với URL đã định sẵn 
+      const response = await axios.get(url); 
       console.log("API Response:", response.data);
       console.log("Request URL:", url);
       

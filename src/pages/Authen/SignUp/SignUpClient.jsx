@@ -11,9 +11,6 @@ import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 import FormInput from '../../../components/Form/FormInput';
 import FormSelect from '../../../components/Form/FormSelect';
 
-
-
-
 const SignUpClient = () => {
   const navigate = useNavigate();
   

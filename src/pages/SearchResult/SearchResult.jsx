@@ -130,6 +130,7 @@ const SearchResult = () => {
         setIsProfileOpen(true);
         // Thêm class để ngăn scroll khi profile đang mở
         document.body.classList.add('no-scroll');
+        // Đảm bảo rằng profile chứa tất cả thông tin cần thiết, bao gồm cả imgProfile
     };
 
     const handleCloseProfile = () => {

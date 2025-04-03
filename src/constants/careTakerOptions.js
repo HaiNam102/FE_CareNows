@@ -13,3 +13,4 @@ export const MEDICAL_SKILLS_OPTIONS = [
   { id: 9, label: "Dùng máy theo dõi (máy đo SpO2, máy theo dõi tim)" },
   { id: 10, label: "Thao tác sonde (sonde tiểu, sonde dạ dày)" }
 ]; 
+

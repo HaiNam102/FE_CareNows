@@ -15,13 +15,18 @@ const LoginForm = () => {
     if (!username || !password) {
       toast.error("Vui lòng điền đầy đủ thông tin!");
       return;
-    }
+    } 
 
     try {
+      console.log("Username:", username);
+      console.log("Password:", password);
+
       const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+        "http://localhost:8080/api/auths/login",
         { username, password }
       );
+
+      console.log("Response:", response.data);
 
       if (response.data.jwt) {
         const token = response.data.jwt;
