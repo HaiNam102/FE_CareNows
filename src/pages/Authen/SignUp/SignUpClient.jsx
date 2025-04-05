@@ -11,9 +11,6 @@ import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 import FormInput from '../../../components/Form/FormInput';
 import FormSelect from '../../../components/Form/FormSelect';
 
-
-
-
 const SignUpClient = () => {
   const navigate = useNavigate();
   
@@ -31,7 +28,14 @@ const SignUpClient = () => {
     address: "",
     password: "",
     imgProfile: null,
-    imgCccd: null
+    imgCccd: null,
+    careRecipient: {
+      name: "",
+      gender: "",
+      phoneNumber: "",
+      yearOld: "",
+      specialDetail: ""
+    }
   });
 
   // Thêm state để track lỗi
@@ -43,7 +47,14 @@ const SignUpClient = () => {
     district: "",
     ward: "",
     address: "",
-    password: ""
+    password: "",
+    careRecipient: {
+      name: "",
+      gender: "",
+      phoneNumber: "",
+      yearOld: "",
+      specialDetail: ""
+    }
   });
 
   // Thêm state để lưu danh sách phường theo quận
@@ -64,7 +75,7 @@ const SignUpClient = () => {
     
     if (name === 'district') {
       setFormData(prev => ({ ...prev, ward: '' }));
-      // Lấy trực tiếp mảng phường từ DANANG_WARDS
+      // Lấy danh sách phường dựa trên quận được chọn
       const wardsList = DANANG_WARDS[value] || [];
       setAvailableWards(wardsList);
     }
@@ -73,22 +84,30 @@ const SignUpClient = () => {
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-
-  
-
- 
+  const handleCareRecipientChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      careRecipient: {
+        ...prev.careRecipient,
+        [name]: value
+      }
+    }));
+  };
 
   // Hàm xử lý đăng ký
   const handleSubmit = async () => {
     try {
-      // 1. Kiểm tra form
+      // Validation
       if (!formData.name || !formData.username || !formData.email || 
-          !formData.phone || !formData.district || !formData.password) {
+          !formData.phone || !formData.district || !formData.password ||
+          !formData.careRecipient.name || !formData.careRecipient.gender ||
+          !formData.careRecipient.yearOld) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
 
-      // 2. Tạo đối tượng RegisterDTO
+      // Tạo registerDTO với thông tin care recipient
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -96,17 +115,25 @@ const SignUpClient = () => {
         phoneNumber: formData.phone,
         nameOfUser: formData.name,
         city: "Đà Nẵng",
-        roleName: "customer",
-        experienceYear: 0,
         district: formData.district,
         ward: formData.ward,
-        address: formData.address
+        address: formData.address,
+        roleName: "Customer",
+        experienceYear: 0,
+        // Thêm thông tin care recipient
+        careRecipient: {
+          name: formData.careRecipient.name,
+          gender: formData.careRecipient.gender,
+          yearOld: parseInt(formData.careRecipient.yearOld),
+          specialDetail: formData.careRecipient.specialDetail || "",
+          phoneNumber: formData.careRecipient.phoneNumber || ""
+        }
       };
 
-      // 3. Tạo FormData và thêm các thành phần
+      // Tạo FormData để gửi file
       const formDataToSend = new FormData();
       
-      // Thêm registerDTO dưới dạng JSON string
+      // Thêm registerDTO dưới dạng JSON Blob
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
@@ -119,7 +146,7 @@ const SignUpClient = () => {
         formDataToSend.append('imgCccd', formData.imgCccd);
       }
 
-      // 4. Gửi request
+      // Gửi request với Content-Type: multipart/form-data
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
@@ -130,8 +157,8 @@ const SignUpClient = () => {
         }
       );
 
-      // 5. Xử lý response
-      if (response.data.code === 20000) { // Mã thành công
+      // Xử lý response
+      if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
       } else {
@@ -140,7 +167,8 @@ const SignUpClient = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
+      toast.error(errorMessage);
     }
   };
 
@@ -226,7 +254,7 @@ const SignUpClient = () => {
 
   // Thêm useEffect để load districts
   useEffect(() => {
-    // Chỉ lấy tên quận để hiển thị
+    // Lấy danh sách quận từ constants
     const districtNames = DANANG_DISTRICTS.map(district => district.name);
     setAvailableDistricts(districtNames);
   }, []);
@@ -329,7 +357,7 @@ const SignUpClient = () => {
                 name="district"
                 value={formData.district}
                 onChange={handleChange}
-                options={DANANG_DISTRICTS.map(district => district.name)}
+                options={availableDistricts}
                 placeholder="Chọn quận"
                 error={errors.district}
               />
@@ -339,7 +367,7 @@ const SignUpClient = () => {
                 name="ward"
                 value={formData.ward}
                 onChange={handleChange}
-                options={DANANG_WARDS[formData.district] || []}
+                options={availableWards}
                 placeholder="Chọn phường"
                 error={errors.ward}
                 disabled={!formData.district}
@@ -355,6 +383,73 @@ const SignUpClient = () => {
               placeholder="Số nhà, tên đường..."
               error={errors.address}
             />
+          </div>
+        </div>
+
+        <div className="mb-8 bg-white rounded-lg p-8 shadow-sm w-[900px] mx-auto">
+          <h2 className="text-[24px] font-semibold text-gray-900 mb-2">Thông tin người cần chăm sóc</h2>
+          <p className="text-[16px] font-medium text-[#8c8c8c] mb-6">
+            Vui lòng cung cấp thông tin về người cần được chăm sóc
+          </p>
+          
+          <div className="space-y-4">
+            <FormInput
+              label="Họ và tên người cần chăm sóc"
+              type="text"
+              name="name"
+              value={formData.careRecipient.name}
+              onChange={handleCareRecipientChange}
+              placeholder="Nhập họ và tên"
+              error={errors.careRecipient.name}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormSelect
+                label="Giới tính"
+                name="gender"
+                value={formData.careRecipient.gender}
+                onChange={handleCareRecipientChange}
+                options={[
+                  { value: "MALE", label: "Nam" },
+                  { value: "FEMALE", label: "Nữ" }
+                ]}
+                placeholder="Chọn giới tính"
+                error={errors.careRecipient.gender}
+              />
+
+              <FormInput
+                label="Tuổi"
+                type="number"
+                name="yearOld"
+                value={formData.careRecipient.yearOld}
+                onChange={handleCareRecipientChange}
+                placeholder="Nhập tuổi"
+                error={errors.careRecipient.yearOld}
+              />
+            </div>
+
+            <FormInput
+              label="Số điện thoại"
+              type="tel"
+              name="phoneNumber"
+              value={formData.careRecipient.phoneNumber}
+              onChange={handleCareRecipientChange}
+              placeholder="Nhập số điện thoại"
+              error={errors.careRecipient.phoneNumber}
+            />
+
+            <div>
+              <label className="block text-[14px] font-medium text-gray-700 mb-1">
+                Chi tiết đặc biệt
+              </label>
+              <textarea
+                name="specialDetail"
+                value={formData.careRecipient.specialDetail}
+                onChange={handleCareRecipientChange}
+                placeholder="Nhập các thông tin đặc biệt cần lưu ý (bệnh lý, thói quen, ...)"
+                className="w-full px-4 py-2 border rounded-[10px] min-h-[100px]"
+              />
+            </div>
           </div>
         </div>
 

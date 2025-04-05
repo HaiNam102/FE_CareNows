@@ -107,7 +107,7 @@ const CareNowRegistration = () => {
               data-aos-delay="700"
               width={300}
               height={400}
-            />
+            /> 
             <h2 className="text-xl text-left font-bold mb-2 text-[25px]">Trải nghiệm người dùng tối ưu</h2>
             <ul className="text-left list-disc list-inside text-[20px]">
               <li data-aos="fade-left" data-aos-delay="800">Ứng dụng dễ sử dụng.</li>
