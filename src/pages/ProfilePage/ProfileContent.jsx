@@ -29,7 +29,7 @@ const ProfileContent = ({ profile = {} }) => {
     rating = 5.0,
     numberOfReviews = 0,
     servicePrice = "N/A",
-    imgProfile = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60",
+    imgProfile = "",
     introduction = "Không có thông tin giới thiệu",
     ward = "",
     district: profileDistrict = "",
@@ -78,7 +78,7 @@ const ProfileContent = ({ profile = {} }) => {
           <img 
             src={imgProfile} 
             alt={`Ảnh của ${nameOfCareTaker}`} 
-            className="w-40 h-40 rounded-full mb-3 object-cover" 
+            className="w-40 h-40 rounded-full mb-3 object-cover transition-transform duration-300 transform hover:scale-105" 
           />
         </div>
       </div>
