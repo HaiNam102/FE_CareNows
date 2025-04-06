@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+import FormSelect from '../../../components/Form/FormSelect';
+import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -25,7 +27,10 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [errors, setErrors] = useState({
@@ -36,7 +41,10 @@ const SignUpCareTaker = () => {
     password: "",
     experienceYear: "",
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [selectedOptions, setSelectedOptions] = useState({
@@ -102,21 +110,36 @@ const SignUpCareTaker = () => {
 
   const handleSubmit = async () => {
     try {
-      // Validate required fields
+      // Kiểm tra validate trước khi gửi request
+      const hasErrors = Object.values(errors).some(error => error !== "");
+      if (hasErrors) {
+        toast.error('Vui lòng kiểm tra lại thông tin!');
+        return;
+      }
+
+      // Kiểm tra các trường bắt buộc
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
+          !formData.gender || !formData.dob || !formData.district || !formData.ward || !formData.address) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
 
+      // Kiểm tra files
       if (!formData.imgProfile || !formData.imgCccd) {
         toast.error('Vui lòng tải lên ảnh đại diện và CCCD!');
         return;
       }
 
+      // Kiểm tra điều khoản
       if (!acceptTraining || !acceptTest) {
         toast.error('Vui lòng đồng ý với điều khoản khóa học!');
+        return;
+      }
+
+      // Kiểm tra chuyên môn
+      if (formData.selectedOptionDetailIds.length === 0) {
+        toast.error('Vui lòng chọn ít nhất một chuyên môn!');
         return;
       }
 
@@ -131,15 +154,19 @@ const SignUpCareTaker = () => {
         city: "Đà Nẵng",
         roleName: "CARE_TAKER",
         experienceYear: parseInt(formData.experienceYear),
-        selectedOptionDetailIds: formData.selectedOptionDetailIds
+        selectedOptionDetailIds: formData.selectedOptionDetailIds,
+        district: formData.district,
+        ward: formData.ward,
+        address: formData.address
       };
 
+      // Log để debug
+      console.log('Sending registration data:', registerDTO);
+
       const formDataToSend = new FormData();
-      
       formDataToSend.append('registerDTO', 
         new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
       );
-
       formDataToSend.append('imgProfile', formData.imgProfile);
       formDataToSend.append('imgCccd', formData.imgCccd);
 
@@ -153,6 +180,9 @@ const SignUpCareTaker = () => {
         }
       );
 
+      // Log response để debug
+      console.log('Registration response:', response.data);
+
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -162,7 +192,17 @@ const SignUpCareTaker = () => {
 
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      // Log chi tiết lỗi
+      if (error.response) {
+        console.log('Error response:', error.response.data);
+        toast.error(error.response.data.message || 'Có lỗi xảy ra khi đăng ký');
+      } else if (error.request) {
+        console.log('Error request:', error.request);
+        toast.error('Không thể kết nối đến server');
+      } else {
+        console.log('Error:', error.message);
+        toast.error(error.message || 'Có lỗi xảy ra khi đăng ký');
+      }
     }
   };
 
@@ -172,7 +212,7 @@ const SignUpCareTaker = () => {
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.gender || 
           !formData.dob || !formData.imgProfile || !formData.imgCccd ||
-          !formData.experienceYear) {
+          !formData.experienceYear || !formData.district || !formData.ward || !formData.address) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
@@ -290,6 +330,41 @@ const SignUpCareTaker = () => {
                       className="w-full"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormSelect
+                      label="Quận"
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      options={DANANG_DISTRICTS.map(district => district.name)}
+                      placeholder="Chọn quận"
+                      error={errors.district}
+                    />
+
+                    <FormSelect
+                      label="Phường"
+                      name="ward"
+                      value={formData.ward}
+                      onChange={handleChange}
+                      options={DANANG_WARDS[formData.district] || []}
+                      placeholder="Chọn phường"
+                      error={errors.ward}
+                      disabled={!formData.district}
+                    />
+                  </div>
+
+                  <FormInput
+                    label="Địa chỉ cụ thể"
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Nhập địa chỉ cụ thể"
+                    error={errors.address}
+                  />
                 </div>
               </div>
             </div>

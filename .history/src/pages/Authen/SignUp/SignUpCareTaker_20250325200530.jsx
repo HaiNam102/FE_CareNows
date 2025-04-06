@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png";
@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+
+const API_URL = 'http://localhost:8080';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -102,21 +104,30 @@ const SignUpCareTaker = () => {
 
   const handleSubmit = async () => {
     try {
-      // Validate required fields
-      if (!formData.name || !formData.username || !formData.email || 
-          !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
-        toast.error('Vui lòng điền đầy đủ thông tin!');
-        return;
+      // Thêm baseURL và timeout config
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:8080',
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        }
+      });
+
+      // Test connection trước
+      try {
+        await axiosInstance.get('/api/health'); // Endpoint kiểm tra kết nối
+        console.log('Server connection successful');
+      } catch (error) {
+        console.error('Server connection test failed:', error);
+        throw new Error('Không thể kết nối đến server');
       }
 
-      if (!formData.imgProfile || !formData.imgCccd) {
-        toast.error('Vui lòng tải lên ảnh đại diện và CCCD!');
-        return;
-      }
-
-      if (!acceptTraining || !acceptTest) {
-        toast.error('Vui lòng đồng ý với điều khoản khóa học!');
+      // Kiểm tra validate trước khi gửi request
+      const hasErrors = Object.values(errors).some(error => error !== "");
+      if (hasErrors) {
+        console.log('Validation errors:', errors);
+        toast.error('Vui lòng kiểm tra lại thông tin!');
         return;
       }
 
@@ -134,25 +145,31 @@ const SignUpCareTaker = () => {
         selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
 
+      // Log registerDTO để kiểm tra
+      console.log('RegisterDTO:', registerDTO);
+
       const formDataToSend = new FormData();
+      formDataToSend.append('registerDTO', JSON.stringify(registerDTO));
       
-      formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
-      );
+      if (formData.imgProfile) {
+        formDataToSend.append('imgProfile', formData.imgProfile);
+        console.log('Image Profile added:', formData.imgProfile.name);
+      }
+      
+      if (formData.imgCccd) {
+        formDataToSend.append('imgCccd', formData.imgCccd);
+        console.log('CCCD Image added:', formData.imgCccd.name);
+      }
 
-      formDataToSend.append('imgProfile', formData.imgProfile);
-      formDataToSend.append('imgCccd', formData.imgCccd);
+      // Log toàn bộ FormData
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
-      const response = await axios.post(
-        'http://localhost:8080/api/auths/register',
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
-        }
-      );
+      const response = await axiosInstance.post('/api/auths/register', formDataToSend);
 
+      console.log('Response:', response.data);
+      
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
@@ -161,8 +178,28 @@ const SignUpCareTaker = () => {
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        response: error.response,
+        request: error.request
+      });
+
+      // Xử lý lỗi chi tiết hơn
+      if (error.code === 'ERR_NETWORK') {
+        toast.error(
+          'Không thể kết nối đến server. Vui lòng kiểm tra:\n' +
+          '1. Server đã được khởi động\n' +
+          '2. Server đang chạy ở port 8080\n' +
+          '3. Không có firewall chặn kết nối'
+        );
+      } else if (error.code === 'ECONNABORTED') {
+        toast.error('Kết nối đến server quá thời gian. Vui lòng thử lại');
+      } else if (error.response) {
+        toast.error(`Lỗi từ server: ${error.response.data?.message || 'Đã có lỗi xảy ra'}`);
+      } else {
+        toast.error(`Lỗi: ${error.message || 'Đã có lỗi xảy ra khi gửi yêu cầu'}`);
+      }
     }
   };
 
@@ -199,6 +236,23 @@ const SignUpCareTaker = () => {
 
   // Input component styles
   const inputClassName = `w-full h-[52px] px-4 border rounded-[10px] ${typographyClasses.input} focus:outline-none`;
+
+  // Thêm function test kết nối
+  const testServerConnection = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/health`);
+      console.log('Server connection test:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Server connection test failed:', error);
+      return false;
+    }
+  };
+
+  // Thêm vào useEffect để test kết nối khi component mount
+  useEffect(() => {
+    testServerConnection();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">
