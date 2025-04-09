@@ -42,8 +42,8 @@ const Login = () => {
           case 'ADMIN':
             redirectPath = '/admin/dashboard';
             break;
-          case 'CARETAKER':
-            redirectPath = '/caretaker/home';
+          case 'CARE_TAKER':
+            redirectPath = '/caretaker/appointments';
             break;
           case 'CUSTOMER':
             redirectPath = '/customer/home';
