@@ -15,6 +15,7 @@ import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ReviewsSection from './pages/ProfilePage/ReviewsSection';
 import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
+import CareTakerPage from './pages/CareTaker';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -74,6 +75,7 @@ function App() {
         <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
         <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
         <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
+        <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
         
       </Routes>
     </BrowserRouter>
