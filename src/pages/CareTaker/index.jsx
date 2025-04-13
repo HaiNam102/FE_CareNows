@@ -1,5 +1,5 @@
 import React from 'react';
-import CareTaker from '../../components/CareTaker';
+import CareTaker from './CareTaker';
 
 const CareTakerPage = () => {
   return <CareTaker />;
