@@ -1177,7 +1177,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
             className="w-full bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300"
               onClick={handleConfirmBooking}
             >
-              Thanh toán
+              Gửi yêu cầu với bảo mẫu
             </button>
           </div>
         </div>
