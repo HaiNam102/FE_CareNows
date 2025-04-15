@@ -99,7 +99,7 @@ const SearchResult = () => {
         const placeholdersNeeded = itemsPerPage - displayItems.length;
 
         for (let i = 0; i < placeholdersNeeded; i++) {
-            displayItems.push({ care_taker_id: `placeholder-${i}`, isPlaceholder: true });
+            displayItems.push({ careTakerId: `placeholder-${i}`, isPlaceholder: true });
         }
         return displayItems;
     };
@@ -117,11 +117,31 @@ const SearchResult = () => {
     };
 
     const handleProfileClick = (profile) => {
-        setSelectedProfile(profile);
-        setIsProfileOpen(true);
-        // Thêm class để ngăn scroll khi profile đang mở
-        document.body.classList.add('no-scroll');
-        // Đảm bảo rằng profile chứa tất cả thông tin cần thiết, bao gồm cả imgProfile
+        console.log("Selected profile:", profile);
+        
+        // Ensure the profile has a valid careTakerId before passing it
+        if (profile && profile.careTakerId) {
+            // Close the current profile first to reset all state
+            setIsProfileOpen(false);
+            setSelectedProfile(null);
+            
+            // Wait for UI to update before opening new profile
+            setTimeout(() => {
+                console.log("Opening caretaker profile:", profile.careTakerId);
+                setSelectedProfile(profile);
+                setIsProfileOpen(true);
+                
+                // Update URL with caretaker ID for direct access
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set('id', profile.careTakerId.toString());
+                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+                
+                // Add class to prevent scrolling when profile is open
+                document.body.classList.add('no-scroll');
+            }, 200); // Longer delay to ensure state updates properly
+        } else {
+            console.error("Profile is missing careTakerId:", profile);
+        }
     };
 
     const handleCloseProfile = () => {
@@ -145,8 +165,8 @@ const SearchResult = () => {
 
     // Hàm gọi API với URL cố định cho nút tìm kiếm
     const handleSearch = () => {
-        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-03-20";
-        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-03-30";
+        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-04-20";
+        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-04-30";
         const districtValue = district || "Hải Châu";
         
         // Tạo URL với format cố định

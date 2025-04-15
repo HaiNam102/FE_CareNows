@@ -7,7 +7,7 @@ const ReviewsSection=()=>{
   // Fetch reviews from API
   useEffect(() => {
     fetch('http://localhost:5000/reviews')
-      .then((res) => res.json())
+      .then((res) => res.json())  
       .then((data) => {
         if (Array.isArray(data)) {
           setReviews(data); // API trả về mảng trực tiếp

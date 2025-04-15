@@ -18,6 +18,7 @@ import BookingHistory from './pages/ManageService/Customer/BookingHistory';
 import MedicalRecords from './pages/ManageService/Customer/MedicalRecords';
 import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
+import CareTakerPage from './pages/CareTaker';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -101,6 +102,7 @@ function App() {
         <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
         <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
         <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
+        <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
         
       </Routes>
     </BrowserRouter>

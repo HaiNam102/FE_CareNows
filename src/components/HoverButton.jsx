@@ -21,7 +21,7 @@ const variants = {
   }
 };
 
-const HoverButton = ({ text, showArrow = true, size = "medium", variant = "primary", onClick, className }) => {
+const HoverButton = ({ text, showArrow = true, size = "medium", variant = "primary", onClick, className, isNested = false }) => {
   const [hovered, setHovered] = useState(false);
   const { fontSize, height, arrowFontSize } = sizes[size] || sizes.medium;
   const { borderColor, backgroundColor, textColor, hoverTextColor } = variants[variant] || variants.primary;
@@ -43,9 +43,6 @@ const HoverButton = ({ text, showArrow = true, size = "medium", variant = "prima
       <button
         onClick={onClick}
         style={{
-          fontSize,
-          fontWeight: 500,
-          fontFamily: "SVN-Gilroy, sans-serif",
           position: "relative",
           transition: "all 0.3s ease-in-out",
           borderRadius: "4px",
@@ -61,32 +58,41 @@ const HoverButton = ({ text, showArrow = true, size = "medium", variant = "prima
           overflow: "hidden",
           boxSizing: "border-box",
         }}
-        className={`${className}`}
       >
-        {/* Lớp phủ */}
-        <span
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: backgroundColor,
-            transition: "transform 0.3s ease-in-out",
-            transform: hovered ? "translateY(-100%)" : "translateY(0)",
-          }}
-        ></span>
+        {text}
+      </span>
+    </>
+  );
 
-        <span
-          style={{
-            position: "relative",
-            zIndex: 10,
-            transition: "color 0.3s ease-in-out",
-            color: hovered ? hoverTextColor : textColor,
-          }}
-        >
-          {text}
-        </span>
-      </button>
+  const commonProps = {
+    "data-animation-type": hovered ? 'hover' : 'none',
+    "data-hover-text": hoverTextColor,
+    className: `${className} ${getVariant()} ${getSize()} md:duration-300 relative overflow-hidden group`,
+    onClick: onClick,
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+  };
 
-      {/* Biểu tượng mũi tên */}
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "2px",
+        transition: "none",
+        flexShrink: 0,
+      }}
+    >
+      {isNested ? (
+        <div {...commonProps}>
+          <ButtonContent />
+        </div>
+      ) : (
+        <button {...commonProps}>
+          <ButtonContent />
+        </button>
+      )}
+
       {showArrow && (
         <div
           style={{
@@ -104,8 +110,9 @@ const HoverButton = ({ text, showArrow = true, size = "medium", variant = "prima
             boxSizing: "border-box",
             transform: hovered ? "translateX(4px)" : "translateX(0)", // Di chuyển sang phải khi hover
           }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
         >
-          {/* Lớp phủ */}
           <span
             style={{
               position: "absolute",
