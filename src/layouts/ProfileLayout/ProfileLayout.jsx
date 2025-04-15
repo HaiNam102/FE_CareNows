@@ -3,6 +3,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import HoverButton from '../../components/HoverButton';
+import HoverButtonOutline from '../../components/HoverButtonOutline';
 import 'animate.css';
 
 const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dateRange }) => {
@@ -59,8 +60,8 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
             aria-label="Close profile"
             tabIndex={0}
           >
-             <HoverButton text="X" size="medium" showArrow={false} isNested={true} />
-          </div>
+             <HoverButtonOutline text="X" size="medium" showArrow={false} />
+          </button>
         </div>
 
         {/* Content Section */}

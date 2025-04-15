@@ -13,6 +13,9 @@ import SearchResult from './pages/SearchResult/SearchResult';
 import Calendar from './components/Calendar';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ReviewsSection from './pages/ProfilePage/ReviewsSection';
+import ProfileCustomer from './pages/ManageService/Customer/ProfileCustomer';
+import BookingHistory from './pages/ManageService/Customer/BookingHistory';
+import MedicalRecords from './pages/ManageService/Customer/MedicalRecords';
 import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
 import CareTakerPage from './pages/CareTaker';
@@ -66,6 +69,30 @@ function App() {
           element={
             <ProtectedRoute allowedRole="ADMIN">
               <MainLayout><AdminHome/></MainLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer/profile" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <ProfileCustomer />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer/booking-history" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <BookingHistory />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer/medical-records" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <MedicalRecords />
             </ProtectedRoute>
           } 
         />

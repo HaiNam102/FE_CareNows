@@ -25,7 +25,7 @@ const ReviewsSection=()=>{
   const averageRating = reviews.length > 0 ? (totalRatings / reviews.length).toFixed(1) : 0;
 
   return (
-    <div className="max-w-2xl mx-auto font-sans">
+    <div className="max-w-2xl mx-auto font-['SVN-Gilroy']">
       <h2 className="text-3xl font-bold mb-4">Đánh giá</h2>
       
       {/* Rating summary */}

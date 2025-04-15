@@ -109,7 +109,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
   return (
     <>
       {/* Profile Section */}
-      <div className="flex items-center justify-between p-6 border-t">
+      <div className="flex items-center justify-between p-6 border-t font-['SVN-Gilroy']">
         <div className={`${fadeInUp}`} style={{ animationDuration: '1.2s' }}>
           <div className="flex items-center mb-2">
             <h1 className="text-2xl font-bold mr-2">
@@ -235,7 +235,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
 
       {/* Booking Button */}
       <div className={`flex flex-col items-end p-6 ${slideInRight}`} style={{ animationDuration: '1s', animationDelay: '0.8s' }}>
-        <HoverButton text="Đặt lịch ngay" size="medium" showArrow={true} />
+        <HoverButton text="Đặt lịch ngay" size="meidum" showArrow={true} />
       </div>
     </>
   );

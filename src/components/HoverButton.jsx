@@ -26,36 +26,37 @@ const HoverButton = ({ text, showArrow = true, size = "medium", variant = "prima
   const { fontSize, height, arrowFontSize } = sizes[size] || sizes.medium;
   const { borderColor, backgroundColor, textColor, hoverTextColor } = variants[variant] || variants.primary;
 
-  const getVariant = () => {
-    if (variant === "primary") return "border-primary-500 bg-primary-500 text-white";
-    if (variant === "secondary") return "border-secondary-500 bg-secondary-500 text-white";
-    return "border-primary-500 bg-primary-500 text-white";
-  };
-
-  const getSize = () => {
-    if (size === "small") return "py-1 px-3 text-xs";
-    if (size === "large") return "py-3 px-6 text-lg";
-    return "py-2 px-4 text-base";
-  };
-
-  const ButtonContent = () => (
-    <>
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundColor: backgroundColor,
-          transition: "transform 0.3s ease-in-out",
-          transform: hovered ? "translateY(-100%)" : "translateY(0)",
-        }}
-      ></span>
-
-      <span
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: showArrow ? "2px" : "0px",
+        transition: "all 0.3s ease-in-out", // Thêm transition cho gap
+        flexShrink: 0,
+        position: "relative", // Thêm position relative để có thể định vị ô mũi tên
+      }}
+    >
+      {/* Button chính */}
+      <button
+        onClick={onClick}
         style={{
           position: "relative",
-          zIndex: 10,
-          transition: "color 0.3s ease-in-out",
+          transition: "all 0.3s ease-in-out",
+          borderRadius: "4px",
+          border: `1.5px solid ${borderColor}`,
+          backgroundColor: "transparent",
           color: hovered ? hoverTextColor : textColor,
+          cursor: "pointer",
+          height,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 20px",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         {text}
@@ -103,10 +104,11 @@ const HoverButton = ({ text, showArrow = true, size = "medium", variant = "prima
             borderRadius: "4px",
             border: `1.5px solid ${borderColor}`,
             backgroundColor: "transparent",
-            transition: "all 0.3s ease-in-out",
+            transition: "all 0.3s ease-in-out, transform 0.3s ease-in-out",
             overflow: "hidden",
             position: "relative",
             boxSizing: "border-box",
+            transform: hovered ? "translateX(4px)" : "translateX(0)", // Di chuyển sang phải khi hover
           }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
