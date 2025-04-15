@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png";
@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -47,6 +49,9 @@ const SignUpCareTaker = () => {
   // State cho checkbox đồng ý khóa học
   const [acceptTraining, setAcceptTraining] = useState(false);
   const [acceptTest, setAcceptTest] = useState(false);
+
+  // Thêm state để theo dõi trạng thái server
+  const [serverStatus, setServerStatus] = useState('checking');
 
   const validateExperienceYear = (value) => {
     if (value === "") return "Vui lòng nhập số năm kinh nghiệm";
@@ -100,26 +105,57 @@ const SignUpCareTaker = () => {
     }, 0);
   };
 
+  // Thêm hàm kiểm tra kết nối
+  const checkServerConnection = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/health`, {
+        timeout: 5000,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      console.log('Server status:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Server check failed:', error);
+      return false;
+    }
+  };
+
+  // Kiểm tra kết nối server khi component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await checkServerConnection();
+      setServerStatus(isConnected ? 'connected' : 'disconnected');
+    };
+    checkConnection();
+  }, []);
+
   const handleSubmit = async () => {
     try {
-      // Validate required fields
-      if (!formData.name || !formData.username || !formData.email || 
-          !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
-        toast.error('Vui lòng điền đầy đủ thông tin!');
-        return;
+      // Kiểm tra kết nối trước khi submit
+      if (serverStatus !== 'connected') {
+        const isConnected = await checkServerConnection();
+        if (!isConnected) {
+          toast.error(
+            'Không thể kết nối đến server. Vui lòng kiểm tra:\n' +
+            '1. Server đã được khởi động\n' +
+            '2. Địa chỉ server là: ' + API_URL + '\n' +
+            '3. Mạng internet đang hoạt động'
+          );
+          return;
+        }
       }
 
-      if (!formData.imgProfile || !formData.imgCccd) {
-        toast.error('Vui lòng tải lên ảnh đại diện và CCCD!');
-        return;
-      }
+      // Log thông tin request để debug
+      console.log('Attempting to connect to:', API_URL);
+      console.log('Form data:', {
+        ...formData,
+        imgProfile: formData.imgProfile?.name,
+        imgCccd: formData.imgCccd?.name
+      });
 
-      if (!acceptTraining || !acceptTest) {
-        toast.error('Vui lòng đồng ý với điều khoản khóa học!');
-        return;
-      }
-
+      const formDataToSend = new FormData();
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -134,38 +170,75 @@ const SignUpCareTaker = () => {
         selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
 
-      const formDataToSend = new FormData();
+      formDataToSend.append('registerDTO', JSON.stringify(registerDTO));
       
-      formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
-      );
+      if (formData.imgProfile) {
+        formDataToSend.append('imgProfile', formData.imgProfile);
+      }
+      if (formData.imgCccd) {
+        formDataToSend.append('imgCccd', formData.imgCccd);
+      }
 
-      formDataToSend.append('imgProfile', formData.imgProfile);
-      formDataToSend.append('imgCccd', formData.imgCccd);
-
-      const response = await axios.post(
-        'http://localhost:8080/api/auths/register',
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
+      // Cấu hình axios với timeout và retry
+      const axiosConfig = {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json'
+        },
+        validateStatus: function (status) {
+          return status >= 200 && status < 500;
         }
-      );
+      };
 
-      if (response.data.code === 20000) {
-        toast.success('Đăng ký thành công!');
-        setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
-      } else {
-        throw new Error(response.data.message || 'Đăng ký thất bại');
+      try {
+        const response = await axios.post(
+          `${API_URL}/api/auths/register`,
+          formDataToSend,
+          axiosConfig
+        );
+
+        console.log('Server response:', response.data);
+
+        if (response.data.code === 20000) {
+          toast.success('Đăng ký thành công!');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          throw new Error(response.data.message || 'Đăng ký thất bại');
+        }
+
+      } catch (error) {
+        if (error.code === 'ECONNABORTED') {
+          toast.error('Request timeout. Vui lòng thử lại');
+        } else if (error.response) {
+          toast.error(`Lỗi: ${error.response.data?.message || 'Đã có lỗi xảy ra'}`);
+        } else if (error.request) {
+          toast.error(
+            'Không nhận được phản hồi từ server. Vui lòng kiểm tra:\n' +
+            '1. Kết nối mạng\n' +
+            '2. Server đang hoạt động\n' +
+            '3. Firewall không chặn kết nối'
+          );
+        } else {
+          toast.error(`Lỗi không xác định: ${error.message}`);
+        }
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      console.error('Submit error:', error);
+      toast.error('Có lỗi xảy ra khi xử lý yêu cầu');
     }
   };
+
+  // Hiển thị thông báo nếu không kết nối được server
+  useEffect(() => {
+    if (serverStatus === 'disconnected') {
+      toast.error(
+        'Không thể kết nối đến server. Vui lòng kiểm tra kết nối và thử lại.',
+        { autoClose: false }
+      );
+    }
+  }, [serverStatus]);
 
   const handleNextStep = () => {
     if (currentStep === 1) {

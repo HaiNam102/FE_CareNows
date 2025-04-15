@@ -25,7 +25,10 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [errors, setErrors] = useState({
@@ -156,7 +159,6 @@ const SignUpCareTaker = () => {
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
@@ -354,6 +356,47 @@ const SignUpCareTaker = () => {
               <h2 className="text-[24px] font-semibold text-gray-900 mb-2">Tùy chọn công việc</h2>
               <p className="text-[16px] font-medium text-[#8C8C8C] mb-6">Chọn khu vực làm việc phù hợp với bạn</p>
               <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[14px] font-medium text-gray-700 mb-1">
+                      Quận
+                    </label>
+                    <select
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      className="w-full h-[52px] px-4 border rounded-[10px] text-[16px] font-['SVN-Gilroy'] focus:outline-none"
+                    >
+                      <option value="">Chọn quận</option>
+                      {/* Add district options */}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[14px] font-medium text-gray-700 mb-1">
+                      Phường
+                    </label>
+                    <select
+                      name="ward"
+                      value={formData.ward}
+                      onChange={handleChange}
+                      className="w-full h-[52px] px-4 border rounded-[10px] text-[16px] font-['SVN-Gilroy'] focus:outline-none"
+                    >
+                      <option value="">Chọn phường</option>
+                      {/* Add ward options */}
+                    </select>
+                  </div>
+                </div>
+
+                <FormInput
+                  label="Địa chỉ cụ thể"
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="Nhập địa chỉ cụ thể"
+                />
+
                 <FormInput
                   label="Số năm kinh nghiệm"
                   type="number"

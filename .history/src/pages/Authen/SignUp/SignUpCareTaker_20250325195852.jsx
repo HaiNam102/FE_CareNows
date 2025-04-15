@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+import FormSelect from '../../../components/Form/FormSelect';
+import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -25,7 +27,10 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [errors, setErrors] = useState({
@@ -36,7 +41,10 @@ const SignUpCareTaker = () => {
     password: "",
     experienceYear: "",
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [selectedOptions, setSelectedOptions] = useState({
@@ -102,21 +110,36 @@ const SignUpCareTaker = () => {
 
   const handleSubmit = async () => {
     try {
-      // Validate required fields
+      // Kiểm tra validate trước khi gửi request
+      const hasErrors = Object.values(errors).some(error => error !== "");
+      if (hasErrors) {
+        toast.error('Vui lòng kiểm tra lại thông tin!');
+        return;
+      }
+
+      // Kiểm tra các trường bắt buộc
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
+          !formData.gender || !formData.dob || !formData.district || !formData.ward || !formData.address) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
 
+      // Kiểm tra files
       if (!formData.imgProfile || !formData.imgCccd) {
         toast.error('Vui lòng tải lên ảnh đại diện và CCCD!');
         return;
       }
 
+      // Kiểm tra điều khoản
       if (!acceptTraining || !acceptTest) {
         toast.error('Vui lòng đồng ý với điều khoản khóa học!');
+        return;
+      }
+
+      // Kiểm tra chuyên môn
+      if (formData.selectedOptionDetailIds.length === 0) {
+        toast.error('Vui lòng chọn ít nhất một chuyên môn!');
         return;
       }
 
@@ -131,39 +154,66 @@ const SignUpCareTaker = () => {
         city: "Đà Nẵng",
         roleName: "CARE_TAKER",
         experienceYear: parseInt(formData.experienceYear),
-        selectedOptionDetailIds: formData.selectedOptionDetailIds
+        selectedOptionDetailIds: formData.selectedOptionDetailIds,
+        district: formData.district,
+        ward: formData.ward,
+        address: formData.address
       };
 
+      // Kiểm tra trước khi append
+      if (!registerDTO) {
+        throw new Error('Dữ liệu đăng ký không hợp lệ');
+      }
+      
       const formDataToSend = new FormData();
       
+      // 1. Fix: Ensure registerDTO is stringified properly and matches backend expectation
       formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
+        new Blob([JSON.stringify(registerDTO)], { 
+          type: 'application/json'
+        })
       );
-
+      
+      // 2. Fix: Match the exact parameter names expected by the backend
       formDataToSend.append('imgProfile', formData.imgProfile);
       formDataToSend.append('imgCccd', formData.imgCccd);
 
+      // 3. Fix: Add proper CORS headers and error handling
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          }
+            'Accept': 'application/json',
+          },
+          timeout: 15000, // Increased timeout
+          withCredentials: true // Add if using cookies/sessions
         }
       );
 
+      // 4. Fix: Match the backend response structure
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      
+      if (error.response) {
+        // Backend returned error response
+        const errorMessage = error.response.data?.message || 'Lỗi từ server';
+        toast.error(errorMessage);
+      } else if (error.code === 'ECONNABORTED') {
+        toast.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.');
+      } else if (!error.response) {
+        toast.error('Không thể kết nối đến server. Vui lòng kiểm tra xem server đã chạy chưa.');
+      } else {
+        toast.error('Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.');
+      }
     }
   };
 
@@ -173,7 +223,7 @@ const SignUpCareTaker = () => {
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.gender || 
           !formData.dob || !formData.imgProfile || !formData.imgCccd ||
-          !formData.experienceYear) {
+          !formData.experienceYear || !formData.district || !formData.ward || !formData.address) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
@@ -291,6 +341,41 @@ const SignUpCareTaker = () => {
                       className="w-full"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormSelect
+                      label="Quận"
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      options={DANANG_DISTRICTS.map(district => district.name)}
+                      placeholder="Chọn quận"
+                      error={errors.district}
+                    />
+
+                    <FormSelect
+                      label="Phường"
+                      name="ward"
+                      value={formData.ward}
+                      onChange={handleChange}
+                      options={DANANG_WARDS[formData.district] || []}
+                      placeholder="Chọn phường"
+                      error={errors.ward}
+                      disabled={!formData.district}
+                    />
+                  </div>
+
+                  <FormInput
+                    label="Địa chỉ cụ thể"
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Nhập địa chỉ cụ thể"
+                    error={errors.address}
+                  />
                 </div>
               </div>
             </div>

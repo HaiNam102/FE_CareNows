@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -25,7 +26,10 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [errors, setErrors] = useState({
@@ -47,6 +51,9 @@ const SignUpCareTaker = () => {
   // State cho checkbox đồng ý khóa học
   const [acceptTraining, setAcceptTraining] = useState(false);
   const [acceptTest, setAcceptTest] = useState(false);
+
+  // Thêm state để lưu danh sách phường dựa theo quận
+  const [wardOptions, setWardOptions] = useState([]);
 
   const validateExperienceYear = (value) => {
     if (value === "") return "Vui lòng nhập số năm kinh nghiệm";
@@ -105,6 +112,7 @@ const SignUpCareTaker = () => {
       // Validate required fields
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.experienceYear ||
+          !formData.gender || !formData.dob || !formData.district || 
           !formData.gender || !formData.dob) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
@@ -156,7 +164,6 @@ const SignUpCareTaker = () => {
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png";
@@ -9,6 +9,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+
+const API_URL = 'http://localhost:8080';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -102,21 +104,18 @@ const SignUpCareTaker = () => {
 
   const handleSubmit = async () => {
     try {
-      // Validate required fields
-      if (!formData.name || !formData.username || !formData.email || 
-          !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
-        toast.error('Vui lòng điền đầy đủ thông tin!');
-        return;
-      }
+      // Log data trước khi gửi để kiểm tra
+      console.log('Form Data being sent:', {
+        ...formData,
+        imgProfile: formData.imgProfile ? formData.imgProfile.name : null,
+        imgCccd: formData.imgCccd ? formData.imgCccd.name : null
+      });
 
-      if (!formData.imgProfile || !formData.imgCccd) {
-        toast.error('Vui lòng tải lên ảnh đại diện và CCCD!');
-        return;
-      }
-
-      if (!acceptTraining || !acceptTest) {
-        toast.error('Vui lòng đồng ý với điều khoản khóa học!');
+      // Kiểm tra validate trước khi gửi request
+      const hasErrors = Object.values(errors).some(error => error !== "");
+      if (hasErrors) {
+        console.log('Validation errors:', errors);
+        toast.error('Vui lòng kiểm tra lại thông tin!');
         return;
       }
 
@@ -134,14 +133,26 @@ const SignUpCareTaker = () => {
         selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
 
-      const formDataToSend = new FormData();
-      
-      formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
-      );
+      // Log registerDTO để kiểm tra
+      console.log('RegisterDTO:', registerDTO);
 
-      formDataToSend.append('imgProfile', formData.imgProfile);
-      formDataToSend.append('imgCccd', formData.imgCccd);
+      const formDataToSend = new FormData();
+      formDataToSend.append('registerDTO', JSON.stringify(registerDTO));
+      
+      if (formData.imgProfile) {
+        formDataToSend.append('imgProfile', formData.imgProfile);
+        console.log('Image Profile added:', formData.imgProfile.name);
+      }
+      
+      if (formData.imgCccd) {
+        formDataToSend.append('imgCccd', formData.imgCccd);
+        console.log('CCCD Image added:', formData.imgCccd.name);
+      }
+
+      // Log toàn bộ FormData
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
@@ -149,21 +160,58 @@ const SignUpCareTaker = () => {
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          }
+            'Accept': 'application/json'
+          },
+          timeout: 30000
         }
       );
+
+      console.log('Server response:', response.data);
 
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      console.error('Registration error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+
+      // Xử lý các trường hợp lỗi cụ thể
+      if (error.response) {
+        // Server trả về response với status code lỗi
+        switch (error.response.status) {
+          case 400:
+            toast.error(`Dữ liệu không hợp lệ: ${error.response.data.message || 'Vui lòng kiểm tra lại thông tin'}`);
+            break;
+          case 409:
+            toast.error('Tên đăng nhập hoặc email đã tồn tại');
+            break;
+          case 413:
+            toast.error('Kích thước file quá lớn');
+            break;
+          case 415:
+            toast.error('Định dạng file không được hỗ trợ');
+            break;
+          case 500:
+            toast.error('Lỗi server: Vui lòng thử lại sau');
+            break;
+          default:
+            toast.error(`Lỗi: ${error.response.data.message || 'Đã có lỗi xảy ra'}`);
+        }
+      } else if (error.request) {
+        // Request được gửi nhưng không nhận được response
+        toast.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại');
+      } else {
+        // Lỗi khi setting up request
+        toast.error(`Lỗi: ${error.message || 'Đã có lỗi xảy ra khi gửi yêu cầu'}`);
+      }
     }
   };
 
@@ -200,6 +248,23 @@ const SignUpCareTaker = () => {
 
   // Input component styles
   const inputClassName = `w-full h-[52px] px-4 border rounded-[10px] ${typographyClasses.input} focus:outline-none`;
+
+  // Thêm function test kết nối
+  const testServerConnection = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/health`);
+      console.log('Server connection test:', response.data);
+      return true;
+    } catch (error) {
+      console.error('Server connection test failed:', error);
+      return false;
+    }
+  };
+
+  // Thêm vào useEffect để test kết nối khi component mount
+  useEffect(() => {
+    testServerConnection();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F9FAFB]">

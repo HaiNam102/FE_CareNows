@@ -156,14 +156,22 @@ const SignUpCareTaker = () => {
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      console.error('Chi tiết lỗi:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      if (error.code === 'ERR_NETWORK') {
+        toast.error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.');
+      } else {
+        toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.');
+      }
     }
   };
 

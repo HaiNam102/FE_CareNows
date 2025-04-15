@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
+import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -25,7 +26,10 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: ""
+    dob: "",
+    district: "",
+    ward: "",
+    address: ""
   });
 
   const [errors, setErrors] = useState({
@@ -47,6 +51,9 @@ const SignUpCareTaker = () => {
   // State cho checkbox đồng ý khóa học
   const [acceptTraining, setAcceptTraining] = useState(false);
   const [acceptTest, setAcceptTest] = useState(false);
+
+  // Thêm state để lưu danh sách phường dựa theo quận
+  const [wardOptions, setWardOptions] = useState([]);
 
   const validateExperienceYear = (value) => {
     if (value === "") return "Vui lòng nhập số năm kinh nghiệm";
@@ -105,7 +112,8 @@ const SignUpCareTaker = () => {
       // Validate required fields
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob) {
+          !formData.gender || !formData.dob || !formData.district || 
+          !formData.ward || !formData.address) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
@@ -129,7 +137,10 @@ const SignUpCareTaker = () => {
         gender: formData.gender,
         dob: formData.dob,
         city: "Đà Nẵng",
-        roleName: "CARE_TAKER",
+        district: formData.district,
+        ward: formData.ward,
+        address: formData.address,
+        roleName: "CARETAKER",
         experienceYear: parseInt(formData.experienceYear),
         selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
@@ -143,25 +154,48 @@ const SignUpCareTaker = () => {
       formDataToSend.append('imgProfile', formData.imgProfile);
       formDataToSend.append('imgCccd', formData.imgCccd);
 
+      // Hiển thị loading
+      const loadingToast = toast.loading('Đang xử lý đăng ký...');
+
       const response = await axios.post(
         'http://localhost:8080/api/auths/register',
         formDataToSend,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-          }
+            'Access-Control-Allow-Origin': '*',
+          },
+          timeout: 10000,
         }
       );
+
+      // Đóng toast loading
+      toast.dismiss(loadingToast);
 
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
+      console.error('Network Error Details:', {
+        message: error.message,
+        code: error.code,
+        response: error.response,
+        request: error.request
+      });
+
+      if (error.code === 'ERR_NETWORK') {
+        toast.error('Không thể kết nối đến server. Vui lòng kiểm tra:');
+        toast.error('1. Server đã được khởi động');
+        toast.error('2. URL API đúng (http://localhost:8080)');
+        toast.error('3. Kết nối mạng ổn định');
+      } else if (error.code === 'ECONNABORTED') {
+        toast.error('Kết nối bị gián đoạn. Vui lòng thử lại.');
+      } else if (error.response?.status === 400) {
+        toast.error(error.response.data.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.');
       console.error('Registration error:', error);
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }

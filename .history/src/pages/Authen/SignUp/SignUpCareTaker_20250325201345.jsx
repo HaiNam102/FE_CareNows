@@ -129,7 +129,7 @@ const SignUpCareTaker = () => {
         gender: formData.gender,
         dob: formData.dob,
         city: "Đà Nẵng",
-        roleName: "CARE_TAKER",
+        roleName: "CARETAKER",
         experienceYear: parseInt(formData.experienceYear),
         selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
@@ -156,14 +156,26 @@ const SignUpCareTaker = () => {
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
         setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
       } else {
-        throw new Error(response.data.message || 'Đăng ký thất bại');
+        toast.error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      if (error.response?.data?.code) {
+        switch (error.response.data.code) {
+          case 40001:
+            toast.error('Tên đăng nhập đã tồn tại');
+            break;
+          case 40002:
+            toast.error('Email đã được sử dụng');
+            break;
+          default:
+            toast.error(error.response.data.message || 'Có lỗi xảy ra khi đăng ký');
+        }
+      } else {
+        toast.error('Không thể kết nối đến server');
+      }
     }
   };
 
