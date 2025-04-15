@@ -3,6 +3,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import HoverButton from '../../components/HoverButton';
+import HoverButtonOutline from '../../components/HoverButtonOutline';
 import 'animate.css';
 
 const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dateRange }) => {
@@ -52,11 +53,14 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
               Nhắn tin
             </a>
           </div>
-          <button 
+          <div 
             onClick={onClose}
             className="text-[#00a37d]"
+            role="button"
+            aria-label="Close profile"
+            tabIndex={0}
           >
-             <HoverButton text="X" size="medium" showArrow={false} />
+             <HoverButtonOutline text="X" size="medium" showArrow={false} />
           </button>
         </div>
 

@@ -44,6 +44,15 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
            year === today.getFullYear();
   };
 
+  // Check if date is in the past
+  const isPastDate = (date, month, year) => {
+    const checkDate = new Date(year, month, date);
+    checkDate.setHours(0, 0, 0, 0);
+    const todayStart = new Date(today);
+    todayStart.setHours(0, 0, 0, 0);
+    return checkDate < todayStart;
+  };
+
   // Check if date is selected start date
   const isSelectedStart = (date, month, year) => {
     if (!selectedStartDate) return false;
@@ -70,6 +79,9 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
 
   // Handle date click
   const handleDateClick = (date, month, year) => {
+    // Don't allow selection of past dates
+    if (isPastDate(date, month, year)) return;
+    
     const clickedDate = new Date(year, month, date);
     
     if (selectionMode === 'start') {
@@ -113,19 +125,14 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
     const daysInMonth = getDaysInMonth(date);
     const firstDayOfMonth = getFirstDayOfMonth(date);
     
-    // Get days from previous month to display
-    const daysFromPrevMonth = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-    const prevMonth = new Date(year, month, 0);
-    const prevMonthDays = getDaysInMonth(prevMonth);
-    
     const days = [];
     
-    // Previous month days
-    for (let i = prevMonthDays - daysFromPrevMonth + 1; i <= prevMonthDays; i++) {
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDayOfMonth; i++) {
       days.push({
-        date: i,
-        month: month - 1 < 0 ? 11 : month - 1,
-        year: month - 1 < 0 ? year - 1 : year,
+        date: null,
+        month: null,
+        year: null,
         isCurrentMonth: false
       });
     }
@@ -140,16 +147,15 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
       });
     }
     
-    // Calculate days needed from next month
+    // Add empty cells to complete the grid
     const totalCells = 42; // Always 6 rows * 7 days to keep consistent height
-    const daysFromNextMonth = totalCells - (daysFromPrevMonth + daysInMonth);
+    const remainingCells = totalCells - days.length;
     
-    // Next month days
-    for (let i = 1; i <= daysFromNextMonth; i++) {
+    for (let i = 0; i < remainingCells; i++) {
       days.push({
-        date: i,
-        month: month + 1 > 11 ? 0 : month + 1,
-        year: month + 1 > 11 ? year + 1 : year,
+        date: null,
+        month: null,
+        year: null,
         isCurrentMonth: false
       });
     }
@@ -183,33 +189,42 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
             </div>
           ))}
           
-          {days.map((day, index) => (
-            <div
-              key={index}
-              onClick={() => handleDateClick(day.date, day.month, day.year)}
-              className={`
-                cursor-pointer text-center py-2 rounded h-10 flex items-center justify-center
-                ${!day.isCurrentMonth ? 'text-gray-300' : 'text-gray-800'}
-                ${isToday(day.date, day.month, day.year) ? 'bg-green-400' : ''}
-                ${isSelectedStart(day.date, day.month, day.year) ? 'bg-emerald-500 text-white' : ''}
-                ${isSelectedEnd(day.date, day.month, day.year) ? 'bg-emerald-500 text-white' : ''}
-                ${isInRange(day.date, day.month, day.year) ? 'bg-emerald-100' : ''}
-                ${!isToday(day.date, day.month, day.year) && 
-                  !isSelectedStart(day.date, day.month, day.year) && 
-                  !isSelectedEnd(day.date, day.month, day.year) && 
-                  !isInRange(day.date, day.month, day.year) ? 'hover:bg-gray-100' : ''}
-              `}
-            >
-              {day.date}
-            </div>
-          ))}
+          {days.map((day, index) => {
+            // Skip rendering for empty cells
+            if (day.date === null) {
+              return <div key={index} className="h-10"></div>;
+            }
+            
+            const isPast = isPastDate(day.date, day.month, day.year);
+            return (
+              <div
+                key={index}
+                onClick={() => handleDateClick(day.date, day.month, day.year)}
+                className={`
+                  text-center py-2 rounded h-10 flex items-center justify-center
+                  ${isPast ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer text-gray-800'}
+                  ${isToday(day.date, day.month, day.year) ? 'bg-green-400' : ''}
+                  ${isSelectedStart(day.date, day.month, day.year) ? 'bg-emerald-500 text-white' : ''}
+                  ${isSelectedEnd(day.date, day.month, day.year) ? 'bg-emerald-500 text-white' : ''}
+                  ${isInRange(day.date, day.month, day.year) ? 'bg-emerald-100' : ''}
+                  ${!isToday(day.date, day.month, day.year) && 
+                    !isSelectedStart(day.date, day.month, day.year) && 
+                    !isSelectedEnd(day.date, day.month, day.year) && 
+                    !isInRange(day.date, day.month, day.year) && 
+                    !isPast ? 'hover:bg-gray-100' : ''}
+                `}
+              >
+                {day.date}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   };
 
   return (
-    <div className=" rounded-lg shadow-l border-1px p-4 w-full max-w-3xl">
+    <div className="rounded-lg shadow-l border-1px p-4 w-full max-w-3xl">
       <div className="flex justify-between items-center mb-6">
         <button 
           onClick={() => navigateMonths(-1)}
@@ -234,7 +249,7 @@ const Calendar = ({ onClose, onSelectDateRange }) => {
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-        <div className=" flex text-sm text-gray-600 gap-6">
+        <div className="flex text-sm text-gray-600 gap-6">
           {selectedStartDate && 
             <span>Từ: {formatDate(selectedStartDate)} </span>
           }

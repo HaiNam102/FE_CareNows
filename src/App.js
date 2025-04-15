@@ -13,8 +13,12 @@ import SearchResult from './pages/SearchResult/SearchResult';
 import Calendar from './components/Calendar';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ReviewsSection from './pages/ProfilePage/ReviewsSection';
+import ProfileCustomer from './pages/ManageService/Customer/ProfileCustomer';
+import BookingHistory from './pages/ManageService/Customer/BookingHistory';
+import MedicalRecords from './pages/ManageService/Customer/MedicalRecords';
 import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
+import CareTakerPage from './pages/CareTaker';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -68,12 +72,37 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/customer/profile" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <ProfileCustomer />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer/booking-history" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <BookingHistory />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer/medical-records" 
+          element={
+            <ProtectedRoute allowedRole="CUSTOMER">
+              <MedicalRecords />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Other Routes */}
         <Route path="/searchResult" element={<MainLayout><SearchResult /></MainLayout>} />
         <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
         <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
         <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
+        <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
         
       </Routes>
     </BrowserRouter>

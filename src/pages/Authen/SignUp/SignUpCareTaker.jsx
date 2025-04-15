@@ -9,8 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
 import FormInput from '../../../components/Form/FormInput';
 import { BASIC_CARE_OPTIONS, MEDICAL_SKILLS_OPTIONS } from '../../../constants/careTakerOptions';
-import FormSelect from '../../../components/Form/FormSelect';
-import { DANANG_DISTRICTS, DANANG_WARDS } from '../../../constants/locations';
 
 const SignUpCareTaker = () => {
   const navigate = useNavigate();
@@ -27,10 +25,7 @@ const SignUpCareTaker = () => {
     experienceYear: "",
     selectedOptionDetailIds: [],
     gender: "",
-    dob: "",
-    district: "",
-    ward: "",
-    address: ""
+    dob: ""
   });
 
   const [errors, setErrors] = useState({
@@ -41,10 +36,7 @@ const SignUpCareTaker = () => {
     password: "",
     experienceYear: "",
     gender: "",
-    dob: "",
-    district: "",
-    ward: "",
-    address: ""
+    dob: ""
   });
 
   const [selectedOptions, setSelectedOptions] = useState({
@@ -113,7 +105,7 @@ const SignUpCareTaker = () => {
       // Validate required fields
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.experienceYear ||
-          !formData.gender || !formData.dob || !formData.district || !formData.ward || !formData.address) {
+          !formData.gender || !formData.dob) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
@@ -139,10 +131,7 @@ const SignUpCareTaker = () => {
         city: "Đà Nẵng",
         roleName: "CARE_TAKER",
         experienceYear: parseInt(formData.experienceYear),
-        selectedOptionDetailIds: formData.selectedOptionDetailIds,
-        district: formData.district,
-        ward: formData.ward,
-        address: formData.address
+        selectedOptionDetailIds: formData.selectedOptionDetailIds
       };
 
       const formDataToSend = new FormData();
@@ -184,7 +173,7 @@ const SignUpCareTaker = () => {
       if (!formData.name || !formData.username || !formData.email || 
           !formData.phone || !formData.password || !formData.gender || 
           !formData.dob || !formData.imgProfile || !formData.imgCccd ||
-          !formData.experienceYear || !formData.district || !formData.ward || !formData.address) {
+          !formData.experienceYear) {
         toast.error('Vui lòng điền đầy đủ thông tin!');
         return;
       }
@@ -302,41 +291,6 @@ const SignUpCareTaker = () => {
                       className="w-full"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormSelect
-                      label="Quận"
-                      name="district"
-                      value={formData.district}
-                      onChange={handleChange}
-                      options={DANANG_DISTRICTS.map(district => district.name)}
-                      placeholder="Chọn quận"
-                      error={errors.district}
-                    />
-
-                    <FormSelect
-                      label="Phường"
-                      name="ward"
-                      value={formData.ward}
-                      onChange={handleChange}
-                      options={DANANG_WARDS[formData.district] || []}
-                      placeholder="Chọn phường"
-                      error={errors.ward}
-                      disabled={!formData.district}
-                    />
-                  </div>
-
-                  <FormInput
-                    label="Địa chỉ cụ thể"
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Nhập địa chỉ cụ thể"
-                    error={errors.address}
-                  />
                 </div>
               </div>
             </div>
