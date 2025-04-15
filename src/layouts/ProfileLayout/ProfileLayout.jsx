@@ -52,12 +52,15 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
               Nhắn tin
             </a>
           </div>
-          <button 
+          <div 
             onClick={onClose}
             className="text-[#00a37d]"
+            role="button"
+            aria-label="Close profile"
+            tabIndex={0}
           >
-             <HoverButton text="X" size="medium" showArrow={false} />
-          </button>
+             <HoverButton text="X" size="medium" showArrow={false} isNested={true} />
+          </div>
         </div>
 
         {/* Content Section */}

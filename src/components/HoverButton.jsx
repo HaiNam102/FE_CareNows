@@ -21,89 +21,96 @@ const variants = {
   }
 };
 
-const HoverButton = ({ text, showArrow = true, size = "medium", variant = "primary", onClick, className }) => {
+const HoverButton = ({ text, showArrow = true, size = "medium", variant = "primary", onClick, className, isNested = false }) => {
   const [hovered, setHovered] = useState(false);
   const { fontSize, height, arrowFontSize } = sizes[size] || sizes.medium;
   const { borderColor, backgroundColor, textColor, hoverTextColor } = variants[variant] || variants.primary;
 
+  const getVariant = () => {
+    if (variant === "primary") return "border-primary-500 bg-primary-500 text-white";
+    if (variant === "secondary") return "border-secondary-500 bg-secondary-500 text-white";
+    return "border-primary-500 bg-primary-500 text-white";
+  };
+
+  const getSize = () => {
+    if (size === "small") return "py-1 px-3 text-xs";
+    if (size === "large") return "py-3 px-6 text-lg";
+    return "py-2 px-4 text-base";
+  };
+
+  const ButtonContent = () => (
+    <>
+      <span
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: backgroundColor,
+          transition: "transform 0.3s ease-in-out",
+          transform: hovered ? "translateY(-100%)" : "translateY(0)",
+        }}
+      ></span>
+
+      <span
+        style={{
+          position: "relative",
+          zIndex: 10,
+          transition: "color 0.3s ease-in-out",
+          color: hovered ? hoverTextColor : textColor,
+        }}
+      >
+        {text}
+      </span>
+    </>
+  );
+
+  const commonProps = {
+    "data-animation-type": hovered ? 'hover' : 'none',
+    "data-hover-text": hoverTextColor,
+    className: `${className} ${getVariant()} ${getSize()} md:duration-300 relative overflow-hidden group`,
+    onClick: onClick,
+    onMouseEnter: () => setHovered(true),
+    onMouseLeave: () => setHovered(false),
+  };
+
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       style={{
-        display: "inline-flex", // Giữ kích thước nguyên vẹn
+        display: "inline-flex",
         alignItems: "center",
-        gap: "2px", // Không thay đổi gap khi hover để tránh ảnh hưởng layout
-        transition: "none", // Loại bỏ animation gap
-        flexShrink: 0, // Ngăn việc co giãn layout
+        gap: "2px",
+        transition: "none",
+        flexShrink: 0,
       }}
     >
-      {/* Button chính */}
-      <button
-        onClick={onClick}
-        style={{
-          fontSize,
-          fontWeight: 500,
-          fontFamily: "SVN-Gilroy, sans-serif",
-          position: "relative",
-          transition: "all 0.3s ease-in-out",
-          borderRadius: "4px",
-          border: `1.5px solid ${borderColor}`,
-          backgroundColor: "transparent", // Background sẽ được xử lý bằng span
-          color: hovered ? hoverTextColor : textColor,
-          cursor: "pointer",
-          height, // Chiều cao cố định, không bị padding ảnh hưởng
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0 20px", // Chỉ padding ngang, không ảnh hưởng height
-          overflow: "hidden",
-          boxSizing: "border-box",
-        }}
-        className={`${className}`}
-      >
-        {/* Lớp phủ */}
-        <span
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: backgroundColor,
-            transition: "transform 0.3s ease-in-out",
-            transform: hovered ? "translateY(-100%)" : "translateY(0)",
-          }}
-        ></span>
+      {isNested ? (
+        <div {...commonProps}>
+          <ButtonContent />
+        </div>
+      ) : (
+        <button {...commonProps}>
+          <ButtonContent />
+        </button>
+      )}
 
-        <span
-          style={{
-            position: "relative",
-            zIndex: 10,
-            transition: "color 0.3s ease-in-out",
-            color: hovered ? hoverTextColor : textColor,
-          }}
-        >
-          {text}
-        </span>
-      </button>
-
-      {/* Biểu tượng mũi tên */}
       {showArrow && (
         <div
           style={{
-            width: height, // Đảm bảo là hình vuông bằng với button
+            width: height,
             height,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "4px",
             border: `1.5px solid ${borderColor}`,
-            backgroundColor: "transparent", // Background sẽ xử lý bằng span
+            backgroundColor: "transparent",
             transition: "all 0.3s ease-in-out",
             overflow: "hidden",
             position: "relative",
             boxSizing: "border-box",
           }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
         >
-          {/* Lớp phủ */}
           <span
             style={{
               position: "absolute",
