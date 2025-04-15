@@ -1,1 +1,0 @@
-Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.

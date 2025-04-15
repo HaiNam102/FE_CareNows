@@ -12,11 +12,11 @@ const districts = [
 
 const BookService = () => {
   const [careType, setCareType] = useState("home");
-  const [selectedDistrict, setSelectedDistrict] = useState("Liên Chiểu"); // Mặc định là Hải Châu
+  const [selectedDistrict, setSelectedDistrict] = useState("Hải Châu"); // Mặc định là Hải Châu
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState([
     new Date('2025-03-20'), 
-    new Date('2025-03-30') 
+    new Date('2025-03-30')
   ]); // Mặc định ngày 20/03/2025 đến 30/03/2025
   const [searchInput, setSearchInput] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);

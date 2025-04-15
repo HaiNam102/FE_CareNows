@@ -7,7 +7,7 @@ const ReviewsSection=()=>{
   // Fetch reviews from API
   useEffect(() => {
     fetch('http://localhost:5000/reviews')
-      .then((res) => res.json())  
+      .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
           setReviews(data); // API trả về mảng trực tiếp
@@ -25,7 +25,7 @@ const ReviewsSection=()=>{
   const averageRating = reviews.length > 0 ? (totalRatings / reviews.length).toFixed(1) : 0;
 
   return (
-    <div className="max-w-2xl mx-auto font-['SVN-Gilroy']">
+    <div className="max-w-2xl mx-auto font-sans">
       <h2 className="text-3xl font-bold mb-4">Đánh giá</h2>
       
       {/* Rating summary */}

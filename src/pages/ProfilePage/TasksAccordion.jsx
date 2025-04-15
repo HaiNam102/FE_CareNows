@@ -14,7 +14,7 @@ export default function TasksAccordion() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto font-['SVN-Gilroy']">
+    <div className="max-w-2xl mx-auto font-sans">
       {/* Tasks to be performed section */}
       <div className="border-b">
         <button

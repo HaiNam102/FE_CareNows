@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Calendar, MapPin, ChevronDown, Search } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+    faStar,
+    faArrowRight,
+    faCalendarAlt,
+    faMapMarkerAlt,
+    faHome,
+    faChevronDown,
+    faSearch
+} from '@fortawesome/free-solid-svg-icons';
 import Pagination from '../../components/Pagination';
 import ProfilePage from '../ProfilePage/ProfilePage';
 
@@ -99,7 +108,7 @@ const SearchResult = () => {
         const placeholdersNeeded = itemsPerPage - displayItems.length;
 
         for (let i = 0; i < placeholdersNeeded; i++) {
-            displayItems.push({ careTakerId: `placeholder-${i}`, isPlaceholder: true });
+            displayItems.push({ care_taker_id: `placeholder-${i}`, isPlaceholder: true });
         }
         return displayItems;
     };
@@ -117,31 +126,11 @@ const SearchResult = () => {
     };
 
     const handleProfileClick = (profile) => {
-        console.log("Selected profile:", profile);
-        
-        // Ensure the profile has a valid careTakerId before passing it
-        if (profile && profile.careTakerId) {
-            // Close the current profile first to reset all state
-            setIsProfileOpen(false);
-            setSelectedProfile(null);
-            
-            // Wait for UI to update before opening new profile
-            setTimeout(() => {
-                console.log("Opening caretaker profile:", profile.careTakerId);
-                setSelectedProfile(profile);
-                setIsProfileOpen(true);
-                
-                // Update URL with caretaker ID for direct access
-                const urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('id', profile.careTakerId.toString());
-                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-                
-                // Add class to prevent scrolling when profile is open
-                document.body.classList.add('no-scroll');
-            }, 200); // Longer delay to ensure state updates properly
-        } else {
-            console.error("Profile is missing careTakerId:", profile);
-        }
+        setSelectedProfile(profile);
+        setIsProfileOpen(true);
+        // Thêm class để ngăn scroll khi profile đang mở
+        document.body.classList.add('no-scroll');
+        // Đảm bảo rằng profile chứa tất cả thông tin cần thiết, bao gồm cả imgProfile
     };
 
     const handleCloseProfile = () => {
@@ -165,8 +154,8 @@ const SearchResult = () => {
 
     // Hàm gọi API với URL cố định cho nút tìm kiếm
     const handleSearch = () => {
-        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-04-20";
-        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-04-30";
+        const startDate = dateRange && dateRange[0] ? formatDateForAPI(dateRange[0]) : "2025-03-20";
+        const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-03-30";
         const districtValue = district || "Hải Châu";
         
         // Tạo URL với format cố định
@@ -188,53 +177,45 @@ const SearchResult = () => {
             .catch(err => console.error("Lỗi fetch dữ liệu tìm kiếm:", err));
     };
 
-    const formatPrice = (price) => {
-        if (!price) return '0';
-        const numPrice = parseInt(price.replace(/\D/g, ''));
-        return numPrice.toLocaleString('vi-VN').replace(/\./g, '.');
-    };
-
     // Component ProfileCard với event handler
     const ProfileCard = ({ profile }) => {
         if (profile.isPlaceholder) {
-            return <div className="w-[261px] h-[377px] opacity-0"></div>;
+            return <div className="w-full h-full opacity-0"></div>;
         }
 
         return (
             <div
-                className="group w-full max-w-[280px] min-w-[261px] h-[377px] p-3 pb-[22px] bg-white rounded-lg border-[0.667px] border-[#8C8C8C] flex flex-col justify-center items-center gap-3 cursor-pointer transition-all duration-300 font-['SVN-Gilroy'] relative hover:border-[#8C8C8C]"
+                className="w-full h-full p-3 bg-white rounded-lg border border-gray-400 flex flex-col justify-center items-center gap-3 cursor-pointer hover:shadow-lg transition-shadow duration-300"
                 onClick={() => handleProfileClick(profile)}
             >
-                <div 
-                    className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
-                    style={{ 
-                        background: 'linear-gradient(0deg, rgba(153, 248, 220, 0.2) 0%, rgba(153, 248, 220, 0) 66%)'
-                    }}
-                ></div>
-                <div className="relative z-10 flex flex-col items-center gap-3 w-full">
-                    <div className="self-stretch text-black text-2xl font-semibold">{profile.nameOfCareTaker}</div>
-                    <div className="text-[#8C8C8C] text-lg self-stretch">
-                        {profile.experienceYear} năm kinh nghiệm
-                    </div>
+                <div className="self-stretch text-black text-2xl font-semibold">{profile.nameOfCareTaker}</div>
+                <div className="text-[#8C8C8C] text-lg self-stretch text-[#8C8C8C] text-2xl" >
+                    {profile.experienceYear} năm kinh nghiệm
+                </div>
 
-                    <img className="w-36 h-36 rounded-full" src={profile.imgProfile} alt={profile.nameOfCareTaker} />
-                    <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.ward} - {profile.district}</div>
-                    <div className="self-stretch flex justify-between items-center">
-                        <div className="flex justify-center items-center">
-                            <span className="text-[#121212] text-sm font-bold ml-1">{profile.rating}</span>
-                            <span className="text-[#BCB9C5] text-sm font-bold">({profile.totalReviewers})</span>
-                        </div>
-                        <div className="flex items-baseline flex-shrink-0">
-                            <span className="text-[#00a37d] text-[24px] font-semibold leading-[28.8px] whitespace-nowrap">{formatPrice(profile.servicePrice)}</span>
-                            <span className="text-[#121212] text-lg font-semibold ml-0.5">/</span>
-                            <span className="text-[#121212] text-sm font-semibold">h</span>
+                <img className="w-36 h-36 rounded-full" src={profile.imgProfile} alt={profile.nameOfCareTaker} />
+                <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.ward} - {profile.district}</div>
+                <div className="self-stretch flex justify-between items-center">
+                    <div className="flex justify-center items-center">
+                        <FontAwesomeIcon icon={faStar} className="text-yellow-500" />
+                        <span className="text-[#121212] text-sm font-bold ml-1">{profile.rating}</span>
+                        <span className="text-[#BCB9C5] text-sm font-bold">({profile.totalReviewers})</span>
+                    </div>
+                    <div className="flex justify-start items-center gap-10">
+                        <div className="p-1 bg-white flex justify-center items-center gap-2.5">
+                            <div>
+                                <span className="text-[#00a37d] text-lg font-semibold">{profile.servicePrice}</span>
+                                <span className="text-[#121212] text-2xl font-semibold">/</span>
+                                <span className="text-[#121212] text-sm font-semibold">h</span>
+                            </div>
                         </div>
                     </div>
-                    <div className="self-stretch flex flex-col justify-start items-center gap-1.5">
-                        <div className="self-stretch h-0 bg-green-700 border border-green-700"></div>
-                        <div className="self-stretch flex justify-between items-center">
-                            <div className="text-[#00a37d] text-sm font-medium">Xem chi tiết</div>
-                        </div>
+                </div>
+                <div className="self-stretch flex flex-col justify-start items-center gap-1.5">
+                    <div className="self-stretch h-0 bg-green-700 border border-green-700"></div>
+                    <div className="self-stretch flex justify-between items-center">
+                        <div className="text-[#00a37d] text-sm font-medium">Xem chi tiết</div>
+                        <FontAwesomeIcon icon={faArrowRight} className="text-[#00a37d]" />
                     </div>
                 </div>
             </div>
@@ -252,58 +233,37 @@ const SearchResult = () => {
         };
 
         return (
-            <div className="fixed top-[64px] left-0 right-0 z-40 bg-white drop-shadow-[0_15px_25px_rgba(0,0,0,0.15)] h-[140px]">
-                {/* Date and Location Header */}
-                <div className="flex items-center justify-center py-3">
-                    <div className="flex items-center space-x-4 text-base text-gray-600">
-                        <div className="flex items-center">
-                            <Calendar className="mr-2 h-[17px] w-[17px] stroke-[1.5]" />
-                            <span className="text-[16px]">{displayDateRange()}</span>
-                        </div>
-                        <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                        <div className="flex items-center">
-                            <MapPin className="mr-2 h-[17px] w-[17px] stroke-[1.5]" />
-                            <span className="text-[16px]">{district || "Chọn địa điểm"}</span>
-                        </div>
+            <div className="bg-white">
+                <div className="flex flex-wrap items-center justify-center p-4 space-x-2">
+                    <div className="flex items-center space-x-2">
+                        <FontAwesomeIcon icon={faCalendarAlt} className="text-gray-700" />
+                        <span className="text-gray-700">{displayDateRange()}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <FontAwesomeIcon icon={faMapMarkerAlt} className="text-gray-700" />
+                        <span className="text-gray-700">{district || "Chọn địa điểm"}</span>
                     </div>
                 </div>
-
-                {/* Filter Section */}
-                <div className="flex justify-center px-4 pb-3">
-                    <div className="flex items-center gap-3 max-w-7xl w-full">
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Loại bảo mẫu
-                        </button>
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 flex items-center whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Giới tính <ChevronDown className="ml-2 h-4 w-4 text-[#00a37d]" />
-                        </button>
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 flex items-center whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Quận <ChevronDown className="ml-2 h-4 w-4 text-[#00a37d]" />
-                        </button>
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Chuyên viên 5*
-                        </button>
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Năm kinh nghiệm
-                        </button>
-                        <button className="border border-gray-300 rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors">
-                            Giờ dịch vụ
-                        </button>
-                        <div className="relative flex-shrink-0">
-                            <div className="absolute inset-0 rounded-full border-2 border-[#00a37d]"></div>
-                            <input 
-                                type="text" 
-                                placeholder="Tên bảo mẫu/Url" 
-                                className="relative w-[200px] px-4 py-2.5 rounded-full border border-black bg-transparent outline-none text-gray-700"
-                            />
-                        </div>
-                        <button 
-                            className="flex-shrink-0 bg-[#00a37d] text-white rounded-full px-6 py-2.5 flex items-center whitespace-nowrap hover:bg-[#008f6c] transition-colors"
-                            onClick={handleSearch}
-                        >
-                            <Search className="mr-2 h-4 w-4" /> Tìm kiếm
-                        </button>
+                <div className="flex flex-wrap items-start justify-start p-4 space-x-2">
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700">Loại bảo mẫu</button>
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700 flex items-center">
+                        Giới tính <FontAwesomeIcon icon={faChevronDown} className="ml-2 text-[#00a37d]" />
+                    </button>
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700 flex items-center">
+                        Quận <FontAwesomeIcon icon={faChevronDown} className="ml-2 text-[#00a37d]" />
+                    </button>
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700">Chuyên viên 5*</button>
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700">Năm kinh nghiệm</button>
+                    <button className="border border-gray-300 rounded-full px-4 py-2 text-gray-700">Giờ dịch vụ</button>
+                    <div className="flex items-center border border-[#00a37d] rounded-full px-2 py-2">
+                        <input type="text" placeholder="Tên bảo mẫu/Url" className="outline-none text-gray-700 w-full" />
                     </div>
+                    <button 
+                        className="bg-[#00a37d] text-white rounded-ful0l px-4 py-2 flex items-center"
+                        onClick={handleSearch}
+                    >
+                        <FontAwesomeIcon icon={faSearch} className="mr-2" /> Tìm kiếm
+                    </button>
                 </div>
             </div>
         );
@@ -311,21 +271,15 @@ const SearchResult = () => {
 
     const displayItems = createDisplayItems();
     return (
-        <div className="min-h-screen font-['SVN-Gilroy'] relative">
-            <div className="h-[140px]">
-                <SearchFilters />
-            </div>
-            <div className="w-full">
-                <div className="max-w-[1200px] mx-auto px-4 mt-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
-                        {displayItems.map(item => (
-                            <div key={item.care_taker_id} className="flex justify-center">
-                                <ProfileCard profile={item} />
-                            </div>
-                        ))}
+        <div className="bg-gray-10">
+            <SearchFilters />
+            <div className="container mx-auto py-4">
+                <div className="min-h-[800px]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {displayItems.map(item => <ProfileCard key={item.care_taker_id} profile={item} />)}
                     </div>
-                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
                 </div>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </div>
 
             {/* Profile Page Overlay and Slide-in */}
