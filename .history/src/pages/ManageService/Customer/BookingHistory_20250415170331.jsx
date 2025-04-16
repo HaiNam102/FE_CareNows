@@ -48,7 +48,7 @@ const storeMockToken = () => {
 // Navigation categories
 const categories = [
   { id: "all", label: "Tất cả" },
-  { id: "pending", label: "Chờ xác nhận" },
+  { id: "doing", label: "Đang thực hiện" },
   { id: "completed", label: "Đã hoàn thành" },
   { id: "cancelled", label: "Đã hủy" }
 ];
@@ -70,14 +70,6 @@ const getStatusConfig = (status) => {
     PENDING: {
       color: "bg-[#2196F3]",
       text: "Chờ xác nhận"
-    },
-    ACCEPT: {
-      color: "bg-[#11AA52]",
-      text: "Đã chấp nhận"
-    },
-    REJECT: {
-      color: "bg-[#FF1A51]",
-      text: "Đã từ chối"
     }
   };
   return configs[status] || { color: "bg-gray-500", text: status };
@@ -274,9 +266,9 @@ const BookingHistory = () => {
     } else {
       // Map our UI category names to backend status values
       const statusMap = {
-        "pending": ["PENDING"],
-        "completed": ["COMPLETED", "ACCEPT"],
-        "cancelled": ["CANCELLED", "REJECT"]
+        "doing": ["ONGOING", "PENDING"],
+        "completed": ["COMPLETED"],
+        "cancelled": ["CANCELLED"]
       };
       
       const filtered = bookings.filter(booking => {

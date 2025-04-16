@@ -82,6 +82,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   }, []);
 
   const handleSelect = (recipient) => {
+    console.log("Selected recipient:", recipient);
     setSelectedRecipient(recipient);
     onSelectRecipient(recipient);
   };

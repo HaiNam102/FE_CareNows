@@ -20,15 +20,7 @@ function Header({ logoOnly = false }) {
       case 'CUSTOMER':
         return [
           { name: "Trang chủ", path: "/" },
-          { 
-            name: "Hồ sơ và dịch vụ", 
-            path: "/customer/profile",
-            subPaths: [
-              '/customer/profile',
-              '/customer/medical-records',
-              '/customer/booking-history'
-            ]
-          },
+          { name: "Hồ sơ và dịch vụ", path: "/customer/profile" },
           { name: "Về CareNow", path: "/about" }
         ];
       case 'CARETAKER':
@@ -79,15 +71,6 @@ function Header({ logoOnly = false }) {
   useEffect(() => {
     const currentPath = location.pathname;
     const links = getNavigationLinks();
-
-    // Kiểm tra nếu đường dẫn hiện tại là một trong các trang con của "Hồ sơ và dịch vụ"
-    if (currentPath.includes('/customer/profile') || 
-        currentPath.includes('/customer/medical-records') || 
-        currentPath.includes('/customer/booking-history')) {
-      setActiveLink("Hồ sơ và dịch vụ");
-      return;
-    }
-
     const currentLink = links.find(link => currentPath === link.path);
     if (currentLink) {
       setActiveLink(currentLink.name);
@@ -108,10 +91,6 @@ function Header({ logoOnly = false }) {
     setActiveLink(link.name);
     navigate(link.path);
     setIsMenuOpen(false);
-  };
-
-  const handleSignupClick = () => {
-    navigate('/signup');
   };
 
   // Kiểm tra kích thước màn hình
@@ -221,12 +200,7 @@ function Header({ logoOnly = false }) {
                 Đăng nhập
               </a>
               <div>
-                <HoverButton 
-                  text="Đăng ký ngay" 
-                  size="medium" 
-                  showArrow={true} 
-                  onClick={handleSignupClick}
-                />
+                <HoverButton text="Đăng ký ngay" size="medium" showArrow={true} />
               </div>
             </div>
           )}
@@ -274,12 +248,7 @@ function Header({ logoOnly = false }) {
                 Đăng nhập
               </a>
               <div className="flex-shrink-0 min-w-[180px]">
-                <HoverButton 
-                  text="Đăng ký ngay" 
-                  size="medium" 
-                  showArrow={true} 
-                  onClick={handleSignupClick}
-                />
+                <HoverButton text="Đăng ký ngay" size="medium" showArrow={true} />
               </div>
             </>
           )}

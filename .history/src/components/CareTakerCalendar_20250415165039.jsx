@@ -439,12 +439,12 @@ const CareTakerCalendar = ({ onClose, onSelectDateRange, careTakerId, onAvailabl
                 onClick={() => handleDateClick(day.date, day.month, day.year)}
                 className={`
                   text-center py-2 rounded h-10 flex items-center justify-center transition-all
-                  ${isPast ? 'text-gray-400 cursor-not-allowed bg-gray-100 opacity-50' :
-                    available ? 'cursor-pointer text-gray-700 bg-green-100 border border-emerald-500 hover:bg-green-200' : 'text-gray-400 cursor-not-allowed bg-gray-100 opacity-50'}
-                  ${isToday(day.date, day.month, day.year) ? 'ring-1 ring-emerald-500' : ''}
-                  ${isRange && selectionMode === 'range' ? 'bg-green-100 border-2 border-emerald-600 text-gray-700' : ''}
-                  ${isMiddleOfRange ? 'bg-emerald-500 text-white border-0' : ''}
-                  ${selected && !isRange && !isMiddleOfRange ? 'bg-emerald-500 text-white border-0 hover:bg-emerald-600' : ''}
+                  ${isPast ? 'text-gray-400 cursor-not-allowed' :
+                    available ? 'cursor-pointer text-gray-900 bg-green-100 hover:bg-green-200' : 'text-gray-400 cursor-not-allowed opacity-50 bg-gray-100'}
+                  ${isToday(day.date, day.month, day.year) ? 'ring-2 ring-green-500' : ''}
+                  ${isRange && selectionMode === 'range' ? 'bg-emerald-600 text-white ring-2 ring-emerald-700' : ''}
+                  ${isMiddleOfRange ? 'bg-emerald-400 text-white' : ''}
+                  ${selected && !isRange && !isMiddleOfRange ? 'bg-emerald-500 text-white hover:bg-emerald-600' : ''}
                   ${selectionMode === 'range' && isRange ? 'relative z-10' : ''}
                 `}
               >
@@ -539,35 +539,25 @@ const CareTakerCalendar = ({ onClose, onSelectDateRange, careTakerId, onAvailabl
         {renderMonth(secondMonth)}
       </div>
 
-      <div className="mt-4 bg-gray-50 p-4 rounded-lg text-sm text-gray-600 mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center bg-green-100 border border-emerald-500 rounded mr-3 text-gray-700">
-              30
-            </div>
-            <span>Ngày có sẵn</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center bg-emerald-500 rounded mr-3 text-white">
-              30
-            </div>
-            <span>Ngày đã chọn</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-10 h-10 flex items-center justify-center bg-gray-100 opacity-50 rounded mr-3 text-gray-400">
-              30
-            </div>
-            <span>Ngày không có sẵn</span>
-          </div>
-          {selectionMode === 'range' && (
-            <div className="flex items-center">
-              <div className="w-10 h-10 flex items-center justify-center bg-emerald-100 border-2 border-emerald-600 rounded mr-3 text-gray-700">
-                30
-              </div>
-              <span>Chọn theo khoảng </span>
-            </div>
-          )}
-        </div>
+      <div className="mt-4 bg-gray-50 p-3 rounded text-sm text-gray-600 mb-4">
+        <p className="flex items-center">
+          <span className="w-3 h-3 inline-block bg-green-100 rounded-full mr-2"></span>
+          Ngày có sẵn - có thể đặt lịch
+        </p>
+        <p className="flex items-center mt-1">
+          <span className="w-3 h-3 inline-block bg-gray-100 opacity-50 rounded-full mr-2"></span>
+          Ngày không có sẵn - không thể đặt lịch
+        </p>
+        <p className="flex items-center mt-1">
+          <span className="w-3 h-3 inline-block bg-emerald-500 rounded-full mr-2"></span>
+          Ngày đã chọn
+        </p>
+        {selectionMode === 'range' && (
+          <p className="flex items-center mt-1">
+            <span className="w-3 h-3 inline-block border-2 border-emerald-700 rounded-full mr-2"></span>
+            Ngày bắt đầu/kết thúc khoảng
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">

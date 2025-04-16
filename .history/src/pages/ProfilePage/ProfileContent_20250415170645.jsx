@@ -4,11 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import HoverButton from '../../components/HoverButton';
 import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
+const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [similarCareTakers, setSimilarCareTakers] = useState([]);
   const [showCareTakerList, setShowCareTakerList] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -84,9 +83,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
   };
 
   const handleBookingClick = () => {
-    if (onNavigate) {
-      onNavigate('schedule');
-    }
+    navigate('/services');
   };
 
   // Extract properties from profile data with appropriate fallbacks
