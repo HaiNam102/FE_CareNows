@@ -82,6 +82,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   }, []);
 
   const handleSelect = (recipient) => {
+    console.log("Selected recipient:", recipient);
     setSelectedRecipient(recipient);
     onSelectRecipient(recipient);
   };
@@ -437,11 +438,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   };
 
   const handleConfirmBooking = async () => {
-      if (!careTakerId) {
+    if (!careTakerId) {
       toast.error('Vui lòng chọn bảo mẫu');
       return;
     }
-    if (!selectedRecipient) {
+    if (!selectedRecipient || !selectedRecipient.careRecipientID) {
       toast.error('Vui lòng chọn bệnh nhân');
       return;
     }
@@ -456,16 +457,16 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
-        return;
-      }
+      return;
+    }
     
-      const formatDate = (date) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
+    const formatDate = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
     
     const days = selectedDateRange.map((date) => formatDate(date));
 
@@ -479,9 +480,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         timeToStart: `${selectedTime.startTime}:00`,
         timeToEnd: `${selectedTime.endTime}:00`,
         jobDescription: formData.notes,
-        careRecipientId: selectedRecipient.careRecipientID,
+        careRecipientId: parseInt(selectedRecipient.careRecipientID, 10),
         price: calculateTotalPrice(),
       };
+
+      console.log("Sending booking request:", requestBody);
     
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/booking?careTakerId=${careTakerId}`, {
@@ -498,14 +501,16 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         throw new Error(errorData.message || 'Đặt lịch thất bại');
       }
 
+      const responseData = await response.json();
+      console.log("Booking response:", responseData);
+
       toast.success('Đặt lịch thành công!');
       setShowSuccessPopup(true);
     } catch (error) {
-     
       toast.error(error.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
       console.error('Booking error:', error);
     }
-    };
+  };
 
     const handleAvailableDates = (dates) => {
       setAvailableDates(dates);

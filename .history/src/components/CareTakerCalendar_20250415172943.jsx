@@ -439,12 +439,12 @@ const CareTakerCalendar = ({ onClose, onSelectDateRange, careTakerId, onAvailabl
                 onClick={() => handleDateClick(day.date, day.month, day.year)}
                 className={`
                   text-center py-2 rounded h-10 flex items-center justify-center transition-all
-                  ${isPast ? 'text-gray-400 cursor-not-allowed bg-gray-100 opacity-50' :
-                    available ? 'cursor-pointer text-gray-700 bg-green-100 border border-emerald-500 hover:bg-green-200' : 'text-gray-400 cursor-not-allowed bg-gray-100 opacity-50'}
-                  ${isToday(day.date, day.month, day.year) ? 'ring-1 ring-emerald-500' : ''}
-                  ${isRange && selectionMode === 'range' ? 'bg-green-100 border-2 border-emerald-600 text-gray-700' : ''}
-                  ${isMiddleOfRange ? 'bg-emerald-500 text-white border-0' : ''}
-                  ${selected && !isRange && !isMiddleOfRange ? 'bg-emerald-500 text-white border-0 hover:bg-emerald-600' : ''}
+                  ${isPast ? 'text-gray-400 cursor-not-allowed' :
+                    available ? 'cursor-pointer text-gray-900 bg-green-100 hover:bg-green-200' : 'text-gray-400 cursor-not-allowed opacity-50 bg-gray-100'}
+                  ${isToday(day.date, day.month, day.year) ? 'ring-2 ring-green-500' : ''}
+                  ${isRange && selectionMode === 'range' ? 'bg-emerald-600 text-white ring-2 ring-emerald-700' : ''}
+                  ${isMiddleOfRange ? 'bg-emerald-400 text-white' : ''}
+                  ${selected && !isRange && !isMiddleOfRange ? 'bg-emerald-500 text-white hover:bg-emerald-600' : ''}
                   ${selectionMode === 'range' && isRange ? 'relative z-10' : ''}
                 `}
               >
@@ -545,7 +545,7 @@ const CareTakerCalendar = ({ onClose, onSelectDateRange, careTakerId, onAvailabl
             <div className="w-10 h-10 flex items-center justify-center bg-green-100 border border-emerald-500 rounded mr-3 text-gray-700">
               30
             </div>
-            <span>Ngày có sẵn</span>
+            <span>Ngày có sẵn - có thể đặt lịch</span>
           </div>
           <div className="flex items-center">
             <div className="w-10 h-10 flex items-center justify-center bg-emerald-500 rounded mr-3 text-white">
@@ -557,14 +557,14 @@ const CareTakerCalendar = ({ onClose, onSelectDateRange, careTakerId, onAvailabl
             <div className="w-10 h-10 flex items-center justify-center bg-gray-100 opacity-50 rounded mr-3 text-gray-400">
               30
             </div>
-            <span>Ngày không có sẵn</span>
+            <span>Ngày không có sẵn - không thể đặt lịch</span>
           </div>
           {selectionMode === 'range' && (
             <div className="flex items-center">
               <div className="w-10 h-10 flex items-center justify-center bg-emerald-100 border-2 border-emerald-600 rounded mr-3 text-gray-700">
                 30
               </div>
-              <span>Chọn theo khoảng </span>
+              <span>Ngày bắt đầu/kết thúc khoảng chọn</span>
             </div>
           )}
         </div>

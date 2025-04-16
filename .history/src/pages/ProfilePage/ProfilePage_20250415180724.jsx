@@ -66,6 +66,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         });
 
         if (response.data.code === 1010) {
+          console.log("Fetched recipients:", response.data.data);
           setRecipients(response.data.data);
         } else {
           toast.error('Không thể tải danh sách bệnh nhân');
@@ -82,6 +83,8 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   }, []);
 
   const handleSelect = (recipient) => {
+    console.log("Selected recipient:", recipient);
+    console.log("Selected recipient ID:", recipient.careRecipientID);
     setSelectedRecipient(recipient);
     onSelectRecipient(recipient);
   };
@@ -124,15 +127,26 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
               key={recipient.careRecipientID}
               className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
                 selectedRecipient?.careRecipientID === recipient.careRecipientID
-                  ? 'border-[#00A37D] bg-[#00A37D] bg-opacity-10'
-                  : 'border-gray-200'
+                  ? 'border-[#00A37D] bg-[#00A37D] bg-opacity-10 ring-2 ring-[#00A37D]'
+                  : 'border-gray-200 hover:border-[#00A37D]'
               }`}
               onClick={() => handleSelect(recipient)}
             >
-              <h3 className="font-semibold text-gray-800">{recipient.name}</h3> 
-              <p className="text-sm text-gray-600">Giới tính: {recipient.gender}</p>
-              <p className="text-sm text-gray-600">Năm sinh: {recipient.yearOld}</p>
-              <p className="text-sm text-gray-600">Tình trạng: {recipient.specialDetail}</p> 
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-gray-800">{recipient.name}</h3>
+                  <p className="text-sm text-gray-600">Giới tính: {recipient.gender}</p>
+                  <p className="text-sm text-gray-600">Năm sinh: {recipient.yearOld}</p>
+                  <p className="text-sm text-gray-600">Tình trạng: {recipient.specialDetail}</p>
+                </div>
+                {selectedRecipient?.careRecipientID === recipient.careRecipientID && (
+                  <div className="bg-[#00A37D] rounded-full p-2">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -142,7 +156,9 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
 
       <div className="mt-auto pt-4 border-t border-gray-200 flex justify-end">
         <button
-          className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className={`bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300 ${
+            !selectedRecipient ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           onClick={() => {
             if (!selectedRecipient) {
               toast.error('Vui lòng chọn một bệnh nhân trước khi tiếp tục');
@@ -437,11 +453,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   };
 
   const handleConfirmBooking = async () => {
-      if (!careTakerId) {
+    if (!careTakerId) {
       toast.error('Vui lòng chọn bảo mẫu');
       return;
     }
-    if (!selectedRecipient) {
+    if (!selectedRecipient || !selectedRecipient.careRecipientID) {
       toast.error('Vui lòng chọn bệnh nhân');
       return;
     }
@@ -456,16 +472,16 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
-        return;
-      }
+      return;
+    }
     
-      const formatDate = (date) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
+    const formatDate = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
     
     const days = selectedDateRange.map((date) => formatDate(date));
 
@@ -479,9 +495,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         timeToStart: `${selectedTime.startTime}:00`,
         timeToEnd: `${selectedTime.endTime}:00`,
         jobDescription: formData.notes,
-        careRecipientId: selectedRecipient.careRecipientID,
+        careRecipientId: parseInt(selectedRecipient.careRecipientID, 10),
         price: calculateTotalPrice(),
       };
+
+      console.log("Sending booking request:", requestBody);
     
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/booking?careTakerId=${careTakerId}`, {
@@ -498,14 +516,16 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         throw new Error(errorData.message || 'Đặt lịch thất bại');
       }
 
+      const responseData = await response.json();
+      console.log("Booking response:", responseData);
+
       toast.success('Đặt lịch thành công!');
       setShowSuccessPopup(true);
     } catch (error) {
-     
       toast.error(error.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
       console.error('Booking error:', error);
     }
-    };
+  };
 
     const handleAvailableDates = (dates) => {
       setAvailableDates(dates);

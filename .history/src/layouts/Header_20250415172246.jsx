@@ -110,10 +110,6 @@ function Header({ logoOnly = false }) {
     setIsMenuOpen(false);
   };
 
-  const handleSignupClick = () => {
-    navigate('/signup');
-  };
-
   // Kiểm tra kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
@@ -221,12 +217,7 @@ function Header({ logoOnly = false }) {
                 Đăng nhập
               </a>
               <div>
-                <HoverButton 
-                  text="Đăng ký ngay" 
-                  size="medium" 
-                  showArrow={true} 
-                  onClick={handleSignupClick}
-                />
+                <HoverButton text="Đăng ký ngay" size="medium" showArrow={true} />
               </div>
             </div>
           )}
@@ -274,12 +265,7 @@ function Header({ logoOnly = false }) {
                 Đăng nhập
               </a>
               <div className="flex-shrink-0 min-w-[180px]">
-                <HoverButton 
-                  text="Đăng ký ngay" 
-                  size="medium" 
-                  showArrow={true} 
-                  onClick={handleSignupClick}
-                />
+                <HoverButton text="Đăng ký ngay" size="medium" showArrow={true} />
               </div>
             </>
           )}

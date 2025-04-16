@@ -66,6 +66,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         });
 
         if (response.data.code === 1010) {
+          console.log('Fetched recipients:', response.data.data);
           setRecipients(response.data.data);
         } else {
           toast.error('Không thể tải danh sách bệnh nhân');
@@ -82,8 +83,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   }, []);
 
   const handleSelect = (recipient) => {
+    console.log('Selected recipient:', recipient);
     setSelectedRecipient(recipient);
-    onSelectRecipient(recipient);
+    if (onSelectRecipient) {
+      onSelectRecipient(recipient);
+    }
   };
 
   return (
@@ -129,10 +133,10 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
               }`}
               onClick={() => handleSelect(recipient)}
             >
-              <h3 className="font-semibold text-gray-800">{recipient.name}</h3> 
+              <h3 className="font-semibold text-gray-800">{recipient.name}</h3>
               <p className="text-sm text-gray-600">Giới tính: {recipient.gender}</p>
               <p className="text-sm text-gray-600">Năm sinh: {recipient.yearOld}</p>
-              <p className="text-sm text-gray-600">Tình trạng: {recipient.specialDetail}</p> 
+              <p className="text-sm text-gray-600">Tình trạng: {recipient.specialDetail || 'alert'}</p>
             </div>
           ))}
         </div>
@@ -142,7 +146,9 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
 
       <div className="mt-auto pt-4 border-t border-gray-200 flex justify-end">
         <button
-          className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className={`bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300 ${
+            !selectedRecipient ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           onClick={() => {
             if (!selectedRecipient) {
               toast.error('Vui lòng chọn một bệnh nhân trước khi tiếp tục');
@@ -437,11 +443,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
   };
 
   const handleConfirmBooking = async () => {
-      if (!careTakerId) {
+    if (!careTakerId) {
       toast.error('Vui lòng chọn bảo mẫu');
       return;
     }
-    if (!selectedRecipient) {
+    if (!selectedRecipient || !selectedRecipient.careRecipientID) {
       toast.error('Vui lòng chọn bệnh nhân');
       return;
     }
@@ -456,17 +462,17 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
 
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
-        return;
-      }
-    
-      const formatDate = (date) => {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      };
-    
+      return;
+    }
+
+    const formatDate = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     const days = selectedDateRange.map((date) => formatDate(date));
 
     try {
@@ -482,7 +488,9 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         careRecipientId: selectedRecipient.careRecipientID,
         price: calculateTotalPrice(),
       };
-    
+
+      console.log('Sending booking request:', requestBody);
+
       const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:8080/api/booking?careTakerId=${careTakerId}`, {
         method: 'POST',
@@ -498,14 +506,16 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         throw new Error(errorData.message || 'Đặt lịch thất bại');
       }
 
+      const responseData = await response.json();
+      console.log('Booking response:', responseData);
+
       toast.success('Đặt lịch thành công!');
       setShowSuccessPopup(true);
     } catch (error) {
-     
       toast.error(error.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
       console.error('Booking error:', error);
     }
-    };
+  };
 
     const handleAvailableDates = (dates) => {
       setAvailableDates(dates);
