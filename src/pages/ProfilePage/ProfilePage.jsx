@@ -9,7 +9,7 @@
   import { useLocation, useNavigate } from 'react-router-dom';
   import axios from 'axios';
   import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+  import 'react-toastify/dist/ReactToastify.css';
 
 // SuccessPopup Component
 const SuccessPopup = ({ message, onClose }) => {
@@ -64,8 +64,11 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
             'Authorization': `Bearer ${token}`,
           },
         });
-
+  
+        console.log('Dữ liệu từ API careRecipient/customer:', response.data);
+  
         if (response.data.code === 1010) {
+          console.log('Danh sách recipients:', response.data.data);
           setRecipients(response.data.data);
         } else {
           toast.error('Không thể tải danh sách bệnh nhân');
@@ -77,9 +80,9 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         setIsLoading(false);
       }
     };
-
+  
     fetchRecipients();
-  }, []);
+  }, []); // Không cần phụ thuộc, chỉ gọi một lần khi component mount
 
   const handleSelect = (recipient) => {
     setSelectedRecipient(recipient);
@@ -121,9 +124,9 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         <div className="space-y-4">
           {recipients.map((recipient) => (
             <div
-              key={recipient.careRecipientID}
+              key={recipient.careRecipientId}
               className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
-                selectedRecipient?.careRecipientID === recipient.careRecipientID
+                selectedRecipient?.careRecipientId === recipient.careRecipientId
                   ? 'border-[#00A37D] bg-[#00A37D] bg-opacity-10'
                   : 'border-gray-200'
               }`}
@@ -228,49 +231,49 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
     }, [profile, location.search]);
 
     useEffect(() => {
-      if (!careTakerId) {
+      if (!careTakerId || activeTab !== 'schedule') {
         setIsLoadingDates(false);
         return;
       }
-
+    
       setAvailableDates([]);
       setIsLoadingDates(true);
-      
+    
       const fetchAvailableDates = async () => {
         try {
           const token = localStorage.getItem('token');
           const response = await axios.get(`http://localhost:8080/api/calendar/caretaker/${careTakerId}`, {
             headers: {
               'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+              'Authorization': `Bearer ${token}`,
+            },
           });
-
+    
           if (response.data && response.data.code === 1010 && Array.isArray(response.data.data)) {
             const dates = response.data.data
-            .filter((item) => item && item.day)
-            .map((item) => {
-              if (!/^\d{4}-\d{2}-\d{2}$/.test(item.day)) return null;
-              const [year, month, day] = item.day.split('-').map(Number);
+              .filter((item) => item && item.day)
+              .map((item) => {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(item.day)) return null;
+                const [year, month, day] = item.day.split('-').map(Number);
                 const date = new Date(year, month - 1, day);
-              return isNaN(date.getTime()) ? null : date;
-            })
-            .filter((date) => date !== null);
-
-          setAvailableDates(dates);
+                return isNaN(date.getTime()) ? null : date;
+              })
+              .filter((date) => date !== null);
+    
+            setAvailableDates(dates);
           } else {
-          toast.error('Không thể tải lịch làm việc');
+            toast.error('Không thể tải lịch làm việc');
           }
         } catch (error) {
-        console.error('Error fetching caretaker schedule:', error);
-        toast.error('Không thể tải lịch làm việc');
+          console.error('Error fetching caretaker schedule:', error);
+          toast.error('Không thể tải lịch làm việc');
         } finally {
           setIsLoadingDates(false);
         }
       };
-
+    
       fetchAvailableDates();
-    }, [careTakerId]);
+    }, [careTakerId, activeTab]); // Chỉ gọi khi activeTab là 'schedule'
 
     const handleSelectCareTaker = (newCareTakerId) => {
       if (newCareTakerId) {
@@ -453,7 +456,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
       toast.error('Vui lòng chọn thời gian');
       return;
     }
-
+    
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
         return;
@@ -479,7 +482,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
         timeToStart: `${selectedTime.startTime}:00`,
         timeToEnd: `${selectedTime.endTime}:00`,
         jobDescription: formData.notes,
-        careRecipientId: selectedRecipient.careRecipientID,
+        careRecipientId: selectedRecipient.careRecipientId,
         price: calculateTotalPrice(),
       };
     
@@ -1210,7 +1213,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
           }
           return null;
         case 'reviews':
-          return <ReviewsSection profile={profile} />;
+          return <ReviewsSection profile={profile} careTakerId={careTakerId} />;
         default:
           return <ProfileContent profile={profile} onCareTakerSelect={handleSelectCareTaker} />;
       }
