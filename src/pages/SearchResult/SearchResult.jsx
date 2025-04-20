@@ -118,31 +118,28 @@ const SearchResult = () => {
 
     const handleProfileClick = (profile) => {
         console.log("Selected profile:", profile);
-        
+      
         // Ensure the profile has a valid careTakerId before passing it
         if (profile && profile.careTakerId) {
-            // Close the current profile first to reset all state
-            setIsProfileOpen(false);
-            setSelectedProfile(null);
-            
-            // Wait for UI to update before opening new profile
-            setTimeout(() => {
-                console.log("Opening caretaker profile:", profile.careTakerId);
-                setSelectedProfile(profile);
-                setIsProfileOpen(true);
-                
-                // Update URL with caretaker ID for direct access
-                const urlParams = new URLSearchParams(window.location.search);
-                urlParams.set('id', profile.careTakerId.toString());
-                window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-                
-                // Add class to prevent scrolling when profile is open
-                document.body.classList.add('no-scroll');
-            }, 200); // Longer delay to ensure state updates properly
+          console.log("Opening caretaker profile:", profile.careTakerId);
+          setIsProfileOpen(false); // Đóng trước để reset state
+          setSelectedProfile(null);
+      
+          // Mở profile mới mà không cần setTimeout
+          setSelectedProfile(profile);
+          setIsProfileOpen(true);
+      
+          // Cập nhật URL với caretaker ID
+          const urlParams = new URLSearchParams(window.location.search);
+          urlParams.set('id', profile.careTakerId.toString());
+          window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+      
+          // Thêm class để ngăn scroll
+          document.body.classList.add('no-scroll');
         } else {
-            console.error("Profile is missing careTakerId:", profile);
+          console.error("Profile is missing careTakerId:", profile);
         }
-    };
+      };;
 
     const handleCloseProfile = () => {
         document.body.classList.remove('no-scroll'); // Xóa class để cho phép scroll

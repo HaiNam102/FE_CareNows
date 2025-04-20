@@ -37,44 +37,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
       element.style.animationDelay = `${index * 0.1}s`;
     });
   }, []);
-
-  // Function to fetch similar caretakers
-  // const fetchSimilarCareTakers = async () => {
-  //   if (showCareTakerList) {
-  //     setShowCareTakerList(false);
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   try {
-  //     // Try to get district from the profile
-  //     const district = profile.district || '';
-      
-  //     const response = await axios.get('http://localhost:8080/api/caretaker/search', {
-  //       params: {
-  //         district: district,
-  //         page: 0,
-  //         size: 5
-  //       }
-  //     });
-      
-  //     if (response.data && response.data.code === 1010) {
-  //       // Filter out the current caretaker if present
-  //       const filteredCareTakers = response.data.data.content.filter(
-  //         caretaker => caretaker.careTakerId !== profile.careTakerId
-  //       );
-  //       setSimilarCareTakers(filteredCareTakers);
-  //       setShowCareTakerList(true);
-  //     } else {
-  //       console.error('Failed to fetch similar caretakers:', response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching similar caretakers:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
+  
   // Handle caretaker selection
   const handleSelectCareTaker = (caretaker) => {
     if (onCareTakerSelect) {
@@ -94,14 +57,14 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
     nameOfCareTaker = "Tên không xác định",
     experienceYear = "N/A",
     rating = 5.0,
-    numberOfReviews = 0,
+    totalReviewers = 0,
     servicePrice = "N/A",
     imgProfile = "",
     introduction = "Không có thông tin giới thiệu",
     ward = "",
     district: profileDistrict = "",
     address = "",
-    totalHires = 0,
+    totalBookings = 0,
     completedHires = 0,
     careTakerId
   } = profile;
@@ -139,7 +102,8 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
             <span className="text-[#00a37d] flex items-center">
               <FontAwesomeIcon icon={faStar} className="mr-1" /> 
               <span className="font-medium">{rating}</span>
-              <span className="text-gray-400 ml-1">({numberOfReviews})</span>
+              <span className="text-gray-400 ml-1">({totalReviewers
+})</span>
             </span>
           </div>
           <a href="#" className="text-[#00a37d] text-sm underline mr-8">
@@ -235,7 +199,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
             <div className="flex items-center ">
               <div className="w-1 h-6 bg-red-500 mr-2"></div>
               <p className="text-2xl font-bold">
-                {totalHires || 0}
+                {totalBookings || 0}
               </p>
             </div>
           </div>
