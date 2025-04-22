@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faUserCircle, faMapMarkerAlt, faStethoscope, faCheckCircle, faClock, faUser, faHospital, faHome, faMoneyBill, faInfoCircle, faFileLines, faTimes, faMars, faVenus, faBriefcase, faCalendarCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCalendarAlt, faUserCircle, faMapMarkerAlt, faStethoscope, faCheckCircle, faClock, faUser, faHospital, faHome, faMoneyBill, faInfoCircle, faFileLines, faTimes, faMars, faVenus, faBriefcase, faCalendarCheck, faCalendarWeek, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { toast, ToastContainer } from 'react-toastify';
@@ -24,8 +24,13 @@ const CareTaker = () => {
   const [loadingRecipient, setLoadingRecipient] = useState(false);
   const [selectedDates, setSelectedDates] = useState([]);
   const [existingDates, setExistingDates] = useState([]);
+  const [calendarEntries, setCalendarEntries] = useState([]);
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [loadingCalendar, setLoadingCalendar] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [calendarBookings, setCalendarBookings] = useState([]);
+  const [calendarView, setCalendarView] = useState('month');
+  const [deletingCalendar, setDeletingCalendar] = useState(false);
 
   useEffect(() => {
     if (currentPage === 'appointments') {
@@ -34,6 +39,9 @@ const CareTaker = () => {
       fetchPayments();
     } else if (currentPage === 'schedule') {
       fetchCareTakerCalendar();
+    } else if (currentPage === 'calendar') {
+      fetchCareTakerCalendar();
+      fetchCalendarBookings();
     }
 
     try {
@@ -51,7 +59,7 @@ const CareTaker = () => {
     } catch (error) {
       console.error('Error decoding token:', error);
     }
-  }, [currentPage]);
+  }, [currentPage, currentMonth]);
 
   const fetchBookings = async () => {
     try {
@@ -338,7 +346,7 @@ const CareTaker = () => {
       };
       
       // Prepare request body - combine existing and newly selected dates
-      const allDates = [...new Set([...existingDates, ...selectedDates])];
+      const allDates = [...new Set([...selectedDates])];
       const requestBody = {
         day: allDates
       };
@@ -392,9 +400,12 @@ const CareTaker = () => {
       
       // Fetch the caretaker's calendar
       const response = await axios.get(`http://localhost:8080/api/calendar/my-calendar`, config);
-      console.log("Du lieu la: " + response.data.data);
+      console.log("Du lieu la: ", response.data.data);
       if (response.data.data && response.data.code === 1010 && Array.isArray(response.data.data)) {
-        // Extract dates from the response
+        // Store full calendar entries
+        setCalendarEntries(response.data.data);
+        
+        // Extract dates from the response for highlighting
         const dates = response.data.data
           .filter(item => item && item.day)
           .map(item => item.day);
@@ -412,6 +423,47 @@ const CareTaker = () => {
       console.error('Error fetching caretaker calendar:', error);
       toast.error('Có lỗi xảy ra khi tải lịch làm việc. Vui lòng thử lại sau.');
       setLoadingCalendar(false);
+    }
+  };
+
+  const handleDeleteCalendarEntry = async (calendarId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa ngày này khỏi lịch làm việc không?')) {
+      try {
+        setDeletingCalendar(true);
+        
+        // Get the authentication token
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Bạn cần đăng nhập để xóa lịch làm việc.');
+          setDeletingCalendar(false);
+          return;
+        }
+        
+        // Configure request with auth header
+        const config = {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        };
+        
+        // Send request to delete calendar entry
+        await axios.delete(`http://localhost:8080/api/calendar/delete/${calendarId}`, config);
+        
+        // Update local state
+        const updatedEntries = calendarEntries.filter(entry => entry.calendarId !== calendarId);
+        setCalendarEntries(updatedEntries);
+        
+        // Update existing dates list
+        const updatedDates = updatedEntries.map(entry => entry.day);
+        setExistingDates(updatedDates);
+        
+        toast.success('Đã xóa ngày làm việc thành công.');
+        setDeletingCalendar(false);
+      } catch (error) {
+        console.error('Error deleting calendar entry:', error);
+        toast.error('Có lỗi xảy ra khi xóa lịch làm việc. Vui lòng thử lại sau.');
+        setDeletingCalendar(false);
+      }
     }
   };
 
@@ -446,6 +498,256 @@ const CareTaker = () => {
       console.error('Error completing booking:', error);
       toast.error('Có lỗi xảy ra khi hoàn thành đơn. Vui lòng thử lại.');
     }
+  };
+
+  const fetchCalendarBookings = async () => {
+    try {
+      // Get the authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Bạn cần đăng nhập để xem lịch làm việc.');
+        return;
+      }
+      
+      // Configure request with auth header
+      const config = {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      };
+      
+      // Get start and end dates for the current month
+      const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      const endDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+      
+      // Format dates for API
+      const startDateStr = startDate.toLocaleDateString('en-CA');
+      const endDateStr = endDate.toLocaleDateString('en-CA');
+      
+      // Fetch bookings for the current month
+      const response = await axios.get(`http://localhost:8080/api/booking/caretaker?fromDate=${startDateStr}&toDate=${endDateStr}`, config);
+      
+      if (response.data && Array.isArray(response.data.data)) {
+        setCalendarBookings(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching calendar bookings:', error);
+      toast.error('Có lỗi xảy ra khi tải lịch hẹn. Vui lòng thử lại sau.');
+    }
+  };
+
+  const handlePrevMonth = () => {
+    const prevMonth = new Date(currentMonth);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    setCurrentMonth(prevMonth);
+  };
+
+  const handleNextMonth = () => {
+    const nextMonth = new Date(currentMonth);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    setCurrentMonth(nextMonth);
+  };
+
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (year, month) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const getMonthName = (month) => {
+    const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 
+                         'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    return monthNames[month];
+  };
+
+  const isDateInBookings = (date) => {
+    return calendarBookings.some(booking => 
+      booking.days && booking.days.includes(date.toLocaleDateString('en-CA'))
+    );
+  };
+
+  const isDateInSchedule = (date) => {
+    const dateStr = date.toLocaleDateString('en-CA');
+    return existingDates.includes(dateStr);
+  };
+
+  const getBookingsForDate = (date) => {
+    const dateStr = date.toLocaleDateString('en-CA');
+    return calendarBookings.filter(booking => booking.days && booking.days.includes(dateStr));
+  };
+
+  // Add these helper functions for week-based display
+
+  // Group dates by week
+  const groupDatesByWeek = (dateEntries) => {
+    const grouped = {};
+    
+    dateEntries.forEach(entry => {
+      const date = new Date(entry.day);
+      // Get the first day of the week (Monday)
+      const firstDayOfWeek = new Date(date);
+      const day = date.getDay();
+      // Adjust for week starting on Monday (0 = Monday, 6 = Sunday)
+      const diff = day === 0 ? 6 : day - 1;
+      firstDayOfWeek.setDate(date.getDate() - diff);
+      
+      // Format as YYYY-MM-DD
+      const weekKey = firstDayOfWeek.toISOString().split('T')[0];
+      
+      if (!grouped[weekKey]) {
+        grouped[weekKey] = [];
+      }
+      grouped[weekKey].push(entry);
+    });
+    
+    // Sort entries within each week
+    Object.keys(grouped).forEach(week => {
+      grouped[week].sort((a, b) => new Date(a.day) - new Date(b.day));
+    });
+    
+    return grouped;
+  };
+  
+  // Format the week range for display (e.g., "10 - 16 Tháng 5, 2023")
+  const formatWeekRange = (weekStartStr) => {
+    const weekStart = new Date(weekStartStr);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    
+    if (weekStart.getMonth() === weekEnd.getMonth() && weekStart.getFullYear() === weekEnd.getFullYear()) {
+      // Same month: "10 - 16 Tháng 5, 2023"
+      return `${weekStart.getDate()} - ${weekEnd.getDate()} ${weekStart.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
+    } else if (weekStart.getFullYear() === weekEnd.getFullYear()) {
+      // Different month, same year: "28 Tháng 4 - 4 Tháng 5, 2023"
+      return `${weekStart.getDate()} ${weekStart.toLocaleDateString('vi-VN', { month: 'long' })} - ${weekEnd.getDate()} ${weekEnd.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
+    } else {
+      // Different year: "30 Tháng 12, 2022 - 5 Tháng 1, 2023"
+      return `${weekStart.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })} - ${weekEnd.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    }
+  };
+
+  // Get day of week in Vietnamese
+  const getVietnameseDayOfWeek = (dateString) => {
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay();
+    const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+    return days[dayOfWeek];
+  };
+
+  const renderCalendar = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    
+    // Adjust first day of week (assuming Sunday is 0)
+    const startDay = firstDay === 0 ? 6 : firstDay - 1; // Convert to Monday = 0, Sunday = 6
+    
+    const days = [];
+    const daysOfWeek = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    
+    // Add days from previous month
+    for (let i = 0; i < startDay; i++) {
+      days.push(null);
+    }
+    
+    // Add days of current month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+    
+    return (
+      <div className="mt-4">
+        <div className="flex justify-between items-center mb-4">
+          <button 
+            className="px-3 py-1 bg-gray-200 rounded"
+            onClick={handlePrevMonth}
+          >
+            &lt; Tháng trước
+          </button>
+          <h2 className="text-xl font-semibold">{getMonthName(month)} {year}</h2>
+          <button 
+            className="px-3 py-1 bg-gray-200 rounded"
+            onClick={handleNextMonth}
+          >
+            Tháng sau &gt;
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-7 gap-1">
+          {daysOfWeek.map((day, index) => (
+            <div key={index} className="text-center font-semibold py-2 border-b">
+              {day}
+            </div>
+          ))}
+          
+          {days.map((day, index) => {
+            if (!day) {
+              return <div key={`empty-${index}`} className="h-28 bg-gray-100 p-1"></div>;
+            }
+            
+            const isToday = day.toDateString() === new Date().toDateString();
+            const hasBooking = isDateInBookings(day);
+            const isScheduled = isDateInSchedule(day);
+            const dayBookings = getBookingsForDate(day);
+            
+            return (
+              <div 
+                key={index} 
+                className={`h-28 p-1 border relative overflow-hidden ${
+                  isToday ? 'bg-blue-50 border-blue-500' : ''
+                } ${isScheduled ? 'bg-teal-50' : ''}`}
+              >
+                <div className="flex justify-between">
+                  <span className={`font-semibold ${isToday ? 'text-blue-600' : ''}`}>
+                    {day.getDate()}
+                  </span>
+                  <div className="flex">
+                    {isScheduled && (
+                      <div className="h-2 w-2 rounded-full bg-teal-500 mr-1"></div>
+                    )}
+                    {hasBooking && (
+                      <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-1 text-xs overflow-y-auto max-h-20">
+                  {dayBookings.map((booking, idx) => (
+                    <div 
+                      key={idx} 
+                      className="mb-1 p-1 bg-orange-100 rounded truncate text-xs"
+                      title={`${booking.customerName}: ${formatTime(booking.timeToStart)} - ${formatTime(booking.timeToEnd)}`}
+                    >
+                      {formatTime(booking.timeToStart)} - {booking.customerName}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        <div className="mt-4 flex gap-4">
+          <div className="flex items-center">
+            <div className="h-3 w-3 rounded-full bg-teal-500 mr-2"></div>
+            <span className="text-sm">Ngày làm việc đã đăng ký</span>
+          </div>
+          <div className="flex items-center">
+            <div className="h-3 w-3 rounded-full bg-orange-500 mr-2"></div>
+            <span className="text-sm">Cuộc hẹn đã xác nhận</span>
+          </div>
+          <div className="flex items-center">
+            <div className="h-3 w-3 rounded-full bg-blue-500 mr-2"></div>
+            <span className="text-sm">Hôm nay</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderContent = () => {
@@ -737,46 +1039,213 @@ const CareTaker = () => {
                   </div>
 
                   <div className="md:w-1/2 md:pl-4">
-                    <h2 className="text-lg font-semibold mb-3">Ngày đã chọn</h2>
-                    <div className="border p-4 rounded-lg bg-gray-50 min-h-[300px]">
-                      {selectedDates.length > 0 ? (
-                        <div className="space-y-2">
-                          {selectedDates.map((dateStr) => (
-                            <div key={dateStr} className="flex justify-between items-center border-b pb-2">
-                              <div className="flex items-center">
-                                <FontAwesomeIcon icon={faCalendarCheck} className="text-teal-500 mr-2" />
-                                <span>{new Date(dateStr).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                    <div className="mb-6">
+                      <h2 className="text-lg font-semibold mb-3">Ngày đã chọn</h2>
+                      <div className="border p-4 rounded-lg bg-gray-50 min-h-[150px]">
+                        {selectedDates.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedDates.map((dateStr) => (
+                              <div key={dateStr} className="flex justify-between items-center border-b pb-2">
+                                <div className="flex items-center">
+                                  <FontAwesomeIcon icon={faCalendarCheck} className="text-teal-500 mr-2" />
+                                  <span>{new Date(dateStr).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                                <button
+                                  className="text-red-500"
+                                  onClick={() => setSelectedDates(selectedDates.filter(d => d !== dateStr))}
+                                >
+                                  <FontAwesomeIcon icon={faTimes} />
+                                </button>
                               </div>
-                              {/* <div className="text-gray-500">09:00 - 17:00</div> */}
-                              <button
-                                className="text-red-500"
-                                onClick={() => setSelectedDates(selectedDates.filter(d => d !== dateStr))}
-                              >
-                                <FontAwesomeIcon icon={faTimes} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-gray-500">
-                          <p>Chưa có ngày nào được chọn</p>
-                        </div>
-                      )}
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500">
+                            <p>Chưa có ngày nào được chọn</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3">
+                        <button
+                          className="px-6 py-3 bg-teal-500 text-white rounded-md font-medium flex items-center justify-center w-full"
+                          onClick={handleSaveSchedule}
+                          disabled={scheduleSaving}
+                        >
+                          {scheduleSaving ? 'Đang lưu...' : 'Đăng ký lịch làm việc'}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="mt-6 text-right">
-                      <button
-                        className="px-6 py-3 bg-teal-500 text-white rounded-md font-medium flex items-center justify-center w-full"
-                        onClick={handleSaveSchedule}
-                        disabled={scheduleSaving}
-                      >
-                        {scheduleSaving ? 'Đang lưu...' : 'Đăng ký lịch làm việc'}
-                      </button>
+                    <div>
+                      <h2 className="text-lg font-semibold mb-3">Lịch làm việc đã đăng ký</h2>
+                      <div className="border p-4 rounded-lg bg-gray-50 max-h-[350px] overflow-y-auto">
+                        {calendarEntries.length > 0 ? (
+                          (() => {
+                            // Filter to only keep entries from today onwards
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0); // Set to beginning of today
+                            
+                            const futureEntries = calendarEntries.filter(entry => {
+                              const entryDate = new Date(entry.day);
+                              entryDate.setHours(0, 0, 0, 0);
+                              return entryDate >= today;
+                            });
+                            
+                            if (futureEntries.length === 0) {
+                              return (
+                                <div className="flex items-center justify-center h-[100px] text-gray-500">
+                                  <p>Không có ngày làm việc nào trong tương lai</p>
+                                </div>
+                              );
+                            }
+                            
+                            const groupedEntries = groupDatesByWeek(futureEntries);
+                            
+                            return (
+                              <div>
+                                {Object.entries(groupedEntries)
+                                  .sort(([weekA], [weekB]) => new Date(weekA) - new Date(weekB))
+                                  .map(([weekStart, entries]) => (
+                                    <div key={weekStart} className="border-b last:border-b-0">
+                                      <div className="bg-teal-50 px-4 py-2 font-medium text-teal-700 border-b">
+                                        {formatWeekRange(weekStart)}
+                                      </div>
+                                      <div className="p-2">
+                                        {entries.map((entry) => (
+                                          <div key={entry.calendarId} className="flex justify-between items-center p-2 hover:bg-gray-100 rounded-md">
+                                            <div className="flex items-center">
+                                              <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+                                                <span className="text-xs font-semibold text-teal-700">
+                                                  {new Date(entry.day).getDate()}
+                                                </span>
+                                              </div>
+                                              <div>
+                                                <div className="font-medium">{getVietnameseDayOfWeek(entry.day)}</div>
+                                                <div className="text-sm text-gray-500">
+                                                  {new Date(entry.day).toLocaleDateString('vi-VN', { 
+                                                    day: 'numeric', 
+                                                    month: 'numeric', 
+                                                    year: 'numeric' 
+                                                  })}
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <button
+                                              className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+                                              onClick={() => handleDeleteCalendarEntry(entry.calendarId)}
+                                              disabled={deletingCalendar}
+                                              title="Xóa ngày này"
+                                            >
+                                              <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <div className="flex items-center justify-center h-[100px] text-gray-500">
+                            <p>Chưa có ngày làm việc nào được đăng ký</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
             </div>
+          </div>
+        );
+      case 'calendar':
+        return (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h1 className="text-2xl font-bold mb-4">Lịch làm việc</h1>
+            
+            <p className="text-gray-600 mb-4">
+              Quản lý lịch làm việc và xem các cuộc hẹn đã được xác nhận. Ngày có màu xanh nhạt là những ngày bạn đã đăng ký có thể làm việc.
+            </p>
+            
+            {loadingCalendar ? (
+              <div className="text-center py-8">
+                <p>Đang tải lịch làm việc...</p>
+              </div>
+            ) : (
+              <div>
+                {renderCalendar()}
+                
+                <div className="mt-8 border-t pt-4">
+                  <h2 className="text-lg font-semibold mb-4">Cập nhật lịch làm việc</h2>
+                  <p className="text-gray-600 mb-4">
+                    Sử dụng lịch dưới đây để thêm hoặc xóa ngày làm việc của bạn.
+                  </p>
+                  
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/2 mb-6 md:mb-0 md:pr-4">
+                      <div className="border p-4 rounded-lg bg-gray-50">
+                        <DatePicker
+                          inline
+                          minDate={new Date()}
+                          highlightDates={[
+                            ...existingDates.map(dateStr => new Date(dateStr)),
+                            ...selectedDates.map(dateStr => new Date(dateStr))
+                          ]}
+                          onSelect={(date) => handleDateSelect(date)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="mt-2 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-500 mr-2"></div>
+                          <span>Ngày đã đăng ký trước đó</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="md:w-1/2 md:pl-4">
+                      <h2 className="text-lg font-semibold mb-3">Ngày đã chọn</h2>
+                      <div className="border p-4 rounded-lg bg-gray-50 min-h-[300px]">
+                        {selectedDates.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedDates.map((dateStr) => (
+                              <div key={dateStr} className="flex justify-between items-center border-b pb-2">
+                                <div className="flex items-center">
+                                  <FontAwesomeIcon icon={faCalendarCheck} className="text-teal-500 mr-2" />
+                                  <span>{new Date(dateStr).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                                </div>
+                                <button
+                                  className="text-red-500"
+                                  onClick={() => setSelectedDates(selectedDates.filter(d => d !== dateStr))}
+                                >
+                                  <FontAwesomeIcon icon={faTimes} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500">
+                            <p>Chưa có ngày nào được chọn</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6">
+                        <button
+                          className="px-6 py-3 bg-teal-500 text-white rounded-md font-medium flex items-center justify-center w-full"
+                          onClick={handleSaveSchedule}
+                          disabled={scheduleSaving}
+                        >
+                          {scheduleSaving ? 'Đang lưu...' : 'Cập nhật lịch làm việc'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       default:
@@ -887,18 +1356,25 @@ const CareTaker = () => {
                   Lịch hẹn của tôi
                 </li>
                 <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'results' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
-                  onClick={() => setCurrentPage('results')}
+                  className={`flex items-center cursor-pointer ${currentPage === 'calendar' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  onClick={() => setCurrentPage('calendar')}
                 >
-                  <FontAwesomeIcon icon={faFileLines} className="mr-3" />
-                  Lịch sử thanh toán
+                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-3" />
+                  Lịch làm việc
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'schedule' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('schedule')}
                 >
                   <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3" />
-                  Lên lịch làm việc
+                  Đăng ký lịch
+                </li>
+                <li
+                  className={`flex items-center cursor-pointer ${currentPage === 'results' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  onClick={() => setCurrentPage('results')}
+                >
+                  <FontAwesomeIcon icon={faFileLines} className="mr-3" />
+                  Lịch sử thanh toán
                 </li>
               </ul>
             </div>
