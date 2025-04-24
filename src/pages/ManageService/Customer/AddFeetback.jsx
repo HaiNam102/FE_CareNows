@@ -92,7 +92,7 @@ export default function AddFeedback() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       <button
         onClick={openModal}
         className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300"

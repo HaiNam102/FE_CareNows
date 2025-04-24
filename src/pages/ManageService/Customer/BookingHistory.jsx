@@ -7,6 +7,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "../../../components/ui/card";
 import { Separator } from "../../../components/ui/separator";
 import { useNavigate } from 'react-router-dom';
+import AddFeedback from './AddFeetback';
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api';
@@ -49,6 +50,7 @@ const storeMockToken = () => {
 const categories = [
   { id: "all", label: "Tất cả" },
   { id: "pending", label: "Chờ xác nhận" },
+  { id: "accepted", label: "Đã xác nhận" },
   { id: "completed", label: "Đã hoàn thành" },
   { id: "cancelled", label: "Đã hủy" }
 ];
@@ -59,21 +61,13 @@ const getStatusConfig = (status) => {
       color: "bg-[#11AA52]",
       text: "Đã hoàn thành" 
     },
-    ONGOING: {
-      color: "bg-[#F7B928]",
-      text: "Đang thực hiện"
-    },
-    CANCELLED: {
-      color: "bg-[#FF4842]",
-      text: "Đã hủy"
-    },
     PENDING: {
       color: "bg-[#2196F3]",
       text: "Chờ xác nhận"
     },
     ACCEPT: {
       color: "bg-[#11AA52]",
-      text: "Đã chấp nhận"
+      text: "Đã xác nhận"
     },
     REJECT: {
       color: "bg-[#FF1A51]",
@@ -178,14 +172,16 @@ const BookingDetailModal = ({ booking, onClose }) => {
                   <span className="text-[#00A86B] font-semibold">{booking.rating}</span>
                   <span className="text-gray-500">({booking.toltalReviewers || 0})</span>
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 ">
                   <button className="px-4 py-2 border border-[#00A86B] text-[#00A86B] rounded-lg hover:bg-[#00A86B] hover:text-white transition-colors">
                     Liên hệ
                   </button>
                   {booking.serviceProgress === "COMPLETED" && (
-                    <button className="px-4 py-2 bg-[#00A86B] text-white rounded-lg hover:bg-[#008F5D] transition-colors">
-                      Đánh giá
-                    </button>
+                    <AddFeedback
+                    careTakerId={booking.careTakerId} // Truyền careTakerId
+                    careTakerName={booking.careTakerName} // Truyền tên chăm sóc viên
+                    experienceYear={booking.experienceYear } // Truyền số năm kinh nghiệm
+                  />
                   )}
                 </div>
               </div>
@@ -221,11 +217,9 @@ const BookingHistory = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
-
+  const [hasFeedbackMap, setHasFeedbackMap] = useState({});
   // Store a mock token for testing without a real backend
   useEffect(() => {
-    // This is only for demonstration purposes
-    // In a real app, this would come from the authentication flow
     storeMockToken();
   }, []);
 
@@ -242,21 +236,15 @@ const BookingHistory = () => {
         }
       } catch (err) {
         console.error('Error fetching bookings:', err);
-        
-        // More detailed error handling
         if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
           if (err.response.status === 401) {
             setError('Please log in to view your bookings');
           } else {
             setError(`Server error: ${err.response.data?.message || 'Unknown error'}`);
           }
         } else if (err.request) {
-          // The request was made but no response was received
           setError('No response from server. Please check your connection.');
         } else {
-          // Something happened in setting up the request that triggered an Error
           setError('Error setting up request. Please try again later.');
         }
       } finally {
@@ -275,8 +263,9 @@ const BookingHistory = () => {
       // Map our UI category names to backend status values
       const statusMap = {
         "pending": ["PENDING"],
-        "completed": ["COMPLETED", "ACCEPT"],
-        "cancelled": ["CANCELLED", "REJECT"]
+        "accepted": ["ACCEPT"],
+        "completed": ["COMPLETED"],
+        "cancelled": ["REJECT"]
       };
       
       const filtered = bookings.filter(booking => {
@@ -299,16 +288,12 @@ const BookingHistory = () => {
       }
     } catch (error) {
       console.error('Error fetching booking details:', error);
-      
-      // Enhanced error handling
       if (error.response && error.response.status === 404) {
-        // Handle not found case
         alert('Booking not found. It may have been deleted.');
         setSelectedBooking(null);
       } else {
-        // For other errors, still show whatever data we have
         setSelectedBooking({
-      ...booking,
+          ...booking,
           loadError: true, 
           errorMessage: error.response?.data?.message || 'Failed to load complete details'
         });
@@ -332,28 +317,26 @@ const BookingHistory = () => {
           {/* Main Content */}
           <div className="flex-1">
             <div className="w-full max-w-[900px] px-8 py-8">
-            {/* Navigation Tabs */}
-            <div className="flex justify-center w-full mb-8">
-              <div className="bg-white rounded-lg inline-flex">
-                <div className="flex items-center px-[10px] py-[6px]">
-                  {categories.map((category, index) => (
-                    <React.Fragment key={category.id}>
-                      <button
-                        className={`whitespace-nowrap rounded-lg transition-colors ${
-                          activeCategory === category.id
-                            ? 'bg-[#00A86B] text-white px-6 py-2'
-                            : 'text-gray-400'
-                        } font-['SVN-Gilroy'] text-base`}
-                        onClick={() => setActiveCategory(category.id)}
-                      >
-                        {category.label}
-                      </button>
-                      {index < categories.length - 1 && <div className="w-[161px]" />}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            </div>
+              {/* Navigation Tabs */}
+              <div className="flex justify-center w-full mb-8">
+  <div className="bg-white rounded-lg flex w-full">
+    <div className="flex items-center justify-between w-full px-[10px] py-[6px]">
+      {categories.map((category) => (
+        <button
+          key={category.id}
+          className={`whitespace-nowrap rounded-lg transition-colors ${
+            activeCategory === category.id
+              ? 'bg-[#00A86B] text-white px-6 py-2'
+              : 'text-gray-400'
+          } font-['SVN-Gilroy'] text-base`}
+          onClick={() => setActiveCategory(category.id)}
+        >
+          {category.label}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
 
               {/* Loading, Error or Booking Cards */}
               {loading ? (
@@ -381,76 +364,76 @@ const BookingHistory = () => {
                   </button>
                 </div>
               ) : (
-            <div className="grid grid-cols-2 gap-6 mb-[400px]">
+                <div className="grid grid-cols-2 gap-6 mb-[400px]">
                   {filteredBookings.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
-                  onClick={() => handleViewDetail(booking)}
-                >
-                  <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
-                    <CardHeader className="px-6 py-1">
-                      <div className="flex items-center justify-between">
-                        <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
-                                Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
-                        </div>
-                              <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
-                                {getStatusConfig(booking.serviceProgress).text}
-                        </Badge>
-                      </div>
-                      <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[13px] leading-[26.3px] mt-1">
-                              Đơn hàng: #{booking.bookingId}
-                      </div>
-                      <div className="h-[0.75px] bg-[#006B52]/10 -mx-6 mt-4 mb-6" />
-                    </CardHeader>
-
-                    <CardContent className="px-6">
-                      <div className="flex items-start gap-6 pt-8">
-                        <div
-                          className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
-                                style={{ backgroundImage: `url(${booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"})` }}
-                        />
-                        <div className="flex flex-col items-start gap-3 flex-1">
-                          <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
-                                  {booking.careTakerName}
+                    <div
+                      key={booking.id}
+                      className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
+                      onClick={() => handleViewDetail(booking)}
+                    >
+                      <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+                        <CardHeader className="px-6 py-1">
+                          <div className="flex items-center justify-between">
+                            <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
+                              Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                            </div>
+                            <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
+                              {getStatusConfig(booking.serviceProgress).text}
+                            </Badge>
                           </div>
-                          <div className="flex items-center gap-2 self-stretch">
-                            <Star className="w-[18px] h-[18px] text-[#00a37d] fill-[#00a37d]" />
-                            <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-[16px] leading-[19px]">
-                                    <span className="text-[#00a37d]">{booking.rating}</span>
-                              <span className="text-[#111111]">&nbsp;</span>
-                                    <span className="text-[#bcb9c5]">({booking.toltalReviewers})</span>
+                          <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[13px] leading-[26.3px] mt-1">
+                            Đơn hàng: #{booking.bookingId}
+                          </div>
+                          <div className="h-[0.75px] bg-[#006B52]/10 -mx-6 mt-4 mb-6" />
+                        </CardHeader>
+
+                        <CardContent className="px-6">
+                          <div className="flex items-start gap-6 pt-8">
+                            <div
+                              className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
+                              style={{ backgroundImage: `url(${booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"})` }}
+                            />
+                            <div className="flex flex-col items-start gap-3 flex-1">
+                              <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
+                                {booking.careTakerName}
+                              </div>
+                              <div className="flex items-center gap-2 self-stretch">
+                                <Star className="w-[18px] h-[18px] text-[#00a37d] fill-[#00a37d]" />
+                                <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-[16px] leading-[19px]">
+                                  <span className="text-[#00a37d]">{booking.rating}</span>
+                                  <span className="text-[#111111]"> </span>
+                                  <span className="text-[#bcb9c5]">({booking.toltalReviewers})</span>
+                                </div>
+                              </div>
+                              <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[15px] leading-[26.3px]">
+                                Chăm sóc tại {booking.locationType === 'HOSPITAL' ? 'bệnh viện' : 'nhà'}
+                              </div>
+                              {booking.serviceProgress === "COMPLETED" && (
+                                <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#008666] text-[15px] leading-[26.3px] underline cursor-pointer hover:text-[#00a37d]">
+                                  Đánh giá ngay
+                                </div>
+                              )}
+                              <div className="self-stretch text-right [font-family:'SVN-Gilroy-SemiBold',Helvetica] text-[#00a37d] text-[24px] font-semibold mt-1">
+                                {booking.servicePrice?.toLocaleString()} VND
+                              </div>
                             </div>
                           </div>
-                          <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[15px] leading-[26.3px]">
-                                  Chăm sóc tại {booking.locationType === 'HOSPITAL' ? 'bệnh viện' : 'nhà'}
-                          </div>
-                                {booking.serviceProgress === "COMPLETED" && (
-                          <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#008666] text-[15px] leading-[26.3px] underline cursor-pointer hover:text-[#00a37d]">
-                            Đánh giá ngay
-                          </div>
-                                )}
-                          <div className="self-stretch text-right [font-family:'SVN-Gilroy-SemiBold',Helvetica] text-[#00a37d] text-[24px] font-semibold mt-1">
-                                  {booking.servicePrice?.toLocaleString()} VND
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
+                        </CardContent>
 
-                    <CardFooter className="flex flex-col px-6 pb-2.5">
-                      <div className="h-[1px] w-[calc(100%+48px)] bg-[#006B52] opacity-100 -mx-6 mb-4" />
-                      <div 
-                        className="flex items-center justify-between w-full group hover:translate-x-1 transition-transform duration-200 cursor-pointer"
-                      >
-                        <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#006B52] text-[13px] leading-[26.3px]">
-                          Xem chi tiết
-                        </div>
-                        <ArrowRight className="w-[21px] h-[21px] text-[#006B52] stroke-[1.5] transition-transform duration-200" />
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </div>
-              ))}
+                        <CardFooter className="flex flex-col px-6 pb-2.5">
+                          <div className="h-[1px] w-[calc(100%+48px)] bg-[#006B52] opacity-100 -mx-6 mb-4" />
+                          <div 
+                            className="flex items-center justify-between w-full group hover:translate-x-1 transition-transform duration-200 cursor-pointer"
+                          >
+                            <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#006B52] text-[13px] leading-[26.3px]">
+                              Xem chi tiết
+                            </div>
+                            <ArrowRight className="w-[21px] h-[21px] text-[#006B52] stroke-[1.5] transition-transform duration-200" />
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -469,4 +452,4 @@ const BookingHistory = () => {
   );
 };
 
-export default BookingHistory; 
+export default BookingHistory;
