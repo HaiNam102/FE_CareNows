@@ -133,8 +133,8 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
               onClick={() => handleSelect(recipient)}
             >
               <h3 className="font-semibold text-gray-800">{recipient.name}</h3> 
-              <p className="text-sm text-gray-600">Giới tính: {recipient.gender}</p>
-              <p className="text-sm text-gray-600">Năm sinh: {recipient.yearOld}</p>
+              <p className="text-sm text-gray-600">Giới tính: {recipient.gender === "FEMALE" ? "Nữ" : "Nam"}</p>
+              <p className="text-sm text-gray-600">Số tuổi: {recipient.yearOld}</p>
               <p className="text-sm text-gray-600">Tình trạng: {recipient.specialDetail}</p> 
             </div>
           ))}
@@ -300,18 +300,14 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
     const formatDateTime = () => {
     if (!selectedDateRange || selectedDateRange.length === 0) return '';
 
-      const sortedDates = [...selectedDateRange].sort((a, b) => a - b);
-      const startDate = new Date(sortedDates[0]);
-      const endDate = new Date(sortedDates[sortedDates.length - 1]);
+    const formattedDates = selectedDateRange.map(date => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
+    }).join(', ');
 
-      const startDay = String(startDate.getDate()).padStart(2, '0');
-      const startMonth = String(startDate.getMonth() + 1).padStart(2, '0');
-
-      const endDay = String(endDate.getDate()).padStart(2, '0');
-      const endMonth = String(endDate.getMonth() + 1).padStart(2, '0');
-
-      return `${selectedTime.startTime}, ${startDay}/${startMonth} - ${selectedTime.endTime}, ${endDay}/${endMonth}`;
-    };
+    return `${selectedTime.startTime} đến ${selectedTime.endTime} trong ngày ${formattedDates}`;
+  };
 
     const handleNavigate = (tab, district, dateRange) => {
       setActiveTab(tab);
@@ -424,7 +420,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
     };
 
   const calculateTotalPrice = () => {
-    const pricePerHour = 600;
+    const pricePerHour = 120;
     const startTime = selectedTime.startTime.split(':').map(Number);
     const endTime = selectedTime.endTime.split(':').map(Number);
 
@@ -1171,7 +1167,7 @@ const CareRecipientSelector = ({ onSelectRecipient, onBack, onContinue }) => {
               <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold text-gray-800">Tổng cộng</h2>
               <span className="text-xl font-bold text-[#00A37D]">
-                {calculateTotalPrice().toLocaleString()} VNĐ
+                {calculateTotalPrice().toLocaleString()}.000 VNĐ
               </span>
               </div>
             </div>
