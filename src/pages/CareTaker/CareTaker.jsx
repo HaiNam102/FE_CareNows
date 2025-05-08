@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faUserCircle, faMapMarkerAlt, faStethoscope, faCheckCircle, faClock, faUser, faHospital, faHome, faMoneyBill, faInfoCircle, faFileLines, faTimes, faMars, faVenus, faBriefcase, faCalendarCheck, faCalendarWeek, faTrash } from '@fortawesome/free-solid-svg-icons';
-import axios from 'axios';
+import api from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -64,28 +64,9 @@ const CareTaker = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setError('Bạn cần đăng nhập để xem lịch hẹn.');
-        setLoading(false);
-        return;
-      }
-
-      // Configure request with auth header
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      const response = await axios.get('http://localhost:8080/api/booking/caretaker', config);
+      const response = await api.get('/booking/caretaker');
       console.log("Response data:", response.data.data);
-
-      // Process the response data
       if (response.data.data && Array.isArray(response.data.data)) {
-        // Add status if not present for testing
         const enhancedData = response.data.data.map((booking, index) => ({
           ...booking,
           id: booking.bookingId || index,
@@ -98,7 +79,6 @@ const CareTaker = () => {
         console.log("Response is not an array or is empty");
         setBookings([]);
       }
-
       setLoading(false);
     } catch (err) {
       console.error('Error fetching bookings:', err);
@@ -110,25 +90,8 @@ const CareTaker = () => {
   const fetchPayments = async () => {
     try {
       setPaymentLoading(true);
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        setPaymentError('Bạn cần đăng nhập để xem lịch sử thanh toán.');
-        setPaymentLoading(false);
-        return;
-      }
-
-      // Configure request with auth header
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      const response = await axios.get('http://localhost:8080/api/payment', config);
+      const response = await api.get('/payment');
       console.log("Payment response data:", response.data.data);
-
       if (response.data.data && Array.isArray(response.data.data)) {
         // Lọc những booking đã hoàn thành và có thể thanh toán
         const completedBookings = response.data.data.filter(booking =>
@@ -146,7 +109,6 @@ const CareTaker = () => {
         console.log("Payment response is not an array or is empty");
         setPayments([]);
       }
-
       setPaymentLoading(false);
     } catch (err) {
       console.error('Error fetching payments:', err);
@@ -157,27 +119,12 @@ const CareTaker = () => {
 
   const handleAcceptBooking = async (bookingId) => {
     try {
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-
-      // Configure request with auth header
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      // Send request to accept booking
-      await axios.put(`http://localhost:8080/api/booking/${bookingId}/status?status=ACCEPT`, {}, config);
-
-      // Update local state
+      await api.put(`/booking/${bookingId}/status?status=ACCEPT`);
       setBookings(prevBookings =>
         prevBookings.map(booking =>
           booking.bookingId === bookingId ? { ...booking, serviceProgress: 'ACCEPT' } : booking
         )
       );
-
-      // Show success message
       toast.success('Đã xác nhận đơn thành công');
     } catch (error) {
       console.error('Error accepting booking:', error);
@@ -187,27 +134,12 @@ const CareTaker = () => {
 
   const handleRejectBooking = async (bookingId) => {
     try {
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-
-      // Configure request with auth header
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      // Send request to reject booking
-      await axios.put(`http://localhost:8080/api/booking/${bookingId}/status?status=REJECT`, {}, config);
-
-      // Update local state
+      await api.put(`/booking/${bookingId}/status?status=REJECT`);
       setBookings(prevBookings =>
         prevBookings.map(booking =>
           booking.bookingId === bookingId ? { ...booking, serviceProgress: 'REJECT' } : booking
         )
       );
-
-      // Show success message
       toast.success('Đã từ chối đơn thành công');
     } catch (error) {
       console.error('Error rejecting booking:', error);
@@ -218,31 +150,12 @@ const CareTaker = () => {
   const fetchCareRecipient = async (bookingId) => {
     try {
       setLoadingRecipient(true);
-      // Get the authentication token from localStorage
-      const token = localStorage.getItem('token');
-
-      if (!token) {
-        toast.error('Bạn cần đăng nhập để xem thông tin.');
-        setLoadingRecipient(false);
-        return;
-      }
-
-      // Configure request with auth header
-      // const config = {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // };
-
-      // Fetch care recipient data for this booking
-      const response = await axios.get(`http://localhost:8080/api/booking/${bookingId}/care-recipient`);
-
+      const response = await api.get(`/booking/${bookingId}/care-recipient`);
       if (response.data.data) {
         setSelectedRecipient(response.data.data);
       } else {
         toast.error('Không thể tải thông tin người được chăm sóc.');
       }
-
       setLoadingRecipient(false);
     } catch (error) {
       console.error('Error fetching care recipient:', error);
@@ -352,7 +265,7 @@ const CareTaker = () => {
       };
       
       // Send request to save calendar
-      await axios.post('http://localhost:8080/api/calendar/create', requestBody, config);
+      await api.post('/calendar/create', requestBody, config);
       
       toast.success('Lịch làm việc đã được cập nhật thành công.');
       setScheduleSaving(false);
@@ -399,7 +312,7 @@ const CareTaker = () => {
       };
       
       // Fetch the caretaker's calendar
-      const response = await axios.get(`http://localhost:8080/api/calendar/my-calendar`, config);
+      const response = await api.get('/calendar/my-calendar', config);
       console.log("Du lieu la: ", response.data.data);
       if (response.data.data && response.data.code === 1010 && Array.isArray(response.data.data)) {
         // Store full calendar entries
@@ -447,7 +360,7 @@ const CareTaker = () => {
         };
         
         // Send request to delete calendar entry
-        await axios.delete(`http://localhost:8080/api/calendar/delete/${calendarId}`, config);
+        await api.delete(`/calendar/delete/${calendarId}`, config);
         
         // Update local state
         const updatedEntries = calendarEntries.filter(entry => entry.calendarId !== calendarId);
@@ -480,7 +393,7 @@ const CareTaker = () => {
       };
 
       // Send request to complete booking
-      await axios.put(`http://localhost:8080/api/booking/${bookingId}/status?status=COMPLETED`, {}, config);
+      await api.put(`/booking/${bookingId}/status?status=COMPLETED`, {}, config);
 
       // Update local state
       setBookings(prevBookings =>
@@ -525,7 +438,7 @@ const CareTaker = () => {
       const endDateStr = endDate.toLocaleDateString('en-CA');
       
       // Fetch bookings for the current month
-      const response = await axios.get(`http://localhost:8080/api/booking/caretaker?fromDate=${startDateStr}&toDate=${endDateStr}`, config);
+      const response = await api.get(`/booking/caretaker?fromDate=${startDateStr}&toDate=${endDateStr}`, config);
       
       if (response.data && Array.isArray(response.data.data)) {
         setCalendarBookings(response.data.data);

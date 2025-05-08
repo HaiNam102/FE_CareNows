@@ -20,6 +20,7 @@ import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
 import CareTakerPage from './pages/CareTaker';
 import AddFeetback from './pages/ManageService/Customer/AddFeetback';
+import FloatingChatButton from './components/FloatingChatButton';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -105,9 +106,8 @@ function App() {
         <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
         <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
         <Route path="/feetback" element={<AddFeetback />} />
-
-        
       </Routes>
+      <FloatingChatButton />
     </BrowserRouter>
   );
 }

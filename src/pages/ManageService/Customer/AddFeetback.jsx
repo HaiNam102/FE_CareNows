@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Star, X, Send, User } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify'; // Nhập toast từ react-toastify
+import api, { careTakerApi } from '../../../services/api';
 
 export default function AddFeedback() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,7 +38,7 @@ export default function AddFeedback() {
       return;
     }
 
-    setIsLoading(true); // Bật trạng thái loading
+    setIsLoading(true);
 
     const requestBody = {
       feedback: feedback,
@@ -45,25 +46,11 @@ export default function AddFeedback() {
     };
 
     try {
-      const response = await fetch(`http://localhost:8080/api/careTakerFeedBack?careTaker_id=${careTakerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // Thêm token nếu API yêu cầu
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await careTakerApi.addReview(careTakerId, requestBody) ;
+      console.log('API Response:', response.data);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Gửi đánh giá thất bại');
-      }
-
-      const data = await response.json();
-      console.log('API Response:', data);
-
-      if (data.code === 1011) {
-        setSubmittedData(data.data);
+      if (response.data.code === 1011) {
+        setSubmittedData(response.data.data);
         setShowConfirmation(true);
         toast.success('Gửi đánh giá thành công!', {
           position: 'top-right',
@@ -74,7 +61,7 @@ export default function AddFeedback() {
           draggable: true,
         });
       } else {
-        throw new Error(data.message || 'Gửi đánh giá thất bại');
+        throw new Error(response.data.message || 'Gửi đánh giá thất bại');
       }
     } catch (err) {
       console.error('Error submitting feedback:', err);
@@ -87,7 +74,7 @@ export default function AddFeedback() {
         draggable: true,
       });
     } finally {
-      setIsLoading(false); // Tắt trạng thái loading
+      setIsLoading(false);
     }
   };
 
