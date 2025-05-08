@@ -3,7 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 // Import the background image
 import loginBg from "../../../assets/images/HeroLogin.png";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import api from '../../../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from "jwt-decode";
@@ -22,7 +22,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8080/api/auths/login', {
+      const response = await api.post('/auths/login', {
         username: formData.username,
         password: formData.password
       });

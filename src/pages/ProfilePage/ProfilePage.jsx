@@ -7,7 +7,7 @@ import ScheduleSection from './ScheduleSection/ScheduleSection';
 import TimePicker from '../../components/TimePicker';
 import NannySchedulePopup from '../../components/NannySchedulePopup';
 import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api, { bookingApi, careRecipientApi } from '../../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -57,32 +57,20 @@ useEffect(() => {
   const fetchRecipients = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8080/api/careRecipient/customer', {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      console.log('Dữ liệu từ API careRecipient/customer:', response.data);
-
+      const response = await careRecipientApi.getAll();
       if (response.data.code === 1010) {
-        console.log('Danh sách recipients:', response.data.data);
         setRecipients(response.data.data);
       } else {
         toast.error('Không thể tải danh sách bệnh nhân');
       }
     } catch (error) {
-      console.error('Error fetching care recipients:', error);
       toast.error('Không thể tải danh sách bệnh nhân');
     } finally {
       setIsLoading(false);
     }
   };
-
   fetchRecipients();
-}, []); // Không cần phụ thuộc, chỉ gọi một lần khi component mount
+}, []);
 
 const handleSelect = (recipient) => {
   setSelectedRecipient(recipient);
@@ -242,7 +230,7 @@ const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const fetchAvailableDates = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:8080/api/calendar/caretaker/${careTakerId}`, {
+        const response = await api.get(`/calendar/caretaker/${careTakerId}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
@@ -481,30 +469,14 @@ const handleConfirmBooking = async () => {
       careRecipientId: selectedRecipient.careRecipientId,
       price: calculateTotalPrice(),
     };
-  
-    const token = localStorage.getItem('token');
-    const response = await fetch(`http://localhost:8080/api/booking?careTakerId=${careTakerId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Đặt lịch thất bại');
-    }
-
+    await bookingApi.createBooking(requestBody, careTakerId);
     toast.success('Đặt lịch thành công!');
     setShowSuccessPopup(true);
   } catch (error) {
-   
-    toast.error(error.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
+    toast.error(error.response?.data?.message || 'Đặt lịch thất bại. Vui lòng thử lại!');
     console.error('Booking error:', error);
   }
-  };
+};
 
   const handleAvailableDates = (dates) => {
     setAvailableDates(dates);

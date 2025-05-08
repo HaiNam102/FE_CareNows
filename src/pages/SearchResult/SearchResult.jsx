@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Calendar, MapPin, ChevronDown, Search, X } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 import ProfilePage from '../ProfilePage/ProfilePage';
+import api from '../../services/api';
 
 // Modal Component
 const Modal = ({ isOpen, onClose, title, children }) => {
@@ -324,20 +325,19 @@ const SearchResult = () => {
         const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-03-30";
         const districtValue = district || "Hải Châu";
         
-        const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
+        const url = `/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
         
         console.log("Fetching from URL:", url);
         
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                console.log("API Response:", data);
-                if (data.data) {
-                    setProfiles(data.data);
-                    setFilteredProfiles(data.data);
+        api.get(url)
+            .then(response => {
+                console.log("API Response:", response.data);
+                if (response.data.data) {
+                    setProfiles(response.data.data);
+                    setFilteredProfiles(response.data.data);
                 } else {
-                    setProfiles(data);
-                    setFilteredProfiles(data);
+                    setProfiles(response.data);
+                    setFilteredProfiles(response.data);
                 }
             })
             .catch(err => console.error("Lỗi fetch dữ liệu:", err));
@@ -447,17 +447,19 @@ const SearchResult = () => {
         const endDate = dateRange && dateRange[1] ? formatDateForAPI(dateRange[1]) : "2025-04-30";
         const districtValue = district || "Hải Châu";
         
-        const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
+        const url = `/careTaker/search?district=${encodeURIComponent(districtValue)}&dayStart=${startDate}&dayEnd=${endDate}`;
         
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                if (data.data) {
-                    setProfiles(data.data);
-                    setFilteredProfiles(data.data);
+        console.log("Fetching from URL:", url);
+        
+        api.get(url)
+            .then(response => {
+                console.log("API Response:", response.data);
+                if (response.data.data) {
+                    setProfiles(response.data.data);
+                    setFilteredProfiles(response.data.data);
                 } else {
-                    setProfiles(data);
-                    setFilteredProfiles(data);
+                    setProfiles(response.data);
+                    setFilteredProfiles(response.data);
                 }
             })
             .catch(err => console.error("Lỗi fetch dữ liệu tìm kiếm:", err));

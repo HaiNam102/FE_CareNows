@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const NannySchedulePopup = ({ careTakerId, selectedDateRange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +41,7 @@ const NannySchedulePopup = ({ careTakerId, selectedDateRange }) => {
     }
   }, [isOpen, actualCareTakerId, selectedDateRange]);
   
-  // Gọi API để lấy lịch của bảo mẫu - endpoint format: /api/booking/booked-slots/caretaker/{id}
+  // Gọi API để lấy lịch của bảo mẫu - endpoint format: /booking/booked-slots/caretaker/{id}
   const fetchNannySchedule = async () => {
     if (!actualCareTakerId) return;
     
@@ -69,7 +69,7 @@ const NannySchedulePopup = ({ careTakerId, selectedDateRange }) => {
       }
       
       // Endpoint lấy slots đã đặt của bảo mẫu
-      const response = await axios.get(`http://localhost:8080/api/booking/booked-slots/caretaker/${actualCareTakerId}`, {
+      const response = await api.get(`/booking/booked-slots/caretaker/${actualCareTakerId}`, {
         params,
         headers: {
           'Content-Type': 'application/json',

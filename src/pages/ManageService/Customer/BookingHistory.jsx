@@ -8,68 +8,15 @@ import { Card, CardContent, CardFooter, CardHeader } from "../../../components/u
 import { Separator } from "../../../components/ui/separator";
 import { useNavigate } from 'react-router-dom';
 import AddFeedback from './AddFeetback';
-import axios from 'axios';
+import api, { bookingApi } from '../../../services/api';
 
-const API_URL = 'http://localhost:8080/api';
-
-// API service
-const bookingApi = {
-  getCustomerBookings: () => {
-    return axios.get(`${API_URL}/booking/customer`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-  },
-
-  getBookingById: (id) => {
-    return axios.get(`${API_URL}/booking/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-  },
-
-};
 // Sửa đổi API Service cho payment
 const paymentApi = {
   initiatePayment: (bookingId) => {
-    console.log(`Initiating payment for booking ID: ${bookingId}`);
-    return axios.post(`${API_URL}/payment/payment?bookingId=${bookingId}`, null, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      // Thêm timeout để tránh chờ quá lâu
-      timeout: 10000
-    }).catch(error => {
-      // Xử lý lỗi khi gọi API
-      console.error("API call error:", error);
-      if (error.response) {
-        // Máy chủ trả về response với status code nằm ngoài phạm vi 2xx
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
-      } else if (error.request) {
-        // Yêu cầu đã được gửi nhưng không nhận được response
-        console.error("No response received:", error.request);
-      } else {
-        // Có lỗi khi thiết lập request
-        console.error("Request setup error:", error.message);
-      }
-      throw error;
-    });
+    return api.post(`/payment/payment?bookingId=${bookingId}`);
   },
-
   // updatePaymentStatus: (bookingId) => {
-  //   return axios.put(`${API_URL}/payment/${bookingId}/status?status=PAID`, null, {
-  //     headers: {
-  //       'Authorization': `Bearer ${localStorage.getItem('token')}`,
-  //       'Content-Type': 'application/json',
-  //       'Accept': 'application/json'
-  //     }
-  //   });
+  //   return api.put(`/payment/${bookingId}/status?status=PAID`);
   // }
 };
 
@@ -141,13 +88,13 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
       setPaymentProcessing(true);
       // Call the payment API
       const response = await paymentApi.initiatePayment(booking.bookingId);
-      
+
       // Kiểm tra cấu trúc response từ API
       console.log("Payment API response:", response);
-      
+
       // Kiểm tra cả hai cấu trúc response có thể có (trực tiếp hoặc trong data.data)
       let paymentUrl = null;
-      
+
       if (response.data?.success && response.data?.paymentUrl) {
         // Cấu trúc như trong hình Postman
         paymentUrl = response.data.paymentUrl;
@@ -155,13 +102,13 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
         // Cấu trúc như trong code hiện tại
         paymentUrl = response.data.data.paymentUrl;
       }
-      
+
       if (paymentUrl) {
         console.log("Opening payment URL:", paymentUrl);
-        
+
         // Mở URL thanh toán trong cửa sổ mới
         const paymentWindow = window.open(paymentUrl, '_self');
-        
+
         // Kiểm tra xem cửa sổ có được mở thành công không
         if (!paymentWindow || paymentWindow.closed || typeof paymentWindow.closed === 'undefined') {
           // Cửa sổ popup bị chặn hoặc không thể mở
@@ -169,7 +116,7 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
           setPaymentProcessing(false);
           return;
         }
-      
+
       } else {
         throw new Error('Payment URL not found in response');
       }
@@ -191,18 +138,18 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
         <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
           <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-         
-           <div className="sticky top-0 bg-white  flex justify-between items-center"> 
-           <h3 className="text-lg font-medium mr-4">Mã đơn hàng: #{booking.bookingId}</h3>
-            <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white`}>
-              {getStatusConfig(booking.serviceProgress).text}
-            </Badge>
-           </div>
+
+            <div className="sticky top-0 bg-white  flex justify-between items-center">
+              <h3 className="text-lg font-medium mr-4">Mã đơn hàng: #{booking.bookingId}</h3>
+              <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white`}>
+                {getStatusConfig(booking.serviceProgress).text}
+              </Badge>
+            </div>
             <div className="flex items-center justify-right">
               <button onClick={onClose} className="mr-0 ">
                 <X className="h-7 w-7 text-gray-500" />
               </button>
-              
+
             </div>
           </div>
 
@@ -222,7 +169,7 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Vị trí làm việc */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold font-['SVN-Gilroy']">Vị trí làm việc</h3>
@@ -238,14 +185,14 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Thông tin người chăm sóc */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold font-['SVN-Gilroy']">Thông tin người chăm sóc</h3>
               <div className="bg-gray-50 rounded-lg p-4 flex items-start gap-4">
-                <img 
-                  src={booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"} 
-                  alt={booking.careTakerName} 
+                <img
+                  src={booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"}
+                  alt={booking.careTakerName}
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div>
@@ -270,7 +217,7 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Chi tiết thanh toán */}
             <div className="space-y-3">
               <h3 className="text-lg font-semibold font-['SVN-Gilroy']">Chi tiết thanh toán</h3>
@@ -289,13 +236,12 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
                     <button
                       onClick={isPaymentSuccessful ? undefined : handlePayment}
                       disabled={isPaymentSuccessful || paymentProcessing}
-                      className={`w-full px-6 py-2 rounded-lg transition-colors flex justify-center items-center ${
-                        isPaymentSuccessful
+                      className={`w-full px-6 py-2 rounded-lg transition-colors flex justify-center items-center ${isPaymentSuccessful
                           ? "bg-gray-400 text-white cursor-not-allowed"
                           : paymentProcessing
                             ? "bg-[#00A86B]/70 text-white cursor-wait"
                             : "bg-[#00A86B] text-white hover:bg-[#008F5D]"
-                      }`}
+                        }`}
                     >
                       {paymentProcessing ? (
                         <>
@@ -395,7 +341,7 @@ const BookingHistory = () => {
         "completed": ["COMPLETED"],
         "cancelled": ["REJECT"]
       };
-      
+
       const filtered = bookings.filter(booking => {
         const validStatuses = statusMap[activeCategory];
         return validStatuses ? validStatuses.includes(booking.serviceProgress) : false;
@@ -422,7 +368,7 @@ const BookingHistory = () => {
       } else {
         setSelectedBooking({
           ...booking,
-          loadError: true, 
+          loadError: true,
           errorMessage: error.response?.data?.message || 'Failed to load complete details'
         });
       }
@@ -452,11 +398,10 @@ const BookingHistory = () => {
                     {categories.map((category) => (
                       <button
                         key={category.id}
-                        className={`whitespace-nowrap rounded-lg transition-colors ${
-                          activeCategory === category.id
+                        className={`whitespace-nowrap rounded-lg transition-colors ${activeCategory === category.id
                             ? 'bg-[#00A86B] text-white px-6 py-2'
                             : 'text-gray-400'
-                        } font-['SVN-Gilroy'] text-base`}
+                          } font-['SVN-Gilroy'] text-base`}
                         onClick={() => setActiveCategory(category.id)}
                       >
                         {category.label}
@@ -484,7 +429,7 @@ const BookingHistory = () => {
                   </div>
                   <h3 className="text-xl font-semibold mb-1">Không có lịch chăm sóc nào</h3>
                   <p className="text-gray-500 mb-4">Bạn chưa có lịch chăm sóc nào trong danh mục này</p>
-                  <button 
+                  <button
                     className="bg-[#00A86B] text-white px-6 py-2 rounded-lg hover:bg-[#008F5D] transition-colors"
                     onClick={() => navigate('/services')}
                   >
@@ -494,74 +439,74 @@ const BookingHistory = () => {
               ) : (
                 <div className="grid grid-cols-2 gap-6 mb-[400px]">
                   {filteredBookings.map((booking) => (
-  <div
-    key={booking.bookingId} // Use booking.bookingId instead of booking.id
-    className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
-    onClick={() => handleViewDetail(booking)}
-  >
-    <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
-      <CardHeader className="px-6 py-1">
-        <div className="flex items-center justify-between">
-          <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
-            Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
-          </div>
-          <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
-            {getStatusConfig(booking.serviceProgress).text}
-          </Badge>
-        </div>
-        <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[13px] leading-[26.3px] mt-1">
-          Đơn hàng: #{booking.bookingId}
-        </div>
-        <div className="h-[0.75px] bg-[#006B52]/10 -mx-6 mt-4 mb-6" />
-      </CardHeader>
+                    <div
+                      key={booking.bookingId} // Use booking.bookingId instead of booking.id
+                      className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
+                      onClick={() => handleViewDetail(booking)}
+                    >
+                      <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+                        <CardHeader className="px-6 py-1">
+                          <div className="flex items-center justify-between">
+                            <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
+                              Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                            </div>
+                            <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
+                              {getStatusConfig(booking.serviceProgress).text}
+                            </Badge>
+                          </div>
+                          <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[13px] leading-[26.3px] mt-1">
+                            Đơn hàng: #{booking.bookingId}
+                          </div>
+                          <div className="h-[0.75px] bg-[#006B52]/10 -mx-6 mt-4 mb-6" />
+                        </CardHeader>
 
-      <CardContent className="px-6">
-        <div className="flex items-start gap-6 pt-8">
-          <div
-            className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
-            style={{ backgroundImage: `url(${booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"})` }}
-          />
-          <div className="flex flex-col items-start gap-3 flex-1">
-            <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
-              {booking.careTakerName}
-            </div>
-            <div className="flex items-center gap-2 self-stretch">
-              <Star className="w-[18px] h-[18px] text-[#00a37d] fill-[#00a37d]" />
-              <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-[16px] leading-[19px]">
-                <span className="text-[#00a37d]">{booking.rating}</span>
-                <span className="text-[#111111]"> </span>
-                <span className="text-[#bcb9c5]">({booking.toltalReviewers})</span>
-              </div>
-            </div>
-            <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[15px] leading-[26.3px]">
-              Chăm sóc tại {booking.locationType === 'HOSPITAL' ? 'bệnh viện' : 'nhà'}
-            </div>
-            {booking.serviceProgress === "COMPLETED" && (
-              <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#008666] text-[15px] leading-[26.3px] underline cursor-pointer hover:text-[#00a37d]">
-                Đánh giá ngay
-              </div>
-            )}
-            <div className="self-stretch text-right [font-family:'SVN-Gilroy-SemiBold',Helvetica] text-[#00a37d] text-[24px] font-semibold mt-1">
-              {booking.servicePrice?.toLocaleString()} VND
-            </div>
-          </div>
-        </div>
-      </CardContent>
+                        <CardContent className="px-6">
+                          <div className="flex items-start gap-6 pt-8">
+                            <div
+                              className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
+                              style={{ backgroundImage: `url(${booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"})` }}
+                            />
+                            <div className="flex flex-col items-start gap-3 flex-1">
+                              <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
+                                {booking.careTakerName}
+                              </div>
+                              <div className="flex items-center gap-2 self-stretch">
+                                <Star className="w-[18px] h-[18px] text-[#00a37d] fill-[#00a37d]" />
+                                <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-[16px] leading-[19px]">
+                                  <span className="text-[#00a37d]">{booking.rating}</span>
+                                  <span className="text-[#111111]"> </span>
+                                  <span className="text-[#bcb9c5]">({booking.toltalReviewers})</span>
+                                </div>
+                              </div>
+                              <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[15px] leading-[26.3px]">
+                                Chăm sóc tại {booking.locationType === 'HOSPITAL' ? 'bệnh viện' : 'nhà'}
+                              </div>
+                              {booking.serviceProgress === "COMPLETED" && (
+                                <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#008666] text-[15px] leading-[26.3px] underline cursor-pointer hover:text-[#00a37d]">
+                                  Đánh giá ngay
+                                </div>
+                              )}
+                              <div className="self-stretch text-right [font-family:'SVN-Gilroy-SemiBold',Helvetica] text-[#00a37d] text-[24px] font-semibold mt-1">
+                                {booking.servicePrice?.toLocaleString()} VND
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
 
-      <CardFooter className="flex flex-col px-6 pb-2.5">
-        <div className="h-[1px] w-[calc(100%+48px)] bg-[#006B52] opacity-100 -mx-6 mb-4" />
-        <div 
-          className="flex items-center justify-between w-full group hover:translate-x-1 transition-transform duration-200 cursor-pointer"
-        >
-          <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#006B52] text-[13px] leading-[26.3px]">
-            Xem chi tiết
-          </div>
-          <ArrowRight className="w-[21px] h-[21px] text-[#006B52] stroke-[1.5] transition-transform duration-200" />
-        </div>
-      </CardFooter>
-    </Card>
-  </div>
-))}
+                        <CardFooter className="flex flex-col px-6 pb-2.5">
+                          <div className="h-[1px] w-[calc(100%+48px)] bg-[#006B52] opacity-100 -mx-6 mb-4" />
+                          <div
+                            className="flex items-center justify-between w-full group hover:translate-x-1 transition-transform duration-200 cursor-pointer"
+                          >
+                            <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#006B52] text-[13px] leading-[26.3px]">
+                              Xem chi tiết
+                            </div>
+                            <ArrowRight className="w-[21px] h-[21px] text-[#006B52] stroke-[1.5] transition-transform duration-200" />
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -571,7 +516,7 @@ const BookingHistory = () => {
 
       {/* Modal for booking details */}
       {selectedBooking && (
-        <BookingDetailModal 
+        <BookingDetailModal
           booking={selectedBooking}
           onClose={closeModal}
         />
