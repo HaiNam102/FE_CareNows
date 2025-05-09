@@ -408,7 +408,7 @@ const BookingHistory = () => {
                       <div className="flex items-start gap-6 pt-8">
                         <div
                           className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
-                                style={{ backgroundImage: `url(${booking.careTakerAvatar || "https://i.pravatar.cc/300?img=1"})` }}
+                                style={{ backgroundImage: `url(${booking.imgProfile || "https://i.pravatar.cc/300?img=1"})` }}
                         />
                         <div className="flex flex-col items-start gap-3 flex-1">
                           <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
