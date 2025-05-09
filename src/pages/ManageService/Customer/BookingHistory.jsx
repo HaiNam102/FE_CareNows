@@ -439,16 +439,53 @@ const BookingHistory = () => {
               ) : (
                 <div className="grid grid-cols-2 gap-6 mb-[400px]">
                   {filteredBookings.map((booking) => (
-                    <div
-                      key={booking.bookingId} // Use booking.bookingId instead of booking.id
-                      className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
-                      onClick={() => handleViewDetail(booking)}
-                    >
-                      <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
-                        <CardHeader className="px-6 py-1">
-                          <div className="flex items-center justify-between">
-                            <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
-                              Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                <div
+                  key={booking.id}
+                  className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
+                  onClick={() => handleViewDetail(booking)}
+                >
+                  <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+                    <CardHeader className="px-6 py-1">
+                      <div className="flex items-center justify-between">
+                        <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
+                                Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
+                        </div>
+                              <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
+                                {getStatusConfig(booking.serviceProgress).text}
+                        </Badge>
+                      </div>
+                      <div className="[font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[#8c8c8c] text-[13px] leading-[26.3px] mt-1">
+                              Đơn hàng: #{booking.bookingId}
+                      </div>
+                      <div className="h-[0.75px] bg-[#006B52]/10 -mx-6 mt-4 mb-6" />
+                    </CardHeader>
+
+                    <CardContent className="px-6">
+                      <div className="flex items-start gap-6 pt-8">
+                        <div
+                          className="w-[130px] h-[130px] bg-cover bg-center rounded-full flex-shrink-0"
+                                style={{ backgroundImage: `url(${booking.imgProfile || "https://i.pravatar.cc/300?img=1"})` }}
+                        />
+                        <div className="flex flex-col items-start gap-3 flex-1">
+                          <div className="self-stretch [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-black text-[26px] leading-[32px]">
+                                  {booking.careTakerName}
+                          </div>
+                          <div className="flex items-center gap-2 self-stretch">
+                            <Star className="w-[18px] h-[18px] text-[#00a37d] fill-[#00a37d]" />
+                            <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-[16px] leading-[19px]">
+                                    <span className="text-[#00a37d]">{booking.rating}</span>
+                              <span className="text-[#111111]">&nbsp;</span>
+                                    <span className="text-[#bcb9c5]">({booking.toltalReviewers})</span>
+//                     <div
+//                       key={booking.bookingId} // Use booking.bookingId instead of booking.id
+//                       className="relative overflow-hidden transition-all duration-300 ease-in-out cursor-pointer"
+//                       onClick={() => handleViewDetail(booking)}
+//                     >
+//                       <Card className="w-full bg-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+//                         <CardHeader className="px-6 py-1">
+//                           <div className="flex items-center justify-between">
+//                             <div className="[font-family:'SVN-Gilroy-Bold',Helvetica] font-bold text-black text-[20px] leading-[26.3px] pt-2">
+//                               Ngày book đơn: {new Date(booking.createdAt).toLocaleDateString('vi-VN')}
                             </div>
                             <Badge className={`${getStatusConfig(booking.serviceProgress).color} text-white [font-family:'SVN-Gilroy-Medium',Helvetica] font-medium text-[13px] leading-[26.3px] mt-2`}>
                               {getStatusConfig(booking.serviceProgress).text}
