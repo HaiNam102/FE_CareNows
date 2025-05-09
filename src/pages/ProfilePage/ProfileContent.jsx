@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import HoverButton from '../../components/HoverButton';
-import axios from 'axios';
+import api, { careTakerApi } from '../../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
@@ -12,6 +12,25 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
   const [similarCareTakers, setSimilarCareTakers] = useState([]);
   const [showCareTakerList, setShowCareTakerList] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState(profile);
+
+  // Always fetch latest profile by id if available
+  useEffect(() => {
+    if (profile?.careTakerId) {
+      careTakerApi.getById(profile.careTakerId)
+        .then(res => {
+          if (res.data && res.data.data) {
+            setProfileData(res.data.data);
+            console.log(res)
+          }
+        })
+        .catch(err => {
+          // Nếu lỗi thì giữ nguyên profile cũ
+        });
+    } else {
+      setProfileData(profile);
+    }
+  }, [profile?.careTakerId]);
 
   // Check if we have a valid profile with careTakerId on mount or when profile changes
   useEffect(() => {
@@ -60,14 +79,14 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
     totalReviewers = 0,
     servicePrice = "N/A",
     imgProfile = "",
-    introduction = "Không có thông tin giới thiệu",
+    introduceYourself = "Không có thông tin giới thiệu",
     ward = "",
     district: profileDistrict = "",
     address = "",
     totalBookings = 0,
     completedHires = 0,
     careTakerId
-  } = profile;
+  } = profileData || {};
 
   // Calculate full address if ward and district are available
   const fullAddress = address || (ward && profileDistrict  ? `${ward}, ${profileDistrict}, Đà Nẵng` : "Chưa cập nhật địa chỉ");
@@ -175,7 +194,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
           Giới thiệu
         </h2>
         <p className="text-gray-700">
-          "{introduction || 'Chưa cập nhật thông tin giới thiệu'}"
+          "{introduceYourself || 'Chưa cập nhật thông tin giới thiệu'}"
         </p>
       </div>
 

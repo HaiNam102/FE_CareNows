@@ -4,10 +4,8 @@ import CustomerSidebar from '../../../components/CustomerSidebar';
 import HoverButtonOutline from "../../../components/HoverButtonOutline";
 import HoverButton from "../../../components/HoverButton";
 import { PenSquare, X } from 'lucide-react';
-import axios from 'axios';
+import api, { careRecipientApi } from '../../../services/api';
 import SpecialNotesInput from '../../../components/SpecialNotesInput';
-
-const API_URL = 'http://localhost:8080/api';
 
 const calculateAge = (birthDate) => {
   if (!birthDate) return '';
@@ -48,17 +46,10 @@ const AddCareRecipientModal = ({ isOpen, onClose, onSuccess }) => {
     setError(null);
 
     try {
-      const response = await axios.post(`${API_URL}/careRecipient/customer`, formData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
+      const response = await careRecipientApi.create(formData);
       if (response.data && response.data.code === 1011) {
         onClose();
         alert('Thêm hồ sơ thành công!');
-        // Force page refresh
         window.location.href = window.location.href;
       }
     } catch (err) {
@@ -201,25 +192,14 @@ const EditCareRecipientModal = ({ isOpen, onClose, onSuccess, recipient }) => {
 
     try {
       const careRecipientId = recipient.careRecipientId || recipient.care_recipient_id;
-      
-      const response = await axios.put(`${API_URL}/careRecipient/${careRecipientId}`, formData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Kiểm tra response và xử lý thành công
-      console.log("API Response:", response.data); // Để debug
-      
-      // Không kiểm tra code, cứ trả về là thành công
+      const response = await careRecipientApi.update(careRecipientId, formData);
+      console.log("API Response:", response.data);
       alert('Cập nhật thông tin thành công!');
-      onClose(); // Đóng modal
+      onClose();
       setTimeout(() => {
-        window.location.reload(); // Reload trang sau một chút
+        window.location.reload();
       }, 100);
     } catch (err) {
-      // Xử lý lỗi như bình thường
       console.error('Error updating care recipient:', err);
       setError(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật hồ sơ');
     } finally {
@@ -341,12 +321,7 @@ const MedicalRecords = () => {
   const fetchCareRecipients = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/careRecipient/customer`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
+      const response = await careRecipientApi.getAll();
       if (response.data && response.data.data) {
         setCareRecipients(response.data.data);
       }

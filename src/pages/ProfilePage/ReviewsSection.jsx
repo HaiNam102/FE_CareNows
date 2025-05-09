@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import axios from 'axios';
 import Pagination from '../../components/Pagination';
+import api, { careTakerApi } from '../../services/api';
 
 const ReviewsSection = ({ careTakerId }) => {
   const [reviews, setReviews] = useState([]);
@@ -14,16 +15,7 @@ const ReviewsSection = ({ careTakerId }) => {
 
     const fetchReviews = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8080/api/careTakerFeedBack?careTaker_id=${careTakerId}`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        );
-
+        const response = await careTakerApi.getReviews(careTakerId);
         const data = response.data;
         if (data.code === 1010 && Array.isArray(data.data)) {
           const formattedReviews = data.data.map((item) => ({

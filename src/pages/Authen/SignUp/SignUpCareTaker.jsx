@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png";
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../../../services/api';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
@@ -136,22 +136,13 @@ const SignUpCareTaker = () => {
 
       const formDataToSend = new FormData();
       
-      formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
-      );
-
+      formDataToSend.append('registerDTO', new Blob([JSON.stringify(registerDTO)], { type: 'application/json' }));
       formDataToSend.append('imgProfile', formData.imgProfile);
       formDataToSend.append('imgCccd', formData.imgCccd);
 
-      const response = await axios.post(
-        'http://localhost:8080/api/auths/register',
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
-        }
-      );
+      const response = await api.post('/auths/register', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
