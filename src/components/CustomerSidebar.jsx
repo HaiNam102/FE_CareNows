@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { User, Clock, FileText } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8080/api';
+import api from '../services/api';
 
 const CustomerSidebar = () => {
   const location = useLocation();
@@ -13,12 +11,7 @@ const CustomerSidebar = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`${API_URL}/customer/getByCustomerId`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
+        const response = await api.get('/customer/getByCustomerId');
         if (response.data && response.data.data) {
           setUserData({
             name: response.data.data.nameOfCustomer || ''
@@ -34,7 +27,6 @@ const CustomerSidebar = () => {
         setLoading(false);
       }
     };
-
     fetchUserData();
   }, []);
 

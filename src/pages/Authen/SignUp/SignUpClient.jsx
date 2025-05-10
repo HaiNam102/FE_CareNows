@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png"
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../../../services/api';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
@@ -66,8 +66,15 @@ const SignUpClient = () => {
   // Thêm state để theo dõi trạng thái kết nối server
   const [isServerConnected, setIsServerConnected] = useState(false);
 
-  // Thay đổi BASE_URL
-  const BASE_URL = 'http://localhost:8080/api';
+  // Thêm state để theo dõi trạng thái loading
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Thêm useEffect để load districts
+  useEffect(() => {
+    // Lấy danh sách quận từ constants
+    const districtNames = DANANG_DISTRICTS.map(district => district.name);
+    setAvailableDistricts(districtNames);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,7 +103,9 @@ const SignUpClient = () => {
   };
 
   // Hàm xử lý đăng ký
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
     try {
       // Validation
       if (!formData.name || !formData.username || !formData.email || 
@@ -147,15 +156,9 @@ const SignUpClient = () => {
       }
 
       // Gửi request với Content-Type: multipart/form-data
-      const response = await axios.post(
-        'http://localhost:8080/api/auths/register',
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
-        }
-      );
+      const response = await api.post('/auths/register', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       // Xử lý response
       if (response.data.code === 20000) {
@@ -166,9 +169,9 @@ const SignUpClient = () => {
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký';
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -249,14 +252,6 @@ const SignUpClient = () => {
         style.remove();
       }
     };
-  }, []);
-
-
-  // Thêm useEffect để load districts
-  useEffect(() => {
-    // Lấy danh sách quận từ constants
-    const districtNames = DANANG_DISTRICTS.map(district => district.name);
-    setAvailableDistricts(districtNames);
   }, []);
 
   return (

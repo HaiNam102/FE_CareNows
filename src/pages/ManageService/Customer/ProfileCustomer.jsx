@@ -4,7 +4,7 @@ import MainLayout from '../../../layouts/MainLayout';
 import CustomerSidebar from '../../../components/CustomerSidebar';
 import HoverButtonOutline from '../../../components/HoverButtonOutline';
 import HoverButton from '../../../components/HoverButton';
-import axios from 'axios';
+import api from '../../../services/api';
 
 const ProfileCustomer = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -53,13 +53,6 @@ const ProfileCustomer = () => {
 
   const handleSaveAll = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
-        window.location.href = '/login';
-        return;
-      }
-
       const [ward, district] = editValues.address.split(', ');
       const updateData = {
         nameOfCustomer: userData.name,
@@ -71,12 +64,7 @@ const ProfileCustomer = () => {
         district: district
       };
 
-      const response = await axios.put('http://localhost:8080/api/customer', updateData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.put('/customer', updateData);
 
       if (response.data?.data) {
         setUserData(prevData => ({
@@ -94,12 +82,7 @@ const ProfileCustomer = () => {
         alert('Cập nhật thông tin thành công!');
 
         // Refresh lại dữ liệu từ server
-        const refreshResponse = await axios.get('http://localhost:8080/api/customer/getByCustomerId', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
+        const refreshResponse = await api.get('/customer/getByCustomerId');
         if (refreshResponse.data?.data) {
           const customerData = refreshResponse.data.data;
           setUserData({
@@ -120,24 +103,19 @@ const ProfileCustomer = () => {
               }
             ]
           });
+
+          setEditValues({
+            birthday: customerData.birthday || '',
+            gender: customerData.gender || '',
+            phone: customerData.phoneNumber || '',
+            email: customerData.email || '',
+            address: `${customerData.ward || ''}, ${customerData.district || ''}`
+          });
         }
-      } else {
-        throw new Error('Cập nhật thất bại');
       }
     } catch (error) {
-      console.error('Error updating customer data:', error);
-      
-      if (error.response?.status === 401) {
-        const errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-        setError(errorMessage);
-        alert(errorMessage);
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-      } else {
-        const errorMessage = error.response?.data?.message || 'Cập nhật thất bại';
-        setError(errorMessage);
-        alert('Cập nhật thất bại: ' + errorMessage);
-      }
+      console.error('Error saving customer data:', error);
+      setError('Không thể cập nhật thông tin. Vui lòng thử lại sau.');
     }
   };
 
@@ -145,21 +123,7 @@ const ProfileCustomer = () => {
     const fetchCustomerData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          console.log('No token found');
-          window.location.href = '/login';
-          return;
-        }
-
-        const response = await axios.get('http://localhost:8080/api/customer/getByCustomerId', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
+        const response = await api.get('/customer/getByCustomerId');
         if (response.data?.data) {
           const customerData = response.data.data;
           setUserData({
