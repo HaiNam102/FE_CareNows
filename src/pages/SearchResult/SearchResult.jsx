@@ -48,7 +48,8 @@ const SearchFilters = ({
     selectedCareTakerType,
     setSelectedCareTakerType,
     selectedServiceHours,
-    setSelectedServiceHours
+    setSelectedServiceHours,
+    openCalendarModal
 }) => {
     const districts = [
         'Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Liên Chiểu', 'Cẩm Lệ', 'Hòa Vang'
@@ -73,7 +74,7 @@ const SearchFilters = ({
         <div className="fixed top-[64px] left-0 right-0 z-40 bg-white drop-shadow-[0_15px_25px_rgba(0,0,0,0.15)] h-[140px]">
             <div className="flex items-center justify-center py-3">
                 <div className="flex items-center space-x-4 text-base text-gray-600">
-                    <div className="flex items-center">
+                    <div className="flex items-center cursor-pointer" onClick={openCalendarModal}>
                         <Calendar className="mr-2 h-[17px] w-[17px] stroke-[1.5]" />
                         <span className="text-[16px]">{displayDateRange()}</span>
                     </div>
@@ -192,6 +193,7 @@ const SearchResult = () => {
     const [selectedCareTakerType, setSelectedCareTakerType] = useState([]);
     const [selectedServiceHours, setSelectedServiceHours] = useState('');
     const itemsPerPage = 8;
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     const districts = [
         'Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Liên Chiểu', 'Cẩm Lệ', 'Hòa Vang'
@@ -392,6 +394,7 @@ const SearchResult = () => {
             });
         }
 
+        filtered.sort((a, b) => b.rating - a.rating);
         setFilteredProfiles(filtered);
         setCurrentPage(1);
     }, [selectedGender, selectedRating, experienceYears, selectedCareTakerType, selectedServiceHours, profiles]);
@@ -542,6 +545,7 @@ const SearchResult = () => {
                     setSelectedCareTakerType={setSelectedCareTakerType}
                     selectedServiceHours={selectedServiceHours}
                     setSelectedServiceHours={setSelectedServiceHours}
+                    openCalendarModal={() => setIsCalendarOpen(true)}
                 />
             </div>
             <div className="w-full">

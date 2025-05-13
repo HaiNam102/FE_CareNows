@@ -3,22 +3,20 @@ import { Star, X, Send, User } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify'; // Nhập toast từ react-toastify
 import api, { careTakerApi } from '../../../services/api';
 
-export default function AddFeedback() {
+export default function AddFeedback({ careTakerId, careTakerName, imgProfile }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Thêm trạng thái loading
-
-  const careTakerId = 2; // Giả sử careTakerId được cố định là 2 như trong ảnh
-  // Trong thực tế, bạn có thể truyền careTakerId qua props hoặc lấy từ context/state
+  const [isLoading, setIsLoading] = useState(false); 
+  
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
-    setShowConfirmation(false);
+    setShowConfirmation(false); 
     setRating(0);
     setFeedback('');
     setSubmittedData(null);
@@ -160,15 +158,21 @@ export default function AddFeedback() {
               <div className="p-6">
                 {/* Thông tin chăm sóc viên */}
                 <div className="flex flex-col items-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                    <User size={32} className="text-emerald-600" />
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-3 overflow-hidden">
+                    {imgProfile ? (
+                      <img
+                        src={imgProfile}
+                        alt={careTakerName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={32} className="text-emerald-600" />
+                    )}
                   </div>
                   <h4 className="font-medium text-gray-800">
-                    {submittedData?.care_taker?.nameOfCareTaker || 'Nguyen Thi Lan'}
+                    {careTakerName || 'Nguyen Thi Lan'}
                   </h4>
-                  <p className="text-sm text-gray-500">
-                    {submittedData?.care_taker?.experienceYear || 6} năm kinh nghiệm
-                  </p>
+                 
                 </div>
 
                 {/* Rating */}

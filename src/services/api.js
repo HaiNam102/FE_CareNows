@@ -31,8 +31,8 @@ api.interceptors.response.use(
     switch (error.response?.status) {
       case 401:
         // Unauthorized - clear token and redirect to login
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        // localStorage.removeItem('token');
+        // window.location.href = '/login';
         toast.error('Đã hết truy cập,vui lòng đăng nhập lại');
         break;
       case 403:
@@ -62,10 +62,10 @@ export const authApi = {
   logout: () => {
     localStorage.removeItem('token');
     return Promise.resolve();
-  },
-  refreshToken: () => {
-    return api.post('/auth/refresh-token');
   }
+  // refreshToken: () => {
+  //   return api.post('/auth/refresh-token');
+  // }
 };
 
 // CareTaker related APIs
