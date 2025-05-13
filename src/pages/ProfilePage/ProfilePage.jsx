@@ -10,6 +10,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import api, { bookingApi, careRecipientApi } from '../../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ChatWidget from '../Chat/ChatWidget';
+import { X } from 'lucide-react';
+import { useChat } from '../../contexts/ChatContext';
+
 
 // SuccessPopup Component
 const SuccessPopup = ({ message, onClose }) => {
@@ -154,6 +158,7 @@ return (
 const ProfilePage = ({ profile, onClose, onNavigate, district, dateRange }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { openChat } = useChat();
 const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile');
 const [scheduleView, setScheduleView] = useState('recipientSelection');
   const [selectedDateRange, setSelectedDateRange] = useState(null);
@@ -177,6 +182,8 @@ const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [isLoadingDates, setIsLoadingDates] = useState(false);
 const [formErrors, setFormErrors] = useState({});
 const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+const [isChatOpen, setIsChatOpen] = useState(false);
+const [chatMode, setChatMode] = useState('modal'); // 'modal' hoặc 'floating'
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -407,21 +414,22 @@ const handleContinueToBookingDetails = () => {
     setScheduleView('confirmation');
   };
 
-const calculateTotalPrice = () => {
-  const pricePerHour = 120;
-  const startTime = selectedTime.startTime.split(':').map(Number);
-  const endTime = selectedTime.endTime.split(':').map(Number);
-
-  let hours = 0;
-  if (endTime[0] < startTime[0]) {
-    hours = (24 - startTime[0] + endTime[0]) + (endTime[1] - startTime[1]) / 60;
-  } else {
-    hours = (endTime[0] - startTime[0]) + (endTime[1] - startTime[1]) / 60;
-  }
-
-  const days = selectedDateRange ? selectedDateRange.length : 0;
-  return pricePerHour * hours * days;
-};
+  const calculateTotalPrice = () => {
+    // Lấy servicePrice từ profile, chuyển thành số
+    const pricePerHour = parseInt(profile?.servicePrice || '0', 10) / 1000; // Giả sử servicePrice là VNĐ, chia 1000 để tránh hiển thị số lớn
+    const startTime = selectedTime.startTime.split(':').map(Number);
+    const endTime = selectedTime.endTime.split(':').map(Number);
+  
+    let hours = 0;
+    if (endTime[0] < startTime[0]) {
+      hours = (24 - startTime[0] + endTime[0]) + (endTime[1] - startTime[1]) / 60;
+    } else {
+      hours = (endTime[0] - startTime[0]) + (endTime[1] - startTime[1]) / 60;
+    }
+  
+    const days = selectedDateRange ? selectedDateRange.length : 0;
+    return pricePerHour * hours * days;
+  };
 
 const handleConfirmBooking = async () => {
     if (!careTakerId) {
@@ -1182,6 +1190,29 @@ const renderRecipientSelectionView = () => {
         return null;
       case 'reviews':
         return <ReviewsSection profile={profile} careTakerId={careTakerId} />;
+        case 'messages':
+          return (
+            <div className="p-6 bg-gray-50 rounded-lg min-h-[700px] flex flex-col items-center justify-center transition-all duration-300">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Tin nhắn</h2>
+                <p className="text-gray-600 mb-6">Bắt đầu trò chuyện với bảo mẫu để thảo luận chi tiết!</p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300"
+                    onClick={() => {
+                      if (careTakerId) {
+                        openChat(careTakerId, profile?.nameOfCareTaker || 'Bảo mẫu');
+                      } else {
+                        toast.error('Không thể tạo cuộc trò chuyện. Vui lòng thử lại sau!');
+                      }
+                    }}
+                  >
+                    Mở chat nổi
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
       default:
         return <ProfileContent profile={profile} onCareTakerSelect={handleSelectCareTaker} />;
     }

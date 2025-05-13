@@ -46,13 +46,13 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
             >
               Đánh giá
             </a>
-            {/* <a 
+            <a 
               href="#" 
               className={`px-4 py-2 ${activeTab === 'messages' ? 'text-white bg-[#00a37d] rounded' : 'text-gray-400'}`} 
               onClick={() => onNavigate('messages', district, dateRange)}
             >
               Nhắn tin
-            </a> */}
+            </a>
           </div>
           <button 
             onClick={onClose}

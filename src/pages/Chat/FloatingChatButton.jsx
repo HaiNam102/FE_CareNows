@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatWidget from './ChatWidget';
+import { useChat } from '../../contexts/ChatContext';
 
 // Custom Chat Icon SVG
 const ChatBubbleIcon = ({ size = 56, color = '#00695C' }) => (
@@ -17,23 +18,43 @@ const DownArrowIcon = ({ size = 46, color = '#00695C' }) => (
 );
 
 const FloatingChatButton = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const { isChatOpen, toggleChat, selectedCareTakerName } = useChat();
+  const [pulseAnimation, setPulseAnimation] = useState(false);
+
+  // Add a pulse animation when a new caretaker is selected
+  useEffect(() => {
+    if (selectedCareTakerName) {
+      setPulseAnimation(true);
+      
+      // Stop the animation after 5 seconds
+      const timer = setTimeout(() => {
+        setPulseAnimation(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [selectedCareTakerName]);
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
       {/* Chat Button */}
       <button
-        onClick={() => setIsChatOpen(!isChatOpen)}
-        className="w-20 h-20 bg-[#E6FFFA] rounded-2xl shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-2xl active:scale-95 focus:outline-none"
+        onClick={toggleChat}
+        className={`w-20 h-20 bg-[#E6FFFA] rounded-2xl shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-2xl active:scale-95 focus:outline-none ${
+          pulseAnimation ? 'animate-pulse' : ''
+        }`}
         style={{ boxShadow: '0 4px 16px 0 #B2DFDB' }}
         aria-label="Open chat"
       >
         {!isChatOpen ? <ChatBubbleIcon /> : <DownArrowIcon />}
+        
+        {/* Notification badge */}
+        
       </button>
 
       {/* Chat Widget */}
       {isChatOpen && (
-        <div className="absolute bottom-24 right-0 animate-fade-in">
+        <div className="absolute bottom-24 right-0 transition-all duration-300 transform scale-100 origin-bottom-right">
           <ChatWidget />
         </div>
       )}
