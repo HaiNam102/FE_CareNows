@@ -1,23 +1,22 @@
 import React, { useState } from 'react';
 import { Star, X, Send, User } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify'; // Nhập toast từ react-toastify
+import api, { careTakerApi } from '../../../services/api';
 
-export default function AddFeedback() {
+export default function AddFeedback({ careTakerId, careTakerName, imgProfile }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Thêm trạng thái loading
-
-  const careTakerId = 2; // Giả sử careTakerId được cố định là 2 như trong ảnh
-  // Trong thực tế, bạn có thể truyền careTakerId qua props hoặc lấy từ context/state
+  const [isLoading, setIsLoading] = useState(false); 
+  
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
-    setShowConfirmation(false);
+    setShowConfirmation(false); 
     setRating(0);
     setFeedback('');
     setSubmittedData(null);
@@ -37,7 +36,7 @@ export default function AddFeedback() {
       return;
     }
 
-    setIsLoading(true); // Bật trạng thái loading
+    setIsLoading(true);
 
     const requestBody = {
       feedback: feedback,
@@ -45,25 +44,11 @@ export default function AddFeedback() {
     };
 
     try {
-      const response = await fetch(`http://localhost:8080/api/careTakerFeedBack?careTaker_id=${careTakerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // Thêm token nếu API yêu cầu
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await careTakerApi.addReview(careTakerId, requestBody) ;
+      console.log('API Response:', response.data);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Gửi đánh giá thất bại');
-      }
-
-      const data = await response.json();
-      console.log('API Response:', data);
-
-      if (data.code === 1011) {
-        setSubmittedData(data.data);
+      if (response.data.code === 1011) {
+        setSubmittedData(response.data.data);
         setShowConfirmation(true);
         toast.success('Gửi đánh giá thành công!', {
           position: 'top-right',
@@ -74,7 +59,7 @@ export default function AddFeedback() {
           draggable: true,
         });
       } else {
-        throw new Error(data.message || 'Gửi đánh giá thất bại');
+        throw new Error(response.data.message || 'Gửi đánh giá thất bại');
       }
     } catch (err) {
       console.error('Error submitting feedback:', err);
@@ -87,12 +72,12 @@ export default function AddFeedback() {
         draggable: true,
       });
     } finally {
-      setIsLoading(false); // Tắt trạng thái loading
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="p-4">
+    <div className="p-0">
       <button
         onClick={openModal}
         className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-300"
@@ -173,15 +158,21 @@ export default function AddFeedback() {
               <div className="p-6">
                 {/* Thông tin chăm sóc viên */}
                 <div className="flex flex-col items-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
-                    <User size={32} className="text-emerald-600" />
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-3 overflow-hidden">
+                    {imgProfile ? (
+                      <img
+                        src={imgProfile}
+                        alt={careTakerName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={32} className="text-emerald-600" />
+                    )}
                   </div>
                   <h4 className="font-medium text-gray-800">
-                    {submittedData?.care_taker?.nameOfCareTaker || 'Nguyen Thi Lan'}
+                    {careTakerName || 'Nguyen Thi Lan'}
                   </h4>
-                  <p className="text-sm text-gray-500">
-                    {submittedData?.care_taker?.experienceYear || 6} năm kinh nghiệm
-                  </p>
+                 
                 </div>
 
                 {/* Rating */}

@@ -20,6 +20,9 @@ import { jwtDecode } from 'jwt-decode';
 import ProfileLayout from './layouts/ProfileLayout/ProfileLayout';
 import CareTakerPage from './pages/CareTaker';
 import AddFeetback from './pages/ManageService/Customer/AddFeetback';
+import FloatingChatButton from './pages/Chat/FloatingChatButton';
+import ChatWidget from './pages/Chat/ChatWidget';
+import { ChatProvider } from './contexts/ChatContext';
 
 // Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -39,76 +42,78 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<MainLayout><Home /></MainLayout>} />
-        <Route path="/login" element={<Login1 />} />
-        <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />
-        <Route path="/signup-client" element={<MainLayout headerType="logoOnly"><SignUpClient/></MainLayout>} />
-        <Route path="/signup-care-taker" element={<MainLayout headerType="logoOnly"><SignUpCareTaker/></MainLayout>} />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/caretaker/home" 
-          element={
-            <ProtectedRoute allowedRole="CARE_TAKER">
-              <MainLayout><CareTakerHome/></MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/customer/home" 
-          element={
-            <ProtectedRoute allowedRole="CUSTOMER">
-              <MainLayout><CustomerHome/></MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/admin/home" 
-          element={
-            <ProtectedRoute allowedRole="ADMIN">
-              <MainLayout><AdminHome/></MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/customer/profile" 
-          element={
-            <ProtectedRoute allowedRole="CUSTOMER">
-              <ProfileCustomer />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/customer/booking-history" 
-          element={
-            <ProtectedRoute allowedRole="CUSTOMER">
-              <BookingHistory />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/customer/medical-records" 
-          element={
-            <ProtectedRoute allowedRole="CUSTOMER">
-              <MedicalRecords />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Other Routes */}
-        <Route path="/searchResult" element={<MainLayout><SearchResult /></MainLayout>} />
-        <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
-        <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
-        <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
-        <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
-        <Route path="/feetback" element={<AddFeetback />} />
-
-        
-      </Routes>
-    </BrowserRouter>
+    <ChatProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+          <Route path="/login" element={<Login1 />} />
+          <Route path="/signup" element={<MainLayout headerType="logoOnly"><SignUpRoleSelection/></MainLayout>} />
+          <Route path="/signup-client" element={<MainLayout headerType="logoOnly"><SignUpClient/></MainLayout>} />
+          <Route path="/signup-care-taker" element={<MainLayout headerType="logoOnly"><SignUpCareTaker/></MainLayout>} />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/caretaker/home" 
+            element={
+              <ProtectedRoute allowedRole="CARE_TAKER">
+                <MainLayout><CareTakerHome/></MainLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/customer/home" 
+            element={
+              <ProtectedRoute allowedRole="CUSTOMER">
+                <MainLayout><CustomerHome/></MainLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/home" 
+            element={
+              <ProtectedRoute allowedRole="ADMIN">
+                <MainLayout><AdminHome/></MainLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/customer/profile" 
+            element={
+              <ProtectedRoute allowedRole="CUSTOMER">
+                <ProfileCustomer />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/customer/booking-history" 
+            element={
+              <ProtectedRoute allowedRole="CUSTOMER">
+                <BookingHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/customer/medical-records" 
+            element={
+              <ProtectedRoute allowedRole="CUSTOMER">
+                <MedicalRecords />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Other Routes */}
+          <Route path="/searchResult" element={<MainLayout><SearchResult /></MainLayout>} />
+          <Route path="/calendar" element={<MainLayout><Calendar /></MainLayout>} />
+          <Route path="/profilePage" element={<MainLayout><ProfilePage /></MainLayout>} />
+          <Route path="/ReviewsSection" element={<MainLayout><ReviewsSection /></MainLayout>} />
+          <Route path="/caretaker/appointments" element={<MainLayout><CareTakerPage /></MainLayout>} />
+          <Route path="/feetback" element={<AddFeetback />} />
+          <Route path="/chat" element={<ChatWidget />} />
+        </Routes>
+        <FloatingChatButton />
+      </BrowserRouter>
+    </ChatProvider>
   );
 }
 
