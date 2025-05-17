@@ -18,13 +18,19 @@ const DownArrowIcon = ({ size = 46, color = '#00695C' }) => (
 );
 
 const FloatingChatButton = () => {
-  const { isChatOpen, toggleChat, selectedCareTakerName } = useChat();
+  const { isChatOpen, toggleChat, selectedCareTakerName, fetchChatRooms, userRole, userId, userName, isProfileChatActive } = useChat();
   const [pulseAnimation, setPulseAnimation] = useState(false);
+
+  // Log user info when component mounts
+  useEffect(() => {
+    console.log("FloatingChatButton mounted with user info:", { userRole, userId, userName });
+  }, []);
 
   // Add a pulse animation when a new caretaker is selected
   useEffect(() => {
     if (selectedCareTakerName) {
       setPulseAnimation(true);
+      console.log("Selected caretaker name changed:", selectedCareTakerName);
       
       // Stop the animation after 5 seconds
       const timer = setTimeout(() => {
@@ -35,21 +41,25 @@ const FloatingChatButton = () => {
     }
   }, [selectedCareTakerName]);
 
+  const handleOpenChat = () => {
+    console.log("Chat button clicked, fetching rooms for:", { userRole, userId });
+    // Fetch chat rooms when the chat button is clicked
+    fetchChatRooms();
+    toggleChat();
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
       {/* Chat Button */}
       <button
-        onClick={toggleChat}
+        onClick={handleOpenChat}
         className={`w-20 h-20 bg-[#E6FFFA] rounded-2xl shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-2xl active:scale-95 focus:outline-none ${
           pulseAnimation ? 'animate-pulse' : ''
         }`}
         style={{ boxShadow: '0 4px 16px 0 #B2DFDB' }}
-        aria-label="Open chat"
+        aria-label={userRole === 'CUSTOMER' ? "Open customer chat" : "Open caretaker chat"}
       >
         {!isChatOpen ? <ChatBubbleIcon /> : <DownArrowIcon />}
-        
-        {/* Notification badge */}
-        
       </button>
 
       {/* Chat Widget */}
