@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { jwtDecode } from 'jwt-decode';
 import SockJS from 'sockjs-client';
 import { Client, Stomp } from '@stomp/stompjs';
+import api, { apiUtils } from '../services/api';
+import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:8080';
 console.log("ChatContext initialized with API_URL:", API_URL);
@@ -27,184 +29,27 @@ export const ChatProvider = ({ children }) => {
   // Add a state for the button ref
   const [chatButtonRef, setChatButtonRef] = useState(null);
 
-  // Log API URL when component mounts
-  useEffect(() => {
-    console.log("ChatProvider mounted with API_URL:", API_URL);
-    
-    // Check if the API is reachable
-    const checkApiHealth = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/health`, { 
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        if (response.ok) {
-          console.log("API is reachable");
-        } else {
-          console.warn(`API health check failed: ${response.status}`);
-        }
-      } catch (error) {
-        console.error("API is not reachable:", error);
-      }
-    };
-    
-    // Check if the chat rooms API is working
-    const checkChatRoomsApi = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          console.warn("No token available for chat rooms API check");
-          return;
-        }
-        
-        console.log("Checking chat rooms API...");
-        const response = await fetch(`${API_URL}/api/chat/rooms`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Chat rooms API check successful:", data);
-        } else {
-          console.warn(`Chat rooms API check failed: ${response.status}`);
-          const errorText = await response.text();
-          console.error("Error response:", errorText);
-        }
-      } catch (error) {
-        console.error("Error checking chat rooms API:", error);
-      }
-    };
-    
-    checkApiHealth();
-    checkChatRoomsApi();
-  }, []);
-
   // Get user info from token
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        console.log("Raw token from localStorage:", token);
         const decoded = jwtDecode(token);
-        console.log("Token decoded (full object):", decoded);
         
-        // Extract user information from token
-        const userId = decoded.userId;  // This should be the customer_id or care_taker_id
-        const userName = decoded.userName || decoded.name;
-        const userRole = decoded.role || 'CUSTOMER'; // Extract role from token or default to CUSTOMER
+        // Extract user_id and role directly from JWT
+        const userId = decoded.user_id;
+        const userRole = decoded.role;
         
-        // Extract username for API calls - try multiple possible fields
-        let username = null;
-        
-        // Check all possible locations for username
-        if (decoded.sub) {
-          username = decoded.sub;
-          console.log("Found username in 'sub':", username);
-        } else if (decoded.username) {
-          username = decoded.username;
-          console.log("Found username in 'username':", username);
-        } else if (decoded.email) {
-          username = decoded.email;
-          console.log("Found username in 'email':", username);
-        } else if (decoded.preferred_username) {
-          username = decoded.preferred_username;
-          console.log("Found username in 'preferred_username':", username);
-        } else if (decoded.name) {
-          username = decoded.name;
-          console.log("Using name as username:", username);
-        }
-        
-        console.log(`User info from token: userId=${userId}, name=${userName}, username=${username}, role=${userRole}`);
-        
-        // Set user info based on token role
-        setUserRole(userRole);
+        // Set these values in state
         setUserId(userId);
-        setUserName(userName);
-        setUsername(username);
-        
-        if (!username) {
-          console.warn("Token does not contain username");
-        }
-        
-        // Test API directly
-        testApiEndpoints();
+        setUserRole(userRole);
+        setUsername(decoded.username);
       } catch (error) {
         console.error('Error decoding token:', error);
-        // Set fallback values for testing
-        setUserRole('CUSTOMER');
-        setUsername('');
-        console.log("Using fallback values due to token error");
-        
-        // Test API directly even with error
-        testApiEndpoints();
       }
-    } else {
-      console.warn('No token found in localStorage');
-      // Set fallback values for testing
-      setUserRole('CUSTOMER');
-      setUsername('');
-      console.log("Using fallback values due to missing token");
-      
-      // Test API directly even without token
-      testApiEndpoints();
     }
   }, []);
   
-  // Test API endpoints directly
-  const testApiEndpoints = async () => {
-    console.log("Testing API endpoints directly...");
-    
-    // Test URLs to try - will select based on role
-    let testUrls = [];
-    
-    if (userRole === 'CARE_TAKER') {
-      testUrls = [
-        `${API_URL}/api/chat/rooms/caretaker/username/${username || ''}`,
-        `${API_URL}/api/chat/rooms/caretaker/1`,
-        `${API_URL}/api/chat/rooms`
-      ];
-    } else {
-      // Default to CUSTOMER role
-      testUrls = [
-        `${API_URL}/api/chat/rooms/customer/username/${username || ''}`,
-      `${API_URL}/api/chat/rooms/customer/1`,
-      `${API_URL}/api/chat/rooms`
-    ];
-    }
-    
-    const token = localStorage.getItem('token') || '';
-    
-    // Try each test URL
-    for (const url of testUrls) {
-      try {
-        console.log(`Testing API: ${url}`);
-        
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
-            'Accept': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`✅ SUCCESS for ${url}:`, data);
-        } else {
-          const text = await response.text();
-          console.error(`❌ ERROR ${response.status} for ${url}:`, text);
-        }
-      } catch (error) {
-        console.error(`❌ FETCH ERROR for ${url}:`, error);
-      }
-    }
-  };
-
   // Fetch chat rooms when chat is opened
   useEffect(() => {
     if (userId && userRole && isChatOpen) {
@@ -299,200 +144,41 @@ export const ChatProvider = ({ children }) => {
     }
   };
   
-  // Update fetchChatRooms to handle both roles
+  // Update fetchChatRooms to use the partnerName directly from API
   const fetchChatRooms = async () => {
-    // Use a try/catch for the whole function to prevent any errors from stopping execution
     try {
-      console.log("=== Starting fetchChatRooms ===");
-      console.log("Role:", userRole);
-      console.log("Username:", username);
-      console.log("User ID:", userId);
-      
-      if (!username) {
-        console.warn("Username is missing");
-      }
-      
-      const effectiveUsername = username || '';
-      
-      // Ensure token is valid before making API calls
-      let token;
-      try {
-        const isTokenOk = await ensureValidToken();
-        if (!isTokenOk) {
-          console.error("Invalid token, will try without validation");
-        }
-        token = localStorage.getItem('token');
-        console.log("Token available:", !!token);
-        if (token) {
-          console.log("Token first 20 chars:", token.substring(0, 20) + "...");
-        }
-      } catch (e) {
-        console.error("Token validation error:", e);
-        token = localStorage.getItem('token');
-      }
-      
-      if (!token) {
-        console.error("No authentication token found");
-      }
-      
-      // Log the username and role for debugging
-      console.log(`Fetching chat rooms for ${userRole} with username ${effectiveUsername}`);
-      
-      // Try multiple endpoints based on user role
-      let endpoints = [];
-      
-      if (userRole === 'CARE_TAKER') {
-        endpoints = [
-          `${API_URL}/api/chat/rooms/caretaker/username/${effectiveUsername}`,
-          `${API_URL}/api/chat/rooms/caretaker/${userId || 1}`
-        ];
-      } else {
-        // Default to CUSTOMER role
-        endpoints = [
-        `${API_URL}/api/chat/rooms/customer/username/${effectiveUsername}`,
-        `${API_URL}/api/chat/rooms/customer/${userId || 1}`
-      ];
-      }
-      
-      let response = null;
-      let data = null;
-      let successEndpoint = null;
-      
-      // Try each endpoint
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Trying endpoint: ${endpoint}`);
-          
-          const headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          };
-          
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-          }
-          
-          const resp = await fetch(endpoint, { headers });
-          
-          if (resp.ok) {
-            response = resp;
-            successEndpoint = endpoint;
-            console.log(`✅ Successful response from ${endpoint}`);
-            
-            const respData = await resp.json();
-            console.log("Response data:", respData);
-            
-            if (respData && respData.data) {
-              data = respData;
-              break;
-            } else {
-              console.warn("Response missing data property:", respData);
-            }
-          } else {
-            const errorText = await resp.text();
-            console.error(`❌ Endpoint ${endpoint} failed (${resp.status}):`, errorText);
-          }
-        } catch (err) {
-          console.error(`❌ Fetch error for ${endpoint}:`, err);
-        }
-      }
-      
-      if (!data) {
-        console.error("All API endpoints failed or returned invalid data");
-        setChatRooms([]);
+      if (!userId) {
+        console.warn('User ID missing - cannot fetch rooms');
         return;
       }
       
-      console.log(`Using successful endpoint: ${successEndpoint}`);
-      console.log("API response for chat rooms:", data);
+      // Use the ID-based endpoints
+      const endpoint = userRole === 'CUSTOMER' 
+        ? `/chat/rooms/customer/customerId/${userId}`
+        : `/chat/rooms/caretaker/caretakerId/${userId}`;
       
-      if (data.data && Array.isArray(data.data)) {
-        console.log(`Received ${data.data.length} chat rooms`);
+      const response = await api.get(endpoint);
+      
+      if (response.data && response.data.code === 1010 && Array.isArray(response.data.data)) {
+        const rooms = response.data.data;
         
-        if (data.data.length > 0) {
-          // DEBUG: Log all available fields in the first room
-          const firstRoom = data.data[0];
-          console.log("FULL ROOM FIELDS:", Object.keys(firstRoom));
-          console.log("ROOM DATA SAMPLE:", firstRoom);
+        if (rooms.length > 0) {
+          // Just use the rooms directly - they already have partnerName
+          setChatRooms(rooms);
           
-          // Map rooms with proper partner information based on role
-          const mappedRooms = data.data.map(room => {
-            // Determine the correct partner info based on user role
-            let partnerName, partnerId;
-            
-            if (userRole === 'CARE_TAKER') {
-              // For care takers, the partner is the customer
-              // Try multiple possible fields for customer name
-              partnerName = room.customerName || 
-                           room.consumerName || 
-                           room.customerUserName ||
-                           room.customerFullName ||
-                           room.fullName ||
-                           room.displayName ||
-                           room.firstName ||
-                           (room.firstName && room.lastName ? `${room.firstName} ${room.lastName}` : null) ||
-                           room.userName ||
-                           room.username ||
-                           room.name ||
-                           (room.customerId ? `Customer ${room.customerId}` : "Khách hàng");
-              partnerId = room.customerId;
-              
-              console.log("Caretaker view - Customer info:", {
-                customerName: room.customerName,
-                consumerName: room.consumerName,
-                customerUserName: room.customerUserName,
-                customerFullName: room.customerFullName,
-                fullName: room.fullName,
-                displayName: room.displayName,
-                firstName: room.firstName,
-                lastName: room.lastName,
-                userName: room.userName,
-                username: room.username,
-                name: room.name,
-                customerId: room.customerId,
-                usedName: partnerName
-              });
-            } else {
-              // For customers, the partner is the care taker
-              partnerName = room.partnerName || room.careTakerName || "Care Taker";
-              partnerId = room.partnerId || room.careTakerId;
-            }
-            
-            return {
-              ...room,
-              partnerName: partnerName,
-              partnerId: partnerId
-            };
-          });
-          
-          console.log("Available chat rooms with proper partner info:", mappedRooms);
-        
-          // Store the mapped room data
-          setChatRooms(mappedRooms);
-        
-          // If no room is selected yet, select the first one
-          if (!selectedCareTaker) {
-            const firstRoom = mappedRooms[0];
-          const roomId = firstRoom.roomId;
-            
-            console.log(`Auto-selecting first room: ${roomId} with partner: ${firstRoom.partnerName}`);
-          
-          // Set the partner name immediately
-          setSelectedCareTakerName(firstRoom.partnerName || "Unknown Partner");
-          
-            // Set selected room but don't connect automatically
-            setSelectedCareTaker(roomId);
+          // Auto-select first room if none selected
+          if (!selectedCareTaker && rooms[0]?.roomId) {
+            setSelectedCareTakerName(rooms[0].partnerName);
+            setSelectedCareTaker(rooms[0].roomId);
           }
         } else {
-          console.warn("No chat rooms found for this user");
           setChatRooms([]);
         }
       } else {
-        console.warn("No chat rooms found in response or invalid format:", data);
         setChatRooms([]);
       }
     } catch (error) {
-      console.error('Unexpected error in fetchChatRooms:', error);
+      console.error('Error fetching chat rooms:', error);
       setChatRooms([]);
     }
   };
