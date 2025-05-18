@@ -168,6 +168,31 @@ export const careRecipientApi = {
   }
 };
 
+// Chat related APIs
+export const chatApi = {
+  // Create chat room between customer and caretaker
+  createChatRoom: (customerId, careTakerId) => {
+    console.log('[chatApi] Creating chat room for:', { customerId, careTakerId });
+    //toast.info(`[chatApi] Creating room: customerId=${customerId}, careTakerId=${careTakerId}`);
+    
+    const result = api.post(`/chat/room`, null, {
+      params: {
+        customerId,
+        careTakerId
+      }
+    });
+    
+    result.then(response => {
+      console.log('[chatApi] Chat room response:', response.data);
+     // toast.info(`[chatApi] Response code: ${response.data.code}`);
+    }).catch(error => {
+      console.error('[chatApi] Chat room error:', error.response?.data || error.message);
+    });
+    
+    return result;
+  },
+};
+
 // Calendar related APIs
 export const calendarApi = {
   // Get available dates for care taker
@@ -197,6 +222,39 @@ export const apiUtils = {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.role;
+    } catch {
+      return null;
+    }
+  },
+
+  // Extract user ID from JWT token
+  extractUserId: () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      // Try to get user_id from the token
+      return payload.user_id || null;
+    } catch {
+      return null;
+    }
+  },
+
+  // Extract username from JWT token
+  extractUsername: () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      // Try to get username based on common JWT claims
+      if (payload.username) return payload.username;
+      if (payload.sub) return payload.sub;
+      if (payload.preferred_username) return payload.preferred_username;
+      if (payload.email) return payload.email;
+      
+      return null;
     } catch {
       return null;
     }

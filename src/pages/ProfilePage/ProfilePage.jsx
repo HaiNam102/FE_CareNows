@@ -7,12 +7,13 @@ import ScheduleSection from './ScheduleSection/ScheduleSection';
 import TimePicker from '../../components/TimePicker';
 import NannySchedulePopup from '../../components/NannySchedulePopup';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api, { bookingApi, careRecipientApi } from '../../services/api';
+import api, { bookingApi, careRecipientApi, chatApi } from '../../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ChatWidget from '../Chat/ChatWidget';
 import { X } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
+import { jwtDecode } from 'jwt-decode';
 
 
 // SuccessPopup Component
@@ -1190,29 +1191,62 @@ const renderRecipientSelectionView = () => {
         return null;
       case 'reviews':
         return <ReviewsSection profile={profile} careTakerId={careTakerId} />;
-        case 'messages':
-          return (
-            <div className="p-6 bg-gray-50 rounded-lg min-h-[700px] flex flex-col items-center justify-center transition-all duration-300">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Tin nhắn</h2>
-                <p className="text-gray-600 mb-6">Bắt đầu trò chuyện với bảo mẫu để thảo luận chi tiết!</p>
-                <div className="flex gap-4 justify-center">
-                  <button
-                    className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300"
-                    onClick={() => {
-                      if (careTakerId) {
-                        openChat(careTakerId, profile?.nameOfCareTaker || 'Bảo mẫu');
-                      } else {
-                        toast.error('Không thể tạo cuộc trò chuyện. Vui lòng thử lại sau!');
+      case 'messages':
+        return (
+          <div className="p-6 bg-gray-50 rounded-lg min-h-[700px] flex flex-col items-center justify-center transition-all duration-300">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Tin nhắn</h2>
+              <p className="text-gray-600 mb-6">Bắt đầu trò chuyện với bảo mẫu để thảo luận chi tiết!</p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300"
+                  onClick={() => {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                      toast.error('Vui lòng đăng nhập để sử dụng tính năng chat');
+                      return;
+                    }
+                    
+                    try {
+                      const decoded = jwtDecode(token);
+                      const customerId = decoded.user_id;
+                      
+                      if (!customerId) {
+                        toast.error('Không thể xác định ID người dùng từ token');
+                        return;
                       }
-                    }}
-                  >
-                    Mở chat nổi
-                  </button>
-                </div>
+                      
+                      if (!careTakerId) {
+                        toast.error('Không thể xác định ID bảo mẫu');
+                        return;
+                      }
+                      
+                      // First, open the chat interface
+                      openChat(careTakerId, profile?.nameOfCareTaker || 'Bảo mẫu');
+                      
+                      // Then create/get chat room in background
+                      chatApi.createChatRoom(customerId, careTakerId)
+                        .then(response => {
+                          if (response.data.code === 1010 || response.data.code === 409) {
+                           // toast.success(`Chat room ${response.data.code === 1010 ? 'created' : 'exists'}`);
+                          }
+                        })
+                        .catch(error => {
+                          console.error("Error creating chat room:", error);
+                          //toast.error('Có lỗi khi tạo phòng chat, nhưng bạn vẫn có thể trò chuyện');
+                        });
+                    } catch (error) {
+                      console.error("Error in chat function:", error);
+                      toast.error('Không thể tạo cuộc trò chuyện. Vui lòng thử lại sau!');
+                    }
+                  }}
+                >
+                  Mở chat nổi
+                </button>
               </div>
             </div>
-          );
+          </div>
+        );
       default:
         return <ProfileContent profile={profile} onCareTakerSelect={handleSelectCareTaker} />;
     }

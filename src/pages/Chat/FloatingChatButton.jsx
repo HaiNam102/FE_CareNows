@@ -18,28 +18,35 @@ const DownArrowIcon = ({ size = 46, color = '#00695C' }) => (
 );
 
 const FloatingChatButton = () => {
-  const { isChatOpen, toggleChat, selectedCareTakerName } = useChat();
+  // Only use the variables we need
+  const { isChatOpen, toggleChat, fetchChatRooms } = useChat();
   const [pulseAnimation, setPulseAnimation] = useState(false);
 
-  // Add a pulse animation when a new caretaker is selected
+  // Add a pulse animation occasionally to attract attention
   useEffect(() => {
-    if (selectedCareTakerName) {
-      setPulseAnimation(true);
-      
-      // Stop the animation after 5 seconds
-      const timer = setTimeout(() => {
-        setPulseAnimation(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [selectedCareTakerName]);
+    // Pulse animation every few minutes to remind users of the chat
+    const pulseInterval = setInterval(() => {
+      if (!isChatOpen) {
+        setPulseAnimation(true);
+        setTimeout(() => setPulseAnimation(false), 3000);
+      }
+    }, 300000); // Every 5 minutes
+    
+    return () => clearInterval(pulseInterval);
+  }, [isChatOpen]);
+
+  const handleOpenChat = () => {
+    console.log("Chat button clicked, fetching all available chat rooms");
+    // Fetch chat rooms when the chat button is clicked
+    fetchChatRooms();
+    toggleChat();
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4">
       {/* Chat Button */}
       <button
-        onClick={toggleChat}
+        onClick={handleOpenChat}
         className={`w-20 h-20 bg-[#E6FFFA] rounded-2xl shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-2xl active:scale-95 focus:outline-none ${
           pulseAnimation ? 'animate-pulse' : ''
         }`}
@@ -47,9 +54,6 @@ const FloatingChatButton = () => {
         aria-label="Open chat"
       >
         {!isChatOpen ? <ChatBubbleIcon /> : <DownArrowIcon />}
-        
-        {/* Notification badge */}
-        
       </button>
 
       {/* Chat Widget */}
