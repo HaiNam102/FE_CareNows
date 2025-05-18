@@ -18,31 +18,25 @@ const DownArrowIcon = ({ size = 46, color = '#00695C' }) => (
 );
 
 const FloatingChatButton = () => {
-  const { isChatOpen, toggleChat, selectedCareTakerName, fetchChatRooms, userRole, userId, userName, isProfileChatActive } = useChat();
+  // Only use the variables we need
+  const { isChatOpen, toggleChat, fetchChatRooms } = useChat();
   const [pulseAnimation, setPulseAnimation] = useState(false);
 
-  // Log user info when component mounts
+  // Add a pulse animation occasionally to attract attention
   useEffect(() => {
-    console.log("FloatingChatButton mounted with user info:", { userRole, userId, userName });
-  }, []);
-
-  // Add a pulse animation when a new caretaker is selected
-  useEffect(() => {
-    if (selectedCareTakerName) {
-      setPulseAnimation(true);
-      console.log("Selected caretaker name changed:", selectedCareTakerName);
-      
-      // Stop the animation after 5 seconds
-      const timer = setTimeout(() => {
-        setPulseAnimation(false);
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [selectedCareTakerName]);
+    // Pulse animation every few minutes to remind users of the chat
+    const pulseInterval = setInterval(() => {
+      if (!isChatOpen) {
+        setPulseAnimation(true);
+        setTimeout(() => setPulseAnimation(false), 3000);
+      }
+    }, 300000); // Every 5 minutes
+    
+    return () => clearInterval(pulseInterval);
+  }, [isChatOpen]);
 
   const handleOpenChat = () => {
-    console.log("Chat button clicked, fetching rooms for:", { userRole, userId });
+    console.log("Chat button clicked, fetching all available chat rooms");
     // Fetch chat rooms when the chat button is clicked
     fetchChatRooms();
     toggleChat();
@@ -57,7 +51,7 @@ const FloatingChatButton = () => {
           pulseAnimation ? 'animate-pulse' : ''
         }`}
         style={{ boxShadow: '0 4px 16px 0 #B2DFDB' }}
-        aria-label={userRole === 'CUSTOMER' ? "Open customer chat" : "Open caretaker chat"}
+        aria-label="Open chat"
       >
         {!isChatOpen ? <ChatBubbleIcon /> : <DownArrowIcon />}
       </button>

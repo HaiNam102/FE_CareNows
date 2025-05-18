@@ -26,7 +26,8 @@ const ChatWidget = () => {
     stompClientRef,
     setSelectedCareTaker,
     setMessages,
-    connectToChat
+    connectToChat,
+    fetchChatHistory
   } = useChat();
   
   const [search, setSearch] = useState('');
@@ -173,6 +174,26 @@ const ChatWidget = () => {
     }
   }, [selectedUser, messages]);
 
+  useEffect(() => {
+    // For each room, if we don't have messages yet, fetch them
+    chatRooms.forEach(room => {
+      if (!messages[room.roomId]) {
+        fetchChatHistory(room.roomId);
+      }
+    });
+  }, [chatRooms]);
+
+  useEffect(() => {
+    if (!selectedUser || !selectedUser.roomId) return;
+
+    const interval = setInterval(() => {
+      fetchChatHistory(selectedUser.roomId);
+    }, 1000);
+
+    // Clean up on unmount or when selectedUser changes
+    return () => clearInterval(interval);
+  }, [selectedUser, fetchChatHistory]);
+
   const handleUserSelect = (user) => {
     if (!user || !user.roomId) return;
     
@@ -206,6 +227,12 @@ const ChatWidget = () => {
       
       // Create user entry for each chat partner
       const roomId = Number(room.roomId);
+      
+      // Find the latest message for this room
+      const latestMsgArr = messages[roomId];
+      const latestMsg = latestMsgArr && latestMsgArr.length > 0
+        ? latestMsgArr[latestMsgArr.length - 1].content
+        : room.lastMessage || 'Chưa có tin nhắn';
       
       // Check if we have messages with this room that might contain real names
       let customerName = null;
@@ -265,7 +292,7 @@ const ChatWidget = () => {
       const user = {
         id: roomId,
         name: partnerName,  // Always use the partnerName from the API
-        description: room.lastMessage || 'Chưa có tin nhắn',
+        description: latestMsg,
         avatar: defaultCareTakerAvatar,
         online: true,
         roomId: roomId,
@@ -366,6 +393,18 @@ const ChatWidget = () => {
         };
       })
     : [];
+
+  useEffect(() => {
+    // Only poll if user is logged in and chat is open
+    if (!userId) return;
+
+    const interval = setInterval(() => {
+      fetchChatRooms();
+    }, 1000);
+
+    // Clean up on unmount
+    return () => clearInterval(interval);
+  }, [userId, fetchChatRooms]);
 
   return (
     <div className="w-[700px] h-[500px] bg-white rounded-2xl shadow-2xl flex overflow-hidden">

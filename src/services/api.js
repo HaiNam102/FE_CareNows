@@ -173,7 +173,7 @@ export const chatApi = {
   // Create chat room between customer and caretaker
   createChatRoom: (customerId, careTakerId) => {
     console.log('[chatApi] Creating chat room for:', { customerId, careTakerId });
-    toast.info(`[chatApi] Creating room: customerId=${customerId}, careTakerId=${careTakerId}`);
+    //toast.info(`[chatApi] Creating room: customerId=${customerId}, careTakerId=${careTakerId}`);
     
     const result = api.post(`/chat/room`, null, {
       params: {
@@ -184,7 +184,7 @@ export const chatApi = {
     
     result.then(response => {
       console.log('[chatApi] Chat room response:', response.data);
-      toast.info(`[chatApi] Response code: ${response.data.code}`);
+     // toast.info(`[chatApi] Response code: ${response.data.code}`);
     }).catch(error => {
       console.error('[chatApi] Chat room error:', error.response?.data || error.message);
     });

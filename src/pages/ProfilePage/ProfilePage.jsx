@@ -7,34 +7,14 @@ import ScheduleSection from './ScheduleSection/ScheduleSection';
 import TimePicker from '../../components/TimePicker';
 import NannySchedulePopup from '../../components/NannySchedulePopup';
 import { useLocation, useNavigate } from 'react-router-dom';
-import api, { bookingApi, careRecipientApi, chatApi, apiUtils } from '../../services/api';
+import api, { bookingApi, careRecipientApi, chatApi } from '../../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ChatWidget from '../Chat/ChatWidget';
-import FloatingChatButton from '../Chat/FloatingChatButton';
 import { X } from 'lucide-react';
 import { useChat } from '../../contexts/ChatContext';
 import { jwtDecode } from 'jwt-decode';
 
-// Define a click chat function outside of the component to make it globally available
-window.openChatBubble = () => {
-  console.log("Manual chat opening triggered");
-  try {
-    // Try to find the chat button in the DOM
-    const chatButton = document.querySelector('.fixed.bottom-6.right-6.z-50 button');
-    if (chatButton) {
-      console.log("Found chat button, clicking it");
-      chatButton.click();
-      return true;
-    } else {
-      console.log("Chat button not found in DOM!");
-      return false;
-    }
-  } catch (e) {
-    console.error("Error in openChatBubble:", e);
-    return false;
-  }
-};
 
 // SuccessPopup Component
 const SuccessPopup = ({ message, onClose }) => {
@@ -179,17 +159,7 @@ return (
 const ProfilePage = ({ profile, onClose, onNavigate, district, dateRange }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { 
-    openChat, 
-    toggleChat,
-    isChatOpen,
-    setIsChatOpen,
-    setSelectedCareTaker, 
-    setSelectedCareTakerName,
-    fetchChatRooms,
-    connectToChat,
-    chatButtonRef
-  } = useChat();
+  const { openChat } = useChat();
 const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'profile');
 const [scheduleView, setScheduleView] = useState('recipientSelection');
   const [selectedDateRange, setSelectedDateRange] = useState(null);
@@ -213,6 +183,7 @@ const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [isLoadingDates, setIsLoadingDates] = useState(false);
 const [formErrors, setFormErrors] = useState({});
 const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+const [isChatOpen, setIsChatOpen] = useState(false);
 const [chatMode, setChatMode] = useState('modal'); // 'modal' hoặc 'floating'
 
   useEffect(() => {
@@ -1222,16 +1193,7 @@ const renderRecipientSelectionView = () => {
         return <ReviewsSection profile={profile} careTakerId={careTakerId} />;
       case 'messages':
         return (
-          <div className="p-6 bg-gray-50 rounded-lg min-h-[700px] flex flex-col items-center transition-all duration-300">
-            {isChatOpen && <div className="w-full flex justify-end mb-4">
-              <button 
-                className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-500"
-                onClick={() => setIsChatOpen(false)}
-              >
-                <X size={18} />
-              </button>
-            </div>}
-            
+          <div className="p-6 bg-gray-50 rounded-lg min-h-[700px] flex flex-col items-center justify-center transition-all duration-300">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Tin nhắn</h2>
               <p className="text-gray-600 mb-6">Bắt đầu trò chuyện với bảo mẫu để thảo luận chi tiết!</p>
@@ -1239,50 +1201,47 @@ const renderRecipientSelectionView = () => {
                 <button
                   className="bg-gradient-to-r from-[#00A37D] to-[#00C495] text-white font-medium py-2 px-6 rounded-lg hover:from-[#008C66] hover:to-[#00A37D] transition-all duration-300"
                   onClick={() => {
-                    if (careTakerId) {
-                      const token = localStorage.getItem('token');
-                      if (!token) {
-                        toast.error('Bạn cần đăng nhập để sử dụng tính năng chat');
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                      toast.error('Vui lòng đăng nhập để sử dụng tính năng chat');
+                      return;
+                    }
+                    
+                    try {
+                      const decoded = jwtDecode(token);
+                      const customerId = decoded.user_id;
+                      
+                      if (!customerId) {
+                        toast.error('Không thể xác định ID người dùng từ token');
                         return;
                       }
-                      try {
-                        const decoded = jwtDecode(token);
-                        const customerId = decoded.user_id;
-                        if (!customerId) {
-                          toast.error('Không thể xác định ID người dùng từ token');
-                          return;
-                        }
-                        
-                        // Create/get chat room
-                        chatApi.createChatRoom(customerId, careTakerId)
-                          .then(response => {
-                            if (response.data.code === 1010 || response.data.code === 409) {
-                              toast.success(`Chat room ${response.data.code === 1010 ? 'created' : 'exists'}`);
-                              
-                              // Set the selected caretaker for the FloatingChatButton
-                              setSelectedCareTaker(careTakerId);
-                              setSelectedCareTakerName(profile?.nameOfCareTaker || 'Bảo mẫu');
-                              
-                              // Open the chat widget via context
-                              if (chatButtonRef && chatButtonRef.current) {
-                                chatButtonRef.current.click();
-                              }
-                            } else {
-                              toast.error(`API Error: ${response.data.code}`);
-                            }
-                          })
-                          .catch(err => {
-                            toast.error(`API Error: ${err.message}`);
-                          });
-                      } catch (error) {
-                        toast.error('Không thể xác thực người dùng. Vui lòng đăng nhập lại!');
+                      
+                      if (!careTakerId) {
+                        toast.error('Không thể xác định ID bảo mẫu');
+                        return;
                       }
-                    } else {
+                      
+                      // First, open the chat interface
+                      openChat(careTakerId, profile?.nameOfCareTaker || 'Bảo mẫu');
+                      
+                      // Then create/get chat room in background
+                      chatApi.createChatRoom(customerId, careTakerId)
+                        .then(response => {
+                          if (response.data.code === 1010 || response.data.code === 409) {
+                           // toast.success(`Chat room ${response.data.code === 1010 ? 'created' : 'exists'}`);
+                          }
+                        })
+                        .catch(error => {
+                          console.error("Error creating chat room:", error);
+                          //toast.error('Có lỗi khi tạo phòng chat, nhưng bạn vẫn có thể trò chuyện');
+                        });
+                    } catch (error) {
+                      console.error("Error in chat function:", error);
                       toast.error('Không thể tạo cuộc trò chuyện. Vui lòng thử lại sau!');
                     }
                   }}
                 >
-                  Mở chat
+                  Mở chat nổi
                 </button>
               </div>
             </div>
@@ -1310,7 +1269,6 @@ const renderRecipientSelectionView = () => {
         onClose={onClose}
       />
     )}
-    {/* FloatingChatButton is already in the app layout */}
     <ToastContainer/>
   </>
   );

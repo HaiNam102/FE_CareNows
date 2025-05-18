@@ -648,6 +648,16 @@ export const ChatProvider = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const interval = setInterval(() => {
+      fetchChatRooms();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [userId, fetchChatRooms]);
+
   return (
     <ChatContext.Provider value={{
       isChatOpen,
