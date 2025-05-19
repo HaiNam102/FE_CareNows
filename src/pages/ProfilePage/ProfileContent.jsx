@@ -78,7 +78,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
     rating = 5.0,
     totalReviewers = 0,
     servicePrice = "N/A",
-    imgProfile = "",
+    image = "",
     introduceYourself = "Không có thông tin giới thiệu",
     ward = "",
     district: profileDistrict = "",
@@ -136,7 +136,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
 
         <div className={`flex flex-col items-end ${bounceIn}`} style={{ animationDuration: '1.5s' }}>
           <img 
-            src={imgProfile} 
+            src={image} 
             alt={`Ảnh của ${nameOfCareTaker}`} 
             className="w-40 h-40 rounded-full mb-3 object-cover transition-transform duration-300 transform hover:scale-105" 
           />
@@ -162,8 +162,8 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
                       onClick={() => handleSelectCareTaker(caretaker)}
                     >
                       <img 
-                        src={caretaker.imgProfile} 
-                        alt={caretaker.nameOfCareTaker} 
+                        src={caretaker.image} 
+                        alt={caretaker.image} 
                         className="w-12 h-12 rounded-full object-cover mr-4"
                       />
                       <div>
