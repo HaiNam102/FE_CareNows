@@ -154,7 +154,7 @@ export const careRecipientApi = {
 
   // Create new care recipient
   create: (data) => {
-    return api.post('/careRecipient', data);
+    return api.post('/careRecipient/customer', data);
   },
 
   // Update care recipient
