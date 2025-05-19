@@ -436,7 +436,7 @@ const AdminHome = () => {
                         </div>
                         <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{formatNumber(item.price)} VNĐ</div>
                         <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.transactionId}</div>
-                        <di style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.updateAt}</di
+                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.updateAt}</div>
                       </div>
                     ))}
                   </>
