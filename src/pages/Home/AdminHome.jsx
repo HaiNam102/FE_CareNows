@@ -56,7 +56,7 @@ const AdminHome = () => {
   const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [countPayment, setCountPayment] = useState(0);
+  const [countPayment, setCountPayment] = useState({ totalAmount: 0, totalAmountAfterPayCaretaker: 0 });
   const itemsPerPage = 5;
 
   const paginatedPayments = filteredPayments.slice(
@@ -77,7 +77,7 @@ const AdminHome = () => {
   const fetchCountPayment = async () => {
     try {
       const response = await axios.get(`${API_BASE}/payment/total`);
-      setCountPayment(response.data.data || 0);
+      setCountPayment(response.data.data || { totalAmount: 0, totalAmountAfterPayCaretaker: 0 });
     } catch (error) {
       console.error('Error fetching payment count:', error);
     }
@@ -171,6 +171,7 @@ const AdminHome = () => {
 
   // Format number with commas
   const formatNumber = (number) => {
+    if (number === undefined || number === null) return '0';
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
@@ -308,7 +309,7 @@ const AdminHome = () => {
                 flex: 1
               }}>
                 <div style={{ fontSize: 32, fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 12 }}>
-                  ${formatNumber(countPayment.totalAmount)} VND
+                  ${formatNumber(countPayment?.totalAmount || 0)} VND
                 </div>
                 <div style={{
                   fontSize: 16,
@@ -333,7 +334,7 @@ const AdminHome = () => {
                     Doanh thu bảo mẫu
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A' }}>
-                    ${formatNumber(countPayment.totalAmountAfterPayCaretaker)} VND
+                    ${formatNumber(countPayment?.totalAmountAfterPayCaretaker || 0)} VND
                   </div>
                 </div>
                 <div>
@@ -435,7 +436,7 @@ const AdminHome = () => {
                         </div>
                         <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{formatNumber(item.price)} VNĐ</div>
                         <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.transactionId}</div>
-                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.updateAt}</div>
+                        <di style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.updateAt}</di
                       </div>
                     ))}
                   </>
