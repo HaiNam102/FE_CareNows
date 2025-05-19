@@ -4,7 +4,7 @@ import Image2 from "../assets/images/Nanny Picture.png";
 import Image1 from "../assets/images/Nanny Picture (1).png";
 import { useNavigate } from "react-router-dom";
 import CalendarComponent from '../components/Calendar';
-import axios from 'axios';
+import api from '../services/api';
 
 const districts = [
   "Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ", "Hòa Vang", "Hoàng Sa"
@@ -15,8 +15,8 @@ const BookService = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("Liên Chiểu"); // Mặc định là Hải Châu
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState([
-    new Date('2025-03-20'), 
-    new Date('2025-03-30') 
+    new Date('2025-05-10'), 
+    new Date('2025-06-20') 
   ]); // Mặc định ngày 20/03/2025 đến 30/03/2025
   const [searchInput, setSearchInput] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
@@ -62,12 +62,8 @@ const BookService = () => {
       // Tạo URL trực tiếp để đảm bảo format chính xác
       const startDate = formatDate(selectedDateRange[0]);
       const endDate = formatDate(selectedDateRange[1]);
-      
-      // Tạo URL với format cố định
-      const url = `http://localhost:8080/api/careTaker/search?district=${encodeURIComponent(selectedDistrict)}&dayStart=${startDate}&dayEnd=${endDate}`;
-      
-      // Gọi API với URL đã định sẵn 
-      const response = await axios.get(url); 
+      const url = `/careTaker/search?district=${encodeURIComponent(selectedDistrict)}&dayStart=${startDate}&dayEnd=${endDate}`;
+      const response = await api.get(url);
       console.log("API Response:", response.data);
       console.log("Request URL:", url);
       

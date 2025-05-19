@@ -1,3 +1,4 @@
+
 // Layout.jsx
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -36,7 +37,7 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
               className={`px-4 py-2 ${activeTab === 'schedule' ? 'text-white bg-[#00a37d] rounded' : 'text-gray-400'}`} 
               onClick={() => onNavigate('schedule', district, dateRange)}
             >
-              Lịch
+              Đặt lịch
             </a>
             <a 
               href="#" 
@@ -53,12 +54,9 @@ const ProfileLayout = ({ children, activeTab, onNavigate, onClose, district, dat
               Nhắn tin
             </a>
           </div>
-          <div 
+          <button 
             onClick={onClose}
             className="text-[#00a37d]"
-            role="button"
-            aria-label="Close profile"
-            tabIndex={0}
           >
              <HoverButtonOutline text="X" size="medium" showArrow={false} />
           </button>

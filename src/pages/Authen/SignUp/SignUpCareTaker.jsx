@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HoverButton from "../../../components/HoverButton";
 import GoogleIcon from "../../../assets/Icon/Google.png";
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import api from '../../../services/api';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { validateField } from '../../../utils/validation';
@@ -47,6 +47,9 @@ const SignUpCareTaker = () => {
   // State cho checkbox đồng ý khóa học
   const [acceptTraining, setAcceptTraining] = useState(false);
   const [acceptTest, setAcceptTest] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const validateExperienceYear = (value) => {
     if (value === "") return "Vui lòng nhập số năm kinh nghiệm";
@@ -120,6 +123,14 @@ const SignUpCareTaker = () => {
         return;
       }
 
+      setLoading(true);
+      setProgress(10);
+
+      // Giả lập tiến trình tăng dần (có thể bỏ nếu muốn chỉ tăng khi BE trả về)
+      const progressInterval = setInterval(() => {
+        setProgress((old) => (old < 90 ? old + 10 : old));
+      }, 400);
+
       const registerDTO = {
         userName: formData.username,
         password: formData.password,
@@ -136,33 +147,38 @@ const SignUpCareTaker = () => {
 
       const formDataToSend = new FormData();
       
-      formDataToSend.append('registerDTO', 
-        new Blob([JSON.stringify(registerDTO)], { type: 'application/json' })
-      );
-
+      formDataToSend.append('registerDTO', new Blob([JSON.stringify(registerDTO)], { type: 'application/json' }));
       formDataToSend.append('imgProfile', formData.imgProfile);
       formDataToSend.append('imgCccd', formData.imgCccd);
 
-      const response = await axios.post(
-        'http://localhost:8080/api/auths/register',
-        formDataToSend,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
-        }
-      );
+      // Thêm log để kiểm tra dữ liệu gửi đi
+      console.log('registerDTO:', registerDTO);
+      for (let pair of formDataToSend.entries()) {
+        console.log(pair[0]+ ', ' + pair[1]);
+      }
+
+      const response = await api.post('/auths/register', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000
+      });
+
+      clearInterval(progressInterval);
+      setProgress(100);
 
       if (response.data.code === 20000) {
         toast.success('Đăng ký thành công!');
-        setTimeout(() => navigate('/login'), 2000);
-        console.log(response);
+        setTimeout(() => {
+          setLoading(false);
+          navigate('/login');
+        }, 1000);
       } else {
+        setLoading(false);
         throw new Error(response.data.message || 'Đăng ký thất bại');
       }
 
     } catch (error) {
-      console.error('Registration error:', error);
+      setLoading(false);
+      console.error('Registration error:', error, error.response);
       toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
     }
   };
@@ -504,6 +520,46 @@ const SignUpCareTaker = () => {
             />
           ))}
         </div>
+
+        {loading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="flex flex-col items-center">
+              {/* Vòng tròn loading */}
+              <div className="relative w-32 h-32 flex items-center justify-center">
+                {/* Vòng quay */}
+                <svg className="w-full h-full animate-spin-slow" viewBox="0 0 100 100">
+                  <circle
+                    className="text-gray-300"
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="10"
+                  />
+                  <circle
+                    className="text-teal-500"
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="10"
+                    strokeDasharray={2 * Math.PI * 45}
+                    strokeDashoffset={2 * Math.PI * 45 * (1 - progress / 100)}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                {/* Số phần trăm */}
+                <span className="absolute text-2xl font-bold text-teal-600">{progress}%</span>
+              </div>
+              {/* Thông báo */}
+              <div className="mt-6 text-lg font-medium text-white bg-teal-500 px-6 py-2 rounded-full shadow-lg">
+                Chúng tôi đang tiến hành xác thực căn cước công dân của bạn...
+              </div>
+            </div>
+          </div>
+        )}
 
         <ToastContainer />
       </div>

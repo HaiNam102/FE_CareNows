@@ -3,12 +3,34 @@ import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faExchangeAlt } from '@fortawesome/free-solid-svg-icons';
 import HoverButton from '../../components/HoverButton';
-import axios from 'axios';
+import api, { careTakerApi } from '../../services/api';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
+const ProfileContent = ({ profile = {}, onCareTakerSelect, onNavigate }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [similarCareTakers, setSimilarCareTakers] = useState([]);
   const [showCareTakerList, setShowCareTakerList] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState(profile);
+
+  // Always fetch latest profile by id if available
+  useEffect(() => {
+    if (profile?.careTakerId) {
+      careTakerApi.getById(profile.careTakerId)
+        .then(res => {
+          if (res.data && res.data.data) {
+            setProfileData(res.data.data);
+            console.log(res)
+          }
+        })
+        .catch(err => {
+          // Nếu lỗi thì giữ nguyên profile cũ
+        });
+    } else {
+      setProfileData(profile);
+    }
+  }, [profile?.careTakerId]);
 
   // Check if we have a valid profile with careTakerId on mount or when profile changes
   useEffect(() => {
@@ -34,44 +56,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
       element.style.animationDelay = `${index * 0.1}s`;
     });
   }, []);
-
-  // Function to fetch similar caretakers
-  // const fetchSimilarCareTakers = async () => {
-  //   if (showCareTakerList) {
-  //     setShowCareTakerList(false);
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   try {
-  //     // Try to get district from the profile
-  //     const district = profile.district || '';
-      
-  //     const response = await axios.get('http://localhost:8080/api/caretaker/search', {
-  //       params: {
-  //         district: district,
-  //         page: 0,
-  //         size: 5
-  //       }
-  //     });
-      
-  //     if (response.data && response.data.code === 1010) {
-  //       // Filter out the current caretaker if present
-  //       const filteredCareTakers = response.data.data.content.filter(
-  //         caretaker => caretaker.careTakerId !== profile.careTakerId
-  //       );
-  //       setSimilarCareTakers(filteredCareTakers);
-  //       setShowCareTakerList(true);
-  //     } else {
-  //       console.error('Failed to fetch similar caretakers:', response.data);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching similar caretakers:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
+  
   // Handle caretaker selection
   const handleSelectCareTaker = (caretaker) => {
     if (onCareTakerSelect) {
@@ -80,22 +65,28 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
     setShowCareTakerList(false);
   };
 
+  const handleBookingClick = () => {
+    if (onNavigate) {
+      onNavigate('schedule');
+    }
+  };
+
   // Extract properties from profile data with appropriate fallbacks
   const {
     nameOfCareTaker = "Tên không xác định",
     experienceYear = "N/A",
     rating = 5.0,
-    numberOfReviews = 0,
+    totalReviewers = 0,
     servicePrice = "N/A",
-    imgProfile = "",
-    introduction = "Không có thông tin giới thiệu",
+    image = "",
+    introduceYourself = "Không có thông tin giới thiệu",
     ward = "",
     district: profileDistrict = "",
     address = "",
-    totalHires = 0,
+    totalBookings = 0,
     completedHires = 0,
     careTakerId
-  } = profile;
+  } = profileData || {};
 
   // Calculate full address if ward and district are available
   const fullAddress = address || (ward && profileDistrict  ? `${ward}, ${profileDistrict}, Đà Nẵng` : "Chưa cập nhật địa chỉ");
@@ -130,7 +121,8 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
             <span className="text-[#00a37d] flex items-center">
               <FontAwesomeIcon icon={faStar} className="mr-1" /> 
               <span className="font-medium">{rating}</span>
-              <span className="text-gray-400 ml-1">({numberOfReviews})</span>
+              <span className="text-gray-400 ml-1">({totalReviewers
+})</span>
             </span>
           </div>
           <a href="#" className="text-[#00a37d] text-sm underline mr-8">
@@ -144,7 +136,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
 
         <div className={`flex flex-col items-end ${bounceIn}`} style={{ animationDuration: '1.5s' }}>
           <img 
-            src={imgProfile} 
+            src={image} 
             alt={`Ảnh của ${nameOfCareTaker}`} 
             className="w-40 h-40 rounded-full mb-3 object-cover transition-transform duration-300 transform hover:scale-105" 
           />
@@ -170,8 +162,8 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
                       onClick={() => handleSelectCareTaker(caretaker)}
                     >
                       <img 
-                        src={caretaker.imgProfile} 
-                        alt={caretaker.nameOfCareTaker} 
+                        src={caretaker.image} 
+                        alt={caretaker.image} 
                         className="w-12 h-12 rounded-full object-cover mr-4"
                       />
                       <div>
@@ -202,7 +194,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
           Giới thiệu
         </h2>
         <p className="text-gray-700">
-          "{introduction || 'Chưa cập nhật thông tin giới thiệu'}"
+          "{introduceYourself || 'Chưa cập nhật thông tin giới thiệu'}"
         </p>
       </div>
 
@@ -226,7 +218,7 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
             <div className="flex items-center ">
               <div className="w-1 h-6 bg-red-500 mr-2"></div>
               <p className="text-2xl font-bold">
-                {totalHires || 0}
+                {totalBookings || 0}
               </p>
             </div>
           </div>
@@ -235,7 +227,12 @@ const ProfileContent = ({ profile = {}, onCareTakerSelect }) => {
 
       {/* Booking Button */}
       <div className={`flex flex-col items-end p-6 ${slideInRight}`} style={{ animationDuration: '1s', animationDelay: '0.8s' }}>
-        <HoverButton text="Đặt lịch ngay" size="meidum" showArrow={true} />
+        <HoverButton 
+          text="Đặt lịch ngay" 
+          size="medium" 
+          showArrow={true} 
+          onClick={handleBookingClick}
+        />
       </div>
     </>
   );
