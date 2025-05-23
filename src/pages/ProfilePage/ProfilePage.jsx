@@ -417,7 +417,7 @@ const handleContinueToBookingDetails = () => {
 
   const calculateTotalPrice = () => {
     // Lấy servicePrice từ profile, chuyển thành số
-    const pricePerHour = parseInt(profile?.servicePrice || '0', 10) / 1000; // Giả sử servicePrice là VNĐ, chia 1000 để tránh hiển thị số lớn
+    const pricePerHour = parseInt(profile?.servicePrice || '0', 10); // Giả sử servicePrice là VNĐ, chia 1000 để tránh hiển thị số lớn
     const startTime = selectedTime.startTime.split(':').map(Number);
     const endTime = selectedTime.endTime.split(':').map(Number);
   
@@ -1148,7 +1148,7 @@ const renderRecipientSelectionView = () => {
             <div className="flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-800">Tổng cộng</h2>
             <span className="text-xl font-bold text-[#00A37D]">
-              {calculateTotalPrice().toLocaleString()}.000 VNĐ
+              {calculateTotalPrice().toLocaleString()} VNĐ
             </span>
             </div>
           </div>

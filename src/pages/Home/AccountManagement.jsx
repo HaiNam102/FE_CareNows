@@ -27,6 +27,24 @@ const AccountManagement = () => {
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const avatarSamples = [
+    "https://randomuser.me/api/portraits/men/1.jpg",
+    "https://randomuser.me/api/portraits/women/2.jpg",
+    "https://randomuser.me/api/portraits/men/3.jpg",
+    "https://randomuser.me/api/portraits/women/4.jpg",
+    "https://randomuser.me/api/portraits/men/5.jpg",
+    "https://randomuser.me/api/portraits/women/6.jpg",
+    "https://randomuser.me/api/portraits/men/7.jpg",
+    "https://randomuser.me/api/portraits/women/8.jpg"
+  ];
+
+  function hashStringToIndex(str, max) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % max;
+  }
 
   // Fetch users theo tab
   useEffect(() => {
@@ -53,7 +71,13 @@ const AccountManagement = () => {
           nameOfUser: u.nameOfUser,
           email: u.email || '',
           status: u.status,
-          avatar: u.image || 'https://randomuser.me/api/portraits/lego/1.jpg',
+          avatar: u.image ||
+            avatarSamples[
+            hashStringToIndex(
+              (u.customerId || u.userId || u.accountId || idx).toString(),
+              avatarSamples.length
+            )
+            ],
           role: role
         }));
         setUsers(mapped);
