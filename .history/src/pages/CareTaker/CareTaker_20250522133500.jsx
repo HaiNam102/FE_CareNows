@@ -1245,65 +1245,81 @@ const CareTaker = () => {
         <div className="flex flex-col lg:flex-row">
           {/* Left Sidebar */}
           <div className="lg:w-1/4 mb-6 lg:mb-0 lg:mr-6">
-            <div>
-              <h2 className="text-3xl font-bold mb-1">Xin chào, {userData.name}!</h2>
-              <p className="text-gray-500 mb-4 text-base">Chọn chức năng bên dưới để quản lý công việc của bạn.</p>
-              <div className="h-[1px] bg-gray-200 w-full mb-4"></div>
-              <nav className="flex flex-col gap-1">
+            <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+              <div>
+                <h2 className="text-[40px] leading-none font-semibold font-['SVN-Gilroy'] mb-3">Xin chào {userData.name}!</h2>
+                <div className="h-[1px] bg-gray-200 w-full"></div>
+              </div>
+
+              <nav className="mt-4">
                 <div
-                  className={`flex items-center h-[44px] px-4 rounded cursor-pointer transition ${
-                    currentPage === 'profile'
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-4 border-teal-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'profile' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setCurrentPage('profile')}
                 >
-                  <FontAwesomeIcon icon={faUserCircle} className="mr-3 w-5" />
-                  <span>Thông tin cá nhân</span>
+                  <span className={`mr-3 ${currentPage === 'profile' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faUserCircle} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Thông tin cá nhân</span>
                 </div>
+
                 <div
-                  className={`flex items-center h-[44px] px-4 rounded cursor-pointer transition ${
-                    currentPage === 'appointments'
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-4 border-teal-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'appointments' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setCurrentPage('appointments')}
                 >
-                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-3 w-5" />
-                  <span>Lịch hẹn của tôi</span>
+                  <span className={`mr-3 ${currentPage === 'appointments' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faCalendarAlt} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch hẹn của tôi</span>
                 </div>
+
                 <div
-                  className={`flex items-center h-[44px] px-4 rounded cursor-pointer transition ${
-                    currentPage === 'calendar'
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-4 border-teal-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'calendar' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setCurrentPage('calendar')}
                 >
-                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-3 w-5" />
-                  <span>Lịch làm việc</span>
+                  <span className={`mr-3 ${currentPage === 'calendar' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faCalendarWeek} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch làm việc</span>
                 </div>
+
                 <div
-                  className={`flex items-center h-[44px] px-4 rounded cursor-pointer transition ${
-                    currentPage === 'schedule'
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-4 border-teal-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'schedule' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setCurrentPage('schedule')}
                 >
-                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3 w-5" />
-                  <span>Đăng ký lịch</span>
+                  <span className={`mr-3 ${currentPage === 'schedule' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faMapMarkerAlt} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Đăng ký lịch</span>
                 </div>
+
                 <div
-                  className={`flex items-center h-[44px] px-4 rounded cursor-pointer transition ${
-                    currentPage === 'results'
-                      ? 'bg-teal-50 text-teal-700 font-semibold border-l-4 border-teal-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'results' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                   onClick={() => setCurrentPage('results')}
                 >
-                  <FontAwesomeIcon icon={faFileLines} className="mr-3 w-5" />
-                  <span>Lịch sử thanh toán</span>
+                  <span className={`mr-3 ${currentPage === 'results' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faFileLines} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch sử thanh toán</span>
                 </div>
               </nav>
             </div>
