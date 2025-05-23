@@ -8,14 +8,14 @@ import axios from 'axios';
 const API_BASE = 'http://localhost:8080/api';
 
 const dataBar = [
-  { name: '1', value: 20 }, { name: '2', value: 22 }, { name: '3', value: 25 }, { name: '4', value: 23 },
-  { name: '5', value: 24 }, { name: '6', value: 26 }, { name: '7', value: 28 }, { name: '8', value: 27 },
-  { name: '9', value: 25 }, { name: '10', value: 40 }, { name: '11', value: 26 }, { name: '12', value: 27 }
+  { name: '1', booking: 20 }, { name: '2', booking: 22 }, { name: '3', booking: 25 }, { name: '4', booking: 23 },
+  { name: '5', booking: 24 }, { name: '6', booking: 26 }, { name: '7', booking: 28 }, { name: '8', booking: 27 },
+  { name: '9', booking: 25 }, { name: '10', booking: 40 }, { name: '11', booking: 26 }, { name: '12', booking: 27 }
 ];
 
 const pieData = [
-  { name: 'Đã kích hoạt', value: 80, color: '#1abc9c' },
-  { name: 'Chưa kích hoạt', value: 40, color: '#ff4e4e' }
+  { name: 'Đã kích hoạt', booking: 80, color: '#1abc9c' },
+  { name: 'Chưa kích hoạt', booking: 40, color: '#ff4e4e' }
 ];
 
 const navs = [
@@ -57,6 +57,8 @@ const AdminHome = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [countPayment, setCountPayment] = useState({ totalAmount: 0, totalAmountAfterPayCaretaker: 0 });
+  const [revenue, setRevenue] = useState([]);
+  const [careTakerActiveCount, setCareTakerActiveCount] = useState(0);
   const itemsPerPage = 5;
 
   const paginatedPayments = filteredPayments.slice(
@@ -82,6 +84,27 @@ const AdminHome = () => {
       console.error('Error fetching payment count:', error);
     }
   };
+
+  const fetchRevenue = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/booking/monthly`);
+      setRevenue(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error('Error fetching payment count:', error);
+    }
+  };
+
+    const fetchCareTakerActiveCount = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/auths/careTaker/counts`);
+      setCareTakerActiveCount(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error('Error fetching payment count:', error);
+    }
+  };
+
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true);
@@ -162,6 +185,8 @@ const AdminHome = () => {
     fetchDashboardData();
     fetchPaymentHistory();
     fetchCountPayment();
+    fetchRevenue();
+    fetchCareTakerActiveCount();
   }, []);
 
   // Easing function for smoother animation
@@ -342,7 +367,7 @@ const AdminHome = () => {
                     Lợi nhuận tháng này
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A' }}>
-                    ${formatNumber(monthlyProfit)} VND
+                   ${formatNumber(revenue[0]?.revenue || 0)} VND
                   </div>
                 </div>
               </div>
@@ -494,7 +519,7 @@ const AdminHome = () => {
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: 24, margin: '12px 0 8px' }}>
-                ${formatNumber(profit)} VND
+                ${formatNumber(revenue[0]?.revenue || 0)} VND
               </div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, fontSize: 14 }}>
                 <span style={{
@@ -518,7 +543,7 @@ const AdminHome = () => {
                   />
                   <YAxis hide />
                   <Tooltip />
-                  <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={24}>
+                  <Bar dataKey="booking" radius={[12, 12, 0, 0]} barSize={24}>
                     {dataBar.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={index === 9 ? '#C6E76D' : '#E8F1FB'} />
                     ))}
@@ -544,7 +569,7 @@ const AdminHome = () => {
                 <span style={{ fontWeight: 500, fontSize: 16, color: '#1a2e22' }}>Quản lý chuyên viên</span>
                 <Info size={10} color="#595959" />
               </div>
-              <div style={{ color: '#B7586E', fontSize: 24, marginBottom: 0, fontWeight: 500 }}><span style={{ fontWeight: 700 }}>!</span> 40 chuyên viên chưa được duyệt</div>
+              <div style={{ color: '#B7586E', fontSize: 24, marginBottom: 0, fontWeight: 500 }}><span style={{ fontWeight: 700 }}>!</span> {careTakerActiveCount.inactiveCount} chuyên viên chưa được duyệt</div>
               <div style={{
                 flex: 1,
                 display: 'flex',
@@ -603,7 +628,7 @@ const AdminHome = () => {
                   zIndex: 4
                 }}>
                   <div style={{ fontSize: 14, color: '#757575', marginBottom: 4 }}>Chuyên viên</div>
-                  <div style={{ fontWeight: 700, fontSize: 42, color: '#1a2e22' }}>120</div>
+                  <div style={{ fontWeight: 700, fontSize: 42, color: '#1a2e22' }}>{careTakerActiveCount.totalCount}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: 24 }}>
@@ -616,7 +641,7 @@ const AdminHome = () => {
                   }}></div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 12, color: '#737373' }}>Đã kích hoạt</span>
-                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>80</span>
+                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>{careTakerActiveCount.activeCount}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -628,7 +653,7 @@ const AdminHome = () => {
                   }}></div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 12, color: '#737373' }}>Chưa kích hoạt</span>
-                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>40</span>
+                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>{careTakerActiveCount.inactiveCount}</span>
                   </div>
                 </div>
               </div>
