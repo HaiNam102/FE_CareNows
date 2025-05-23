@@ -18,7 +18,7 @@ const CareTaker = () => {
   const [error, setError] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [userData, setUserData] = useState({ name: '', lastLogin: '' });
-  const [currentPage, setCurrentPage] = useState('schedule'); 
+  const [currentPage, setCurrentPage] = useState('appointments'); 
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [loadingRecipient, setLoadingRecipient] = useState(false);
@@ -218,7 +218,7 @@ const CareTaker = () => {
   // Format currency
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '0 VND';
-    return `${amount.toLocaleString()}.000 VND`;
+    return `${amount.toLocaleString()} VND`;
   };
 
   const handleDateSelect = (date) => {
@@ -757,7 +757,7 @@ const CareTaker = () => {
                       {booking.servicePrice && (
                         <div className="border-t pt-3 mt-3">
                           <div className="font-medium">Estimate earnings:</div>
-                          <div className="text-xl font-bold"> {booking.servicePrice.toLocaleString()}.000 VND</div>
+                          <div className="text-xl font-bold"> {booking.servicePrice.toLocaleString()} VND</div>
                         </div>
                       )}
                     </div>

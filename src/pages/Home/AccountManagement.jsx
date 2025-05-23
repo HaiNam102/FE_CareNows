@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Logo from '../../assets/images/Logo.png';
-import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, Upload, Plus, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, Upload, MoreHorizontal } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Navigation items
@@ -9,81 +9,16 @@ const navs = [
   { label: 'Quản lý tài khoản', icon: <Users size={20} />, path: '/admin/accounts' },
 ];
 
-// Mock data for users table
-const mockUsers = [
-  {
-    id: 1,
-    name: 'Nguyen Nhat Tan',
-    email: 'vananhnvt2k3@gmail.com',
-    role: 'Khách hàng',
-    status: 'active',
-    joinDate: '15/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
-  },
-  {
-    id: 2,
-    name: 'Tran Van Minh',
-    email: 'tranvanminh@gmail.com',
-    role: 'Chuyên viên',
-    status: 'active',
-    joinDate: '14/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg'
-  },
-  {
-    id: 3,
-    name: 'Le Thi Hong',
-    email: 'lethihong@gmail.com',
-    role: 'Khách hàng',
-    status: 'inactive',
-    joinDate: '14/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/3.jpg'
-  },
-  {
-    id: 4,
-    name: 'Pham Quoc Bao',
-    email: 'phamquocbao@gmail.com',
-    role: 'Chuyên viên',
-    status: 'active',
-    joinDate: '13/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/4.jpg'
-  },
-  {
-    id: 5,
-    name: 'Hoang Thuy Linh',
-    email: 'hoangthuylinh@gmail.com',
-    role: 'Khách hàng',
-    status: 'active',
-    joinDate: '12/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/5.jpg'
-  },
-  {
-    id: 6,
-    name: 'Vo Minh Truong',
-    email: 'vominhtruong@gmail.com',
-    role: 'Chuyên viên',
-    status: 'pending',
-    joinDate: '11/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/6.jpg'
-  },
-  {
-    id: 7,
-    name: 'Trinh Thi My',
-    email: 'trinhthimy@gmail.com',
-    role: 'Chuyên viên',
-    status: 'active',
-    joinDate: '10/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/7.jpg'
-  }
-];
+const API_BASE = 'http://localhost:8080/api/auths';
 
 const AccountManagement = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('customer'); // 'customer' or 'specialist'
-  const [users, setUsers] = useState(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState(mockUsers);
+  const [activeTab, setActiveTab] = useState('customer');
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFilter, setShowFilter] = useState(false);
@@ -92,19 +27,70 @@ const AccountManagement = () => {
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  
-  // Filter users based on selected tab and search term
+  const avatarSamples = [
+    "https://randomuser.me/api/portraits/men/1.jpg",
+    "https://randomuser.me/api/portraits/women/2.jpg",
+    "https://randomuser.me/api/portraits/men/3.jpg",
+    "https://randomuser.me/api/portraits/women/4.jpg",
+    "https://randomuser.me/api/portraits/men/5.jpg",
+    "https://randomuser.me/api/portraits/women/6.jpg",
+    "https://randomuser.me/api/portraits/men/7.jpg",
+    "https://randomuser.me/api/portraits/women/8.jpg"
+  ];
+
+  function hashStringToIndex(str, max) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % max;
+  }
+
+  // Fetch users theo tab
+  useEffect(() => {
+    const fetchUsers = async () => {
+      let url = '';
+      let role = '';
+      if (activeTab === 'customer') {
+        url = `${API_BASE}/customer`;
+        role = "Khách hàng";
+      } else {
+        url = `${API_BASE}/careTaker`;
+        role = "Chuyên viên";
+      }
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        const data = await res.json();
+        const mapped = (data.data || []).map((u, idx) => ({
+          accountId: u.accountId,
+          userId: u.userId || idx,
+          nameOfUser: u.nameOfUser,
+          email: u.email || '',
+          status: u.status,
+          avatar: u.image ||
+            avatarSamples[
+            hashStringToIndex(
+              (u.customerId || u.userId || u.accountId || idx).toString(),
+              avatarSamples.length
+            )
+            ],
+          role: role
+        }));
+        setUsers(mapped);
+      } catch (e) {
+        setUsers([]);
+      }
+    };
+    fetchUsers();
+  }, [activeTab]);
+
   useEffect(() => {
     let result = users;
-    
-    // Filter by tab
-    if (activeTab === 'customer') {
-      result = result.filter(user => user.role === 'Khách hàng');
-    } else if (activeTab === 'specialist') {
-      result = result.filter(user => user.role === 'Chuyên viên');
-    }
-    
-    // Filter by search
+
     if (searchTerm.trim() !== '') {
       const lowercasedSearch = searchTerm.toLowerCase();
       result = result.filter(
@@ -113,22 +99,19 @@ const AccountManagement = () => {
           user.email.toLowerCase().includes(lowercasedSearch)
       );
     }
-    
-    // Filter by role
+
     if (roleFilter !== 'all') {
       result = result.filter(user => user.role === roleFilter);
     }
-    
-    // Filter by status
+
     if (statusFilter !== 'all') {
       result = result.filter(user => user.status === statusFilter);
     }
-    
+
     setFilteredUsers(result);
     setCurrentPage(1);
-  }, [searchTerm, activeTab, users, roleFilter, statusFilter]);
+  }, [searchTerm, users, roleFilter, statusFilter]);
 
-  // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -143,8 +126,8 @@ const AccountManagement = () => {
       user.joinDate
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,'
-      + headers.join(',') + '\\n'
-      + rows.map(e => e.join(',')).join('\\n');
+      + headers.join(',') + '\n'
+      + rows.map(e => e.join(',')).join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -154,20 +137,40 @@ const AccountManagement = () => {
     document.body.removeChild(link);
   };
 
-  const handleBlockUser = (user) => {
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === user.id ? { ...u, status: 'inactive' } : u
-      )
-    );
+  const handleBlockUser = async (user) => {
+    try {
+      await fetch(`${API_BASE}/active/${user.accountId}?status=INACTIVE`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      setUsers(prev =>
+        prev.map(u =>
+          u.accountId === user.accountId ? { ...u, status: 'INACTIVE' } : u
+        )
+      );
+    } catch (e) {
+      console.error('Error blocking user:', e);
+    }
   };
 
-  const handleActivateUser = (user) => {
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === user.id ? { ...u, status: 'active' } : u
-      )
-    );
+  const handleActivateUser = async (user) => {
+    try {
+      await fetch(`${API_BASE}/active/${user.accountId}?status=ACTIVE`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      setUsers(prev =>
+        prev.map(u =>
+          u.accountId === user.accountId ? { ...u, status: 'ACTIVE' } : u
+        )
+      );
+    } catch (e) {
+      console.error('Error activating user:', e);
+    }
   };
 
   const handleDeactivateUser = (user) => {
@@ -193,11 +196,9 @@ const AccountManagement = () => {
                 <div
                   key={nav.label}
                   onClick={() => {
-                    console.log('Navigating to:', nav.path);
                     try {
                       navigate(nav.path);
                     } catch (error) {
-                      console.error('Navigation error:', error);
                       window.location.href = nav.path;
                     }
                   }}
@@ -230,7 +231,6 @@ const AccountManagement = () => {
             try {
               navigate('/login');
             } catch (error) {
-              console.error('Navigation error:', error);
               window.location.href = '/login';
             }
           }}>
@@ -238,7 +238,7 @@ const AccountManagement = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div style={{ flex: 1, padding: 24 }}>
         {/* Top area with notification and display buttons */}
@@ -250,13 +250,13 @@ const AccountManagement = () => {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
-            <div style={{ 
-              padding: '8px 16px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 8, 
-              border: '1px solid #E0E0E0', 
-              borderRadius: 50, 
+            <div style={{
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid #E0E0E0',
+              borderRadius: 50,
               cursor: 'pointer',
               fontSize: 14
             }}>
@@ -269,23 +269,23 @@ const AccountManagement = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Account Management Content */}
         <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '0.75px solid #A6A6A6' }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A', marginBottom: 12 }}>Quản lý tài khoản</h1>
             <p style={{ fontSize: 14, color: '#737373' }}>Xem và quản lý tất cả tài khoản người dùng</p>
           </div>
-          
+
           {/* Tabs + Actions Row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
             {/* Tabs */}
             <div style={{ display: 'flex' }}>
-              <div 
+              <div
                 onClick={() => setActiveTab('customer')}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 50, 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 50,
                   background: activeTab === 'customer' ? '#C6E76D' : 'transparent',
                   color: activeTab === 'customer' ? '#1A1A1A' : '#737373',
                   fontWeight: 500,
@@ -296,11 +296,11 @@ const AccountManagement = () => {
               >
                 Khách hàng
               </div>
-              <div 
+              <div
                 onClick={() => setActiveTab('specialist')}
-                style={{ 
-                  padding: '8px 16px', 
-                  borderRadius: 50, 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 50,
                   background: activeTab === 'specialist' ? '#C6E76D' : 'transparent',
                   color: activeTab === 'specialist' ? '#1A1A1A' : '#737373',
                   fontWeight: 500,
@@ -311,7 +311,7 @@ const AccountManagement = () => {
                 Chuyên viên
               </div>
             </div>
-            
+
             {/* Actions */}
             <div style={{ display: 'flex', gap: 12 }}>
               {/* Search */}
@@ -335,7 +335,7 @@ const AccountManagement = () => {
                   <Search size={18} color="#8C8C8C" strokeWidth={2} />
                 </span>
               </div>
-              
+
               {/* Filter Button */}
               <div
                 style={{
@@ -354,7 +354,7 @@ const AccountManagement = () => {
               >
                 <Filter size={16} style={{ marginRight: 8 }} />
                 Bộ lọc
-                {/* Hiện filter popup nếu showFilter true */}
+                {/* Hiện filter popup nếu showFilter 'ACTIVE' */}
                 {showFilter && (
                   <div
                     style={{
@@ -384,15 +384,15 @@ const AccountManagement = () => {
                       <label style={{ fontSize: 13, color: '#737373' }}>Trạng thái:</label>
                       <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ borderRadius: 8, padding: 4, width: '100%', marginTop: 4 }}>
                         <option value="all">Tất cả trạng thái</option>
-                        <option value="active">Hoạt động</option>
-                        <option value="inactive">Đã chặn</option>
-                        <option value="pending">Chờ duyệt</option>
+                        <option value="ACTIVE">Hoạt động</option>
+                        <option value="INACTIVE">Đã chặn</option>
+                        <option value="PENDING">Chờ duyệt</option>
                       </select>
                     </div>
                   </div>
                 )}
               </div>
-              
+
               {/* Export Button */}
               <div
                 style={{
@@ -411,14 +411,14 @@ const AccountManagement = () => {
                 <Download size={16} style={{ marginRight: 8 }} />
                 Xuất file
               </div>
-              
+
               {/* Import Button */}
-              <div style={{ 
-                height: 40, 
-                display: 'flex', 
-                alignItems: 'center', 
-                padding: '0 16px', 
-                border: '0.75px solid #A6A6A6', 
+              <div style={{
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                padding: '0 16px',
+                border: '0.75px solid #A6A6A6',
                 borderRadius: 50,
                 fontSize: 13,
                 color: '#1A1A1A',
@@ -429,54 +429,52 @@ const AccountManagement = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Users Table */}
-          <div style={{ border: '0.75px solid #A6A6A6', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ border: '0.75px solid #A6A6A6', borderRadius: 12 }}>
             {/* Table Header */}
             <div style={{ display: 'flex', background: '#F9F9F9', padding: '12px 16px', borderBottom: '0.75px solid #A6A6A6' }}>
               <div style={{ flex: 3, fontSize: 14, fontWeight: 500, color: '#737373' }}>Tên người dùng</div>
               <div style={{ flex: 2, fontSize: 14, fontWeight: 500, color: '#737373' }}>Email</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Vai trò</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Trạng thái</div>
-              <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Ngày tham gia</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373', textAlign: 'center' }}>Thao tác</div>
             </div>
-            
+
             {/* Table Rows */}
             {paginatedUsers.map((user) => (
-              <div key={user.id} style={{ display: 'flex', padding: '12px 16px', borderBottom: '0.75px solid #E6E6E6', alignItems: 'center' }}>
+              <div key={user.userId} style={{ display: 'flex', padding: '12px 16px', borderBottom: '0.75px solid #E6E6E6', alignItems: 'center' }}>
                 <div style={{ flex: 3, display: 'flex', alignItems: 'center' }}>
-                  <div style={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
                     overflow: 'hidden',
                     marginRight: 12,
                     backgroundImage: `url(${user.avatar})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                   }} />
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>{user.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>{user.nameOfUser}</div>
                 </div>
                 <div style={{ flex: 2, fontSize: 14, color: '#1A1A1A' }}>{user.email}</div>
                 <div style={{ flex: 1, fontSize: 14, color: '#1A1A1A' }}>{user.role}</div>
                 <div style={{ flex: 1 }}>
-                  <span style={{ 
+                  <span style={{
                     display: 'inline-block',
                     padding: '4px 12px',
                     borderRadius: 50,
                     fontSize: 12,
                     fontWeight: 500,
-                    background: user.status === 'active' ? '#C6E76D' : 
-                               user.status === 'inactive' ? '#FEEBE6' : '#FFF6DE',
-                    color: user.status === 'active' ? '#1A1A1A' : 
-                           user.status === 'inactive' ? '#D73B29' : '#EAAE19'
+                    background: user.status === 'ACTIVE' ? '#C6E76D' :
+                      user.status === 'INACTIVE' ? '#FEEBE6' : '#FFF6DE',
+                    color: user.status === 'ACTIVE' ? '#1A1A1A' :
+                      user.status === 'INACTIVE' ? '#D73B29' : '#EAAE19'
                   }}>
-                    {user.status === 'active' ? 'Hoạt động' : 
-                     user.status === 'inactive' ? 'Đã khóa' : 'Chờ duyệt'}
+                    {user.status === 'ACTIVE' ? 'Hoạt động' :
+                      user.status === 'INACTIVE' ? 'Đã khóa' : 'Chờ duyệt'}
                   </span>
                 </div>
-                <div style={{ flex: 1, fontSize: 14, color: '#1A1A1A' }}>{user.joinDate}</div>
                 <div style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
                   <div
                     style={{
@@ -490,12 +488,12 @@ const AccountManagement = () => {
                       border: '0.75px solid #E6E6E6',
                       background: '#fff'
                     }}
-                    onClick={() => setActionMenuUserId(actionMenuUserId === user.id ? null : user.id)}
+                    onClick={() => setActionMenuUserId(actionMenuUserId === user.userId ? null : user.userId)}
                   >
                     <MoreHorizontal size={16} color="#737373" />
                   </div>
                   {/* Hiện menu thao tác nếu đúng user */}
-                  {actionMenuUserId === user.id && (
+                  {actionMenuUserId === user.userId && (
                     <div
                       style={{
                         position: 'absolute',
@@ -510,26 +508,48 @@ const AccountManagement = () => {
                       }}
                       onClick={e => e.stopPropagation()}
                     >
-                      {/* Khách hàng: chỉ có chặn */}
                       {user.role === 'Khách hàng' && (
-                        <button
-                          style={{
-                            width: '100%',
-                            padding: '10px 16px',
-                            background: 'none',
-                            border: 'none',
-                            color: '#D73B29',
-                            textAlign: 'left',
-                            cursor: user.status === 'inactive' ? 'not-allowed' : 'pointer'
-                          }}
-                          onClick={() => {
-                            handleBlockUser(user);
-                            setActionMenuUserId(null);
-                          }}
-                          disabled={user.status === 'inactive'}
-                        >
-                          {user.status === 'inactive' ? 'Đã chặn' : 'Chặn tài khoản'}
-                        </button>
+                        <>
+                          <button
+                            style={{
+                              width: '100%',
+                              padding: '10px 16px',
+                              background: 'none',
+                              border: 'none',
+                              color: '#D73B29',
+                              textAlign: 'left',
+                              cursor: user.status === 'INACTIVE' ? 'not-allowed' : 'pointer',
+                              opacity: user.status === 'INACTIVE' ? 0.5 : 1 // Làm mờ chữ "Đã chặn"
+                            }}
+                            onClick={() => {
+                              handleBlockUser(user);
+                              setActionMenuUserId(null);
+                            }}
+                            disabled={user.status === 'INACTIVE'}
+                          >
+                            {user.status === 'INACTIVE' ? 'Đã chặn' : 'Chặn tài khoản'}
+                          </button>
+                          {/* Nút mở chặn */}
+                          {user.status === 'INACTIVE' && (
+                            <button
+                              style={{
+                                width: '100%',
+                                padding: '10px 16px',
+                                background: 'none',
+                                border: 'none',
+                                color: '#1A1A1A',
+                                textAlign: 'left',
+                                cursor: 'pointer'
+                              }}
+                              onClick={() => {
+                                handleActivateUser(user);
+                                setActionMenuUserId(null);
+                              }}
+                            >
+                              Mở chặn
+                            </button>
+                          )}
+                        </>
                       )}
                       {/* Chuyên viên: chặn, kích hoạt, hủy kích hoạt */}
                       {user.role === 'Chuyên viên' && (
@@ -542,15 +562,16 @@ const AccountManagement = () => {
                               border: 'none',
                               color: '#D73B29',
                               textAlign: 'left',
-                              cursor: user.status === 'inactive' ? 'not-allowed' : 'pointer'
+                              cursor: user.status === 'INACTIVE' ? 'not-allowed' : 'pointer',
+                              opacity: user.status === 'INACTIVE' ? 0.5 : 1 // Làm mờ chữ "Đã chặn"
                             }}
                             onClick={() => {
                               handleBlockUser(user);
                               setActionMenuUserId(null);
                             }}
-                            disabled={user.status === 'inactive'}
+                            disabled={user.status === 'INACTIVE'}
                           >
-                            {user.status === 'inactive' ? 'Đã chặn' : 'Chặn tài khoản'}
+                            {user.status === 'INACTIVE' ? 'Đã chặn' : 'Chặn tài khoản'}
                           </button>
                           <button
                             style={{
@@ -558,17 +579,17 @@ const AccountManagement = () => {
                               padding: '10px 16px',
                               background: 'none',
                               border: 'none',
-                              color: user.status === 'active' ? '#A6A6A6' : '#1A1A1A',
+                              color: user.status === 'ACTIVE' ? '#A6A6A6' : '#1A1A1A',
                               textAlign: 'left',
-                              cursor: user.status === 'active' ? 'not-allowed' : 'pointer'
+                              cursor: user.status === 'ACTIVE' ? 'not-allowed' : 'pointer'
                             }}
                             onClick={() => {
                               handleActivateUser(user);
                               setActionMenuUserId(null);
                             }}
-                            disabled={user.status === 'active'}
+                            disabled={user.status === 'ACTIVE'}
                           >
-                            {user.status === 'active' ? 'Đã kích hoạt' : 'Kích hoạt tài khoản'}
+                            {user.status === 'ACTIVE' ? 'Đã kích hoạt' : 'Kích hoạt tài khoản'}
                           </button>
                           <button
                             style={{
@@ -576,15 +597,15 @@ const AccountManagement = () => {
                               padding: '10px 16px',
                               background: 'none',
                               border: 'none',
-                              color: user.status !== 'active' ? '#A6A6A6' : '#EAAE19',
+                              color: user.status !== 'ACTIVE' ? '#A6A6A6' : '#EAAE19',
                               textAlign: 'left',
-                              cursor: user.status !== 'active' ? 'not-allowed' : 'pointer'
+                              cursor: user.status !== 'ACTIVE' ? 'not-allowed' : 'pointer'
                             }}
                             onClick={() => {
                               handleDeactivateUser(user);
                               setActionMenuUserId(null);
                             }}
-                            disabled={user.status !== 'active'}
+                            disabled={user.status !== 'ACTIVE'}
                           >
                             Hủy kích hoạt
                           </button>
@@ -596,7 +617,7 @@ const AccountManagement = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Pagination */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -668,4 +689,4 @@ const AccountManagement = () => {
   );
 };
 
-export default AccountManagement; 
+export default AccountManagement;

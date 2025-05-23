@@ -3,85 +3,19 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import Logo from '../../assets/images/Logo.png';
 import { LayoutDashboard, Users, Settings2, LogOut, Search, HandCoins, Fullscreen, Pen, Ellipsis, Info, PieChart as PieChartIcon } from 'lucide-react';
 import { useLocation, useNavigate, NavLink } from 'react-router-dom';
+import axios from 'axios';
 
-// Mock data for bar chart
+const API_BASE = 'http://localhost:8080/api';
+
 const dataBar = [
-  { name: '1', value: 20 }, { name: '2', value: 22 }, { name: '3', value: 25 }, { name: '4', value: 23 },
-  { name: '5', value: 24 }, { name: '6', value: 26 }, { name: '7', value: 28 }, { name: '8', value: 27 },
-  { name: '9', value: 25 }, { name: '10', value: 40 }, { name: '11', value: 26 }, { name: '12', value: 27 }
+  { name: '1', booking: 20 }, { name: '2', booking: 22 }, { name: '3', booking: 25 }, { name: '4', booking: 23 },
+  { name: '5', booking: 24 }, { name: '6', booking: 26 }, { name: '7', booking: 28 }, { name: '8', booking: 27 },
+  { name: '9', booking: 25 }, { name: '10', booking: 40 }, { name: '11', booking: 26 }, { name: '12', booking: 27 }
 ];
 
-// Mock data for pie chart
 const pieData = [
-  { name: 'Đã kích hoạt', value: 80, color: '#1abc9c' },
-  { name: 'Chưa kích hoạt', value: 40, color: '#ff4e4e' }
-];
-
-// Mock data for payment history
-const mockPaymentHistory = [
-  {
-    id: '001',
-    name: 'Nguyen Nhat Tan',
-    card: '3467 5839 67831',
-    amount: '150.000',
-    code: '#1234',
-    date: '15/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg'
-  },
-  {
-    id: '002',
-    name: 'Tran Van Minh',
-    card: '3467 5839 67832',
-    amount: '260.000',
-    code: '#2345',
-    date: '14/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/2.jpg'
-  },
-  {
-    id: '003',
-    name: 'Le Thi Hong',
-    card: '3467 5839 67833',
-    amount: '320.000',
-    code: '#3456',
-    date: '14/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/3.jpg'
-  },
-  {
-    id: '004',
-    name: 'Pham Quoc Bao',
-    card: '3467 5839 67834',
-    amount: '180.000',
-    code: '#4567',
-    date: '13/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/4.jpg'
-  },
-  {
-    id: '005',
-    name: 'Hoang Thuy Linh',
-    card: '3467 5839 67835',
-    amount: '210.000',
-    code: '#5678',
-    date: '12/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/5.jpg'
-  },
-  {
-    id: '006',
-    name: 'Vo Minh Truong',
-    card: '3467 5839 67836',
-    amount: '290.000',
-    code: '#6789',
-    date: '11/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/men/6.jpg'
-  },
-  {
-    id: '007',
-    name: 'Trinh Thi My',
-    card: '3467 5839 67837',
-    amount: '175.000',
-    code: '#7890',
-    date: '10/03/2025',
-    avatar: 'https://randomuser.me/api/portraits/women/7.jpg'
-  }
+  { name: 'Đã kích hoạt', booking: 80, color: '#1abc9c' },
+  { name: 'Chưa kích hoạt', booking: 40, color: '#ff4e4e' }
 ];
 
 const navs = [
@@ -97,56 +31,118 @@ const API_ENDPOINTS = {
   MONTHLY_PROFIT: '/api/finance/profit'
 };
 
+const avatarSamples = [
+  "https://randomuser.me/api/portraits/men/1.jpg",
+  "https://randomuser.me/api/portraits/men/2.jpg",
+  "https://randomuser.me/api/portraits/women/3.jpg",
+  "https://randomuser.me/api/portraits/men/4.jpg",
+  "https://randomuser.me/api/portraits/women/5.jpg",
+  "https://randomuser.me/api/portraits/men/6.jpg",
+  "https://randomuser.me/api/portraits/women/7.jpg"
+];
 const AdminHome = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // States for animated counters
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [nurseRevenue, setNurseRevenue] = useState(0);
   const [monthlyProfit, setMonthlyProfit] = useState(0);
   const [profit, setProfit] = useState(0);
-  
+
   // States for data
-  const [paymentHistory, setPaymentHistory] = useState(mockPaymentHistory);
+  const [paymentHistory, setPaymentHistory] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredPayments, setFilteredPayments] = useState(mockPaymentHistory);
+  const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [countPayment, setCountPayment] = useState({ totalAmount: 0, totalAmountAfterPayCaretaker: 0 });
+  const [revenue, setRevenue] = useState([]);
+  const [careTakerActiveCount, setCareTakerActiveCount] = useState(0);
+  const itemsPerPage = 5;
+
+  const paginatedPayments = filteredPayments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
   // Target values
   const totalRevenueTarget = 120000000;
   const nurseRevenueTarget = 88000000;
   const monthlyProfitTarget = 10000000;
   const profitTarget = 36000000;
-  
+
   // Animation duration in milliseconds
   const duration = 1000;
   const frameRate = 30;
   const totalFrames = Math.floor(duration / 1000 * frameRate);
-  
+
+  const fetchCountPayment = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/payment/total`);
+      setCountPayment(response.data.data || { totalAmount: 0, totalAmountAfterPayCaretaker: 0 });
+    } catch (error) {
+      console.error('Error fetching payment count:', error);
+    }
+  };
+
+  const fetchRevenue = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/booking/monthly`);
+      setRevenue(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error('Error fetching payment count:', error);
+    }
+  };
+
+    const fetchCareTakerActiveCount = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/auths/careTaker/counts`);
+      setCareTakerActiveCount(response.data.data);
+      console.log(response.data.data);
+    } catch (error) {
+      console.error('Error fetching payment count:', error);
+    }
+  };
+
+  const fetchPaymentHistory = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE}/payment/getAllPayment`);
+      setPaymentHistory(response.data.data || []);
+      setFilteredPayments(response.data.data || []);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setPaymentHistory([]);
+      setFilteredPayments([]);
+      console.error('Error fetching payment history:', error);
+    }
+  };
+
   // Animation effect
-  useEffect(() => {
-    let frame = 0;
-    const interval = setInterval(() => {
-      frame++;
-      const progress = frame / totalFrames;
-      
-      if (frame <= totalFrames) {
-        setTotalRevenue(Math.floor(easeOutQuad(progress) * totalRevenueTarget));
-        setNurseRevenue(Math.floor(easeOutQuad(progress) * nurseRevenueTarget));
-        setMonthlyProfit(Math.floor(easeOutQuad(progress) * monthlyProfitTarget));
-        setProfit(Math.floor(easeOutQuad(progress) * profitTarget));
-      } else {
-        clearInterval(interval);
-        setTotalRevenue(totalRevenueTarget);
-        setNurseRevenue(nurseRevenueTarget);
-        setMonthlyProfit(monthlyProfitTarget);
-        setProfit(profitTarget);
-      }
-    }, 1000 / frameRate);
-    
-    return () => clearInterval(interval);
-  }, []);
+  // useEffect(() => {
+  //   let frame = 0;
+  //   const interval = setInterval(() => {
+  //     frame++;
+  //     const progress = frame / totalFrames;
+
+  //     if (frame <= totalFrames) {
+  //       setTotalRevenue(Math.floor(easeOutQuad(progress) * totalRevenueTarget));
+  //       setNurseRevenue(Math.floor(easeOutQuad(progress) * nurseRevenueTarget));
+  //       setMonthlyProfit(Math.floor(easeOutQuad(progress) * monthlyProfitTarget));
+  //       setProfit(Math.floor(easeOutQuad(progress) * profitTarget));
+  //     } else {
+  //       clearInterval(interval);
+  //       setTotalRevenue(totalRevenueTarget);
+  //       setNurseRevenue(nurseRevenueTarget);
+  //       setMonthlyProfit(monthlyProfitTarget);
+  //       setProfit(profitTarget);
+  //     }
+  //   }, 1000 / frameRate);
+
+  //   return () => clearInterval(interval);
+  // }, []);
 
   // Search function for payment history
   useEffect(() => {
@@ -155,15 +151,16 @@ const AdminHome = () => {
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
       const results = paymentHistory.filter(
-        item => 
-          item.name.toLowerCase().includes(lowercasedSearch) ||
-          item.card.includes(searchTerm) ||
-          item.code.toLowerCase().includes(lowercasedSearch)
+        item =>
+          (item.nameOfUser && item.nameOfUser.toLowerCase().includes(lowercasedSearch)) ||
+          (item.transactionId && item.transactionId.toLowerCase().includes(lowercasedSearch)) ||
+          (item.price && item.price.toString().includes(searchTerm)) ||
+          (item.updateAt && item.updateAt.toLowerCase().includes(lowercasedSearch))
       );
       setFilteredPayments(results);
     }
   }, [searchTerm, paymentHistory]);
-  
+
   // Function to fetch dashboard data - ready for API integration
   const fetchDashboardData = async () => {
     try {
@@ -171,7 +168,7 @@ const AdminHome = () => {
       // Future API implementation
       // const response = await fetch(API_ENDPOINTS.DASHBOARD_STATS);
       // const data = await response.json();
-      
+
       // For now, using mock data
       setTimeout(() => {
         // setPaymentHistory(mockPaymentHistory);
@@ -182,19 +179,24 @@ const AdminHome = () => {
       setLoading(false);
     }
   };
-  
+
   // Fetch data on component mount
   useEffect(() => {
     fetchDashboardData();
+    fetchPaymentHistory();
+    fetchCountPayment();
+    fetchRevenue();
+    fetchCareTakerActiveCount();
   }, []);
-  
+
   // Easing function for smoother animation
   const easeOutQuad = (x) => {
     return 1 - (1 - x) * (1 - x);
   };
-  
+
   // Format number with commas
   const formatNumber = (number) => {
+    if (number === undefined || number === null) return '0';
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
@@ -208,13 +210,21 @@ const AdminHome = () => {
     return () => console.log('AccountManagement unmounted');
   }, []);
 
+  function hashStringToIndex(str, max) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % max;
+  }
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      minHeight: '100vh', 
-      background: '#f7f9fa', 
-      width: '100%', 
-      fontFamily: 'SVN-Gilroy' 
+    <div style={{
+      display: 'flex',
+      minHeight: '100vh',
+      background: '#f7f9fa',
+      width: '100%',
+      fontFamily: 'SVN-Gilroy'
     }}>
       {/* Sidebar */}
       <div style={{ width: 226, background: '#1a2e22', color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px 0' }}>
@@ -246,7 +256,7 @@ const AdminHome = () => {
                 >
                   <span style={{ marginRight: 10, display: 'flex', alignItems: 'center' }}>
                     {React.cloneElement(nav.icon, { size: 24 })}
-                  </span> 
+                  </span>
                   {nav.label}
                 </NavLink>
               );
@@ -270,7 +280,7 @@ const AdminHome = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div style={{ flex: 1, padding: 24 }}>
         {/* Top area with notification and display buttons */}
@@ -282,13 +292,13 @@ const AdminHome = () => {
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
             </div>
-            <div style={{ 
-              padding: '8px 16px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 8, 
-              border: '1px solid #E0E0E0', 
-              borderRadius: 50, 
+            <div style={{
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid #E0E0E0',
+              borderRadius: 50,
               cursor: 'pointer',
               fontSize: 14
             }}>
@@ -301,7 +311,7 @@ const AdminHome = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Dashboard content */}
         <div style={{ display: 'flex', gap: 24 }}>
           {/* Left column */}
@@ -324,24 +334,24 @@ const AdminHome = () => {
                 flex: 1
               }}>
                 <div style={{ fontSize: 32, fontWeight: 600, color: '#1A1A1A', lineHeight: 1.2, marginBottom: 12 }}>
-                  ${formatNumber(totalRevenue)} VND
+                  ${formatNumber(countPayment?.totalAmount || 0)} VND
                 </div>
-                <div style={{ 
-                  fontSize: 16, 
-                  fontWeight: 500, 
-                  background: '#C2E561', 
-                  color: '#1A1A1A', 
-                  padding: '4px 12px', 
-                  borderRadius: 4, 
+                <div style={{
+                  fontSize: 16,
+                  fontWeight: 500,
+                  background: '#C2E561',
+                  color: '#1A1A1A',
+                  padding: '4px 12px',
+                  borderRadius: 4,
                   display: 'inline-block'
                 }}>
                   Tổng doanh thu
                 </div>
               </div>
-              
+
               {/* Divider */}
               <div style={{ width: 1, height: 64, background: '#BFBFBF' }}></div>
-              
+
               {/* Other revenue stats */}
               <div style={{ flex: 2, display: 'flex', gap: 40 }}>
                 <div>
@@ -349,7 +359,7 @@ const AdminHome = () => {
                     Doanh thu bảo mẫu
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A' }}>
-                    ${formatNumber(nurseRevenue)} VND
+                    ${formatNumber(countPayment?.totalAmountAfterPayCaretaker || 0)} VND
                   </div>
                 </div>
                 <div>
@@ -357,32 +367,32 @@ const AdminHome = () => {
                     Lợi nhuận tháng này
                   </div>
                   <div style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A' }}>
-                    ${formatNumber(monthlyProfit)} VND
+                   ${formatNumber(revenue[0]?.revenue || 0)} VND
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {/* Payment history */}
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
-              padding: 24, 
-              border: '0.75px solid #A6A6A6', 
+            <div style={{
+              background: '#fff',
+              borderRadius: 16,
+              padding: 24,
+              border: '0.75px solid #A6A6A6',
               flex: 1,
               position: 'relative',
               minHeight: 462
             }}>
               {loading && (
-                <div style={{ 
-                  position: 'absolute', 
-                  top: 0, 
-                  left: 0, 
-                  right: 0, 
-                  bottom: 0, 
-                  background: 'rgba(255,255,255,0.7)', 
-                  display: 'flex', 
-                  justifyContent: 'center', 
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'rgba(255,255,255,0.7)',
+                  display: 'flex',
+                  justifyContent: 'center',
                   alignItems: 'center',
                   zIndex: 10,
                   borderRadius: 16
@@ -390,7 +400,7 @@ const AdminHome = () => {
                   <div>Đang tải...</div>
                 </div>
               )}
-              
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, fontSize: 16, color: '#1a2e22' }}>Lịch sử thanh toán</div>
                 <div style={{ position: 'relative', width: 318, height: 44 }}>
@@ -417,35 +427,41 @@ const AdminHome = () => {
               <div>
                 {/* Header columns */}
                 <div style={{ display: 'flex', alignItems: 'center', padding: '0 0 16px 0', color: '#737373', fontSize: 14, fontWeight: 400 }}>
-                  <div style={{ flex: 2 }}></div>
+                  <div style={{ flex: 2 }}>Người thanh toán</div>
                   <div style={{ flex: 1 }}>Số tiền</div>
                   <div style={{ flex: 1 }}>Mã giao dịch</div>
                   <div style={{ flex: 1 }}>Ngày chuyển</div>
                 </div>
-                
-                {filteredPayments.length > 0 ? (
+
+                {paginatedPayments.length > 0 ? (
                   <>
-                    {filteredPayments.map((item, idx) => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '0.5px solid #BFBFBF' }}>
+                    {paginatedPayments.map((item, idx) => (
+                      <div key={item.paymentId} style={{ display: 'flex', alignItems: 'center', padding: '16px 0', borderBottom: '0.5px solid #BFBFBF' }}>
                         <div style={{ flex: 2, display: 'flex', alignItems: 'center' }}>
-                          <div style={{ 
-                            width: 40, 
-                            height: 40, 
-                            borderRadius: '50%', 
-                            background: '#ddd', 
-                            marginRight: 16,
-                            backgroundImage: `url(${item.avatar})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          }} />
+                          <div
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: '50%',
+                              background: '#ddd',
+                              marginRight: 16,
+                              backgroundImage: `url(${item.avatar ||
+                                avatarSamples[
+                                hashStringToIndex(item.nameOfUser || 'unknown', avatarSamples.length)
+                                ]
+                                })`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center'
+                            }}
+                          />
                           <div>
-                            <div style={{ fontWeight: 500, color: '#1A1A1A', fontSize: 16 }}>{item.name}</div>
-                            <div style={{ color: '#8C8C8C', fontSize: 13 }}>{item.card}</div>
+                            <div style={{ fontWeight: 500, color: '#1A1A1A', fontSize: 16 }}>{item.nameOfUser}</div>
+                            {/* <div style={{ color: '#8C8C8C', fontSize: 13 }}>{item.card}</div> */}
                           </div>
                         </div>
-                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.amount} VNĐ</div>
-                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.code}</div>
-                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.date}</div>
+                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{formatNumber(item.price)} VNĐ</div>
+                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.transactionId}</div>
+                        <div style={{ flex: 1, fontSize: 16, fontWeight: 500, color: '#1A1A1A' }}>{item.updateAt}</div>
                       </div>
                     ))}
                   </>
@@ -454,19 +470,39 @@ const AdminHome = () => {
                     Không tìm thấy kết quả phù hợp
                   </div>
                 )}
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16, gap: 8 }}>
+                  {Array.from({ length: Math.ceil(filteredPayments.length / itemsPerPage) }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        border: '1px solid #C6E76D',
+                        background: currentPage === i + 1 ? '#C6E76D' : '#fff',
+                        color: currentPage === i + 1 ? '#1A1A1A' : '#737373',
+                        fontWeight: 500,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div style={{ textAlign: 'center', marginTop: 16 }}>
                 <a href="#" style={{ color: '#1abc9c', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Xem tất cả</a>
               </div>
             </div>
           </div>
-          
+
           {/* Right column */}
           <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Profit chart */}
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
+            <div style={{
+              background: '#fff',
+              borderRadius: 16,
               padding: 24,
               border: '0.75px solid #A6A6A6'
             }}>
@@ -483,17 +519,17 @@ const AdminHome = () => {
                 </div>
               </div>
               <div style={{ fontWeight: 700, fontSize: 24, margin: '12px 0 8px' }}>
-                ${formatNumber(profit)} VND
+                ${formatNumber(revenue[0]?.revenue || 0)} VND
               </div>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, fontSize: 14 }}>
-                <span style={{ 
-                  background: '#C6E76D', 
-                  color: '#1A1A1A', 
-                  fontWeight: 600, 
-                  padding: '2px 8px', 
+                <span style={{
+                  background: '#C6E76D',
+                  color: '#1A1A1A',
+                  fontWeight: 600,
+                  padding: '2px 8px',
                   borderRadius: 4,
-                  fontSize: 14, 
-                  marginRight: 8 
+                  fontSize: 14,
+                  marginRight: 8
                 }}>+12%</span>
                 <span style={{ color: '#8C8C8C', fontWeight: 400 }}>Tháng cao nhất</span>
               </div>
@@ -507,7 +543,7 @@ const AdminHome = () => {
                   />
                   <YAxis hide />
                   <Tooltip />
-                  <Bar dataKey="value" radius={[12,12,0,0]} barSize={24}>
+                  <Bar dataKey="booking" radius={[12, 12, 0, 0]} barSize={24}>
                     {dataBar.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={index === 9 ? '#C6E76D' : '#E8F1FB'} />
                     ))}
@@ -515,12 +551,12 @@ const AdminHome = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            
+
             {/* Specialist management */}
-            <div style={{ 
-              background: '#fff', 
-              borderRadius: 16, 
-              padding: 24, 
+            <div style={{
+              background: '#fff',
+              borderRadius: 16,
+              padding: 24,
               border: '0.75px solid #A6A6A6',
               flex: 1,
               display: 'flex',
@@ -533,16 +569,16 @@ const AdminHome = () => {
                 <span style={{ fontWeight: 500, fontSize: 16, color: '#1a2e22' }}>Quản lý chuyên viên</span>
                 <Info size={10} color="#595959" />
               </div>
-              <div style={{ color: '#B7586E', fontSize: 24, marginBottom: 0, fontWeight: 500 }}><span style={{ fontWeight: 700 }}>!</span> 40 chuyên viên chưa được duyệt</div>
-              <div style={{ 
+              <div style={{ color: '#B7586E', fontSize: 24, marginBottom: 0, fontWeight: 500 }}><span style={{ fontWeight: 700 }}>!</span> {careTakerActiveCount.inactiveCount} chuyên viên chưa được duyệt</div>
+              <div style={{
                 flex: 1,
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 position: 'relative'
               }}>
                 {/* Outer donut chart */}
-                <div style={{ 
+                <div style={{
                   position: 'absolute',
                   width: 260,
                   height: 260,
@@ -550,7 +586,7 @@ const AdminHome = () => {
                   background: 'conic-gradient(#00D1A0 0deg 216deg, #FF6E91 216deg 360deg)'
                 }}></div>
                 {/* Inner white space for donut effect */}
-                <div style={{ 
+                <div style={{
                   position: 'absolute',
                   width: 208,
                   height: 208,
@@ -559,7 +595,7 @@ const AdminHome = () => {
                   zIndex: 2
                 }}></div>
                 {/* SVG Dash circle */}
-                <svg 
+                <svg
                   style={{
                     position: 'absolute',
                     width: 170,
@@ -578,7 +614,7 @@ const AdminHome = () => {
                   />
                 </svg>
                 {/* Inner grey circle with text */}
-                <div style={{ 
+                <div style={{
                   position: 'absolute',
                   width: 156,
                   height: 156,
@@ -592,32 +628,32 @@ const AdminHome = () => {
                   zIndex: 4
                 }}>
                   <div style={{ fontSize: 14, color: '#757575', marginBottom: 4 }}>Chuyên viên</div>
-                  <div style={{ fontWeight: 700, fontSize: 42, color: '#1a2e22' }}>120</div>
+                  <div style={{ fontWeight: 700, fontSize: 42, color: '#1a2e22' }}>{careTakerActiveCount.totalCount}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginTop: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ 
-                    width: 28, 
-                    height: 28, 
-                    borderRadius: '50%', 
+                  <div style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
                     background: '#00D1A0',
                   }}></div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 12, color: '#737373' }}>Đã kích hoạt</span>
-                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>80</span>
+                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>{careTakerActiveCount.activeCount}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ 
-                    width: 28, 
-                    height: 28, 
-                    borderRadius: '50%', 
+                  <div style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
                     background: '#FF6E91',
                   }}></div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 12, color: '#737373' }}>Chưa kích hoạt</span>
-                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>40</span>
+                    <span style={{ fontSize: 16, color: '#000000', fontWeight: 500 }}>{careTakerActiveCount.inactiveCount}</span>
                   </div>
                 </div>
               </div>
@@ -629,4 +665,4 @@ const AdminHome = () => {
   );
 };
 
-export default AdminHome; 
+export default AdminHome;

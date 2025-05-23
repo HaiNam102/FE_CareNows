@@ -26,14 +26,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const message = error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại sau';
-    
+
     // Handle different error status codes
     switch (error.response?.status) {
       case 401:
         // Unauthorized - clear token and redirect to login
         // localStorage.removeItem('token');
         // window.location.href = '/login';
-        toast.error('Đã hết truy cập,vui lòng đăng nhập lại');
+        // toast.error('Đã hết truy cập,vui lòng đăng nhập lại');
         break;
       case 403:
         toast.error('Bạn không có quyền thực hiện hành động này');
@@ -74,27 +74,27 @@ export const careTakerApi = {
   search: (params) => {
     return api.get('/careTaker/search', { params });
   },
-  
+
   // Get care taker by ID
-  getById: (id) => { 
+  getById: (id) => {
     return api.get(`/careTaker/getCareTakerId/${id}`);
   },
-  
+
   // Get care taker profile
   getProfile: () => {
     return api.get('/careTaker/profile');
   },
-  
+
   // Update care taker profile
   updateProfile: (data) => {
     return api.put('/careTaker/profile', data);
   },
-  
+
   // Get care taker reviews
   getReviews: (careTakerId) => {
     return api.get(`/careTakerFeedBack?careTaker_id=${careTakerId}`);
   },
-  
+
   // Add review for care taker
   addReview: (careTakerId, reviewData) => {
     return api.post(`/careTakerFeedBack?careTaker_id=${careTakerId}`, reviewData);
@@ -154,7 +154,7 @@ export const careRecipientApi = {
 
   // Create new care recipient
   create: (data) => {
-    return api.post('/careRecipient', data);
+    return api.post('/careRecipient/customer', data);
   },
 
   // Update care recipient
@@ -174,21 +174,21 @@ export const chatApi = {
   createChatRoom: (customerId, careTakerId) => {
     console.log('[chatApi] Creating chat room for:', { customerId, careTakerId });
     //toast.info(`[chatApi] Creating room: customerId=${customerId}, careTakerId=${careTakerId}`);
-    
+
     const result = api.post(`/chat/room`, null, {
       params: {
         customerId,
         careTakerId
       }
     });
-    
+
     result.then(response => {
       console.log('[chatApi] Chat room response:', response.data);
-     // toast.info(`[chatApi] Response code: ${response.data.code}`);
+      // toast.info(`[chatApi] Response code: ${response.data.code}`);
     }).catch(error => {
       console.error('[chatApi] Chat room error:', error.response?.data || error.message);
     });
-    
+
     return result;
   },
 };
@@ -233,7 +233,7 @@ export const apiUtils = {
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      
+
       // Try to get user_id from the token
       return payload.user_id || null;
     } catch {
@@ -247,13 +247,13 @@ export const apiUtils = {
     if (!token) return null;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      
+
       // Try to get username based on common JWT claims
       if (payload.username) return payload.username;
       if (payload.sub) return payload.sub;
       if (payload.preferred_username) return payload.preferred_username;
       if (payload.email) return payload.email;
-      
+
       return null;
     } catch {
       return null;
