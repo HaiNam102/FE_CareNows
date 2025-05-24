@@ -7,6 +7,8 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import CareTakerProfile from './CareTakerProfile';
+import DashboardCareTaker from './DashboardCareTaker';
 
 const CareTaker = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -31,6 +33,7 @@ const CareTaker = () => {
   const [calendarBookings, setCalendarBookings] = useState([]);
   const [calendarView, setCalendarView] = useState('month');
   const [deletingCalendar, setDeletingCalendar] = useState(false);
+  const [careTakerId, setCareTakerId] = useState(null);
 
   useEffect(() => {
     if (currentPage === 'appointments') {
@@ -54,6 +57,10 @@ const CareTaker = () => {
             name: decoded.username || 'User',
             lastLogin: new Date().toLocaleDateString('vi-VN')
           });
+          // Set careTakerId from token
+          if (decoded.user_id) {
+            setCareTakerId(decoded.user_id);
+          }
         }
       }
     } catch (error) {
@@ -811,11 +818,14 @@ const CareTaker = () => {
         );
       case 'profile':
         return (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h1 className="text-2xl font-bold mb-6">Thông tin cá nhân</h1>
-            <p>Trang thông tin cá nhân đang được phát triển...</p>
-          </div>
+          <CareTakerProfile careTakerId={careTakerId} />
         );
+      
+      case 'dashboard':
+          return (
+            <DashboardCareTaker />
+       );
+        
       case 'results':
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -1246,13 +1256,13 @@ const CareTaker = () => {
           {/* Left Sidebar */}
           <div className="lg:w-1/4 mb-6 lg:mb-0 lg:mr-6">
             <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-              <div className="flex items-center mb-4">
+              {/* <div className="flex items-center mb-4">
                 <img src="/avatar.png" alt="User avatar" className="h-12 w-12 rounded-full mr-4" />
                 <div>
                   <h2 className="font-bold text-xl">Xin chào, {userData.name}</h2>
                   <p className="text-gray-500">Last login: {userData.lastLogin}</p>
                 </div>
-              </div>
+              </div> */}
               <ul className="space-y-3">
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'profile' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
@@ -1260,6 +1270,14 @@ const CareTaker = () => {
                 >
                   <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
                   Thông tin cá nhân
+                </li>
+
+                <li
+                  className={`flex items-center cursor-pointer ${currentPage === 'dashboard' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  onClick={() => setCurrentPage('dashboard')}
+                >
+                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
+                  Dashboard
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'appointments' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
