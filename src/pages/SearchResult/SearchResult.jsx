@@ -496,7 +496,12 @@ const SearchResult = () => {
   {profile.experienceYear} năm kinh nghiệm
 </div>
 
-                    <img className="w-36 h-36 rounded-full" src={profile.imgProfile} alt={profile.nameOfCareTaker} />
+<img
+  className="w-36 h-36 rounded-full object-cover object-center"
+  src={profile.imgProfile}
+  alt={profile.nameOfCareTaker}
+/>
+
                     <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.ward} - {profile.district}</div>
                     <div className="self-stretch flex justify-between items-center">
                         <div className="flex justify-center items-center">
