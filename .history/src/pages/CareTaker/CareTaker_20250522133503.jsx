@@ -7,8 +7,6 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import CareTakerProfile from './CareTakerProfile';
-import DashboardCareTaker from './DashboardCareTaker';
 
 const CareTaker = () => {
   const [activeTab, setActiveTab] = useState('pending');
@@ -20,7 +18,7 @@ const CareTaker = () => {
   const [error, setError] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [userData, setUserData] = useState({ name: '', lastLogin: '' });
-  const [currentPage, setCurrentPage] = useState('appointments'); 
+  const [currentPage, setCurrentPage] = useState('schedule'); 
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState(null);
   const [loadingRecipient, setLoadingRecipient] = useState(false);
@@ -33,7 +31,6 @@ const CareTaker = () => {
   const [calendarBookings, setCalendarBookings] = useState([]);
   const [calendarView, setCalendarView] = useState('month');
   const [deletingCalendar, setDeletingCalendar] = useState(false);
-  const [careTakerId, setCareTakerId] = useState(null);
 
   useEffect(() => {
     if (currentPage === 'appointments') {
@@ -57,10 +54,6 @@ const CareTaker = () => {
             name: decoded.username || 'User',
             lastLogin: new Date().toLocaleDateString('vi-VN')
           });
-          // Set careTakerId from token
-          if (decoded.user_id) {
-            setCareTakerId(decoded.user_id);
-          }
         }
       }
     } catch (error) {
@@ -225,7 +218,7 @@ const CareTaker = () => {
   // Format currency
   const formatCurrency = (amount) => {
     if (!amount && amount !== 0) return '0 VND';
-    return `${amount.toLocaleString()} VND`;
+    return `${amount.toLocaleString()}.000 VND`;
   };
 
   const handleDateSelect = (date) => {
@@ -764,7 +757,7 @@ const CareTaker = () => {
                       {booking.servicePrice && (
                         <div className="border-t pt-3 mt-3">
                           <div className="font-medium">Estimate earnings:</div>
-                          <div className="text-xl font-bold"> {booking.servicePrice.toLocaleString()} VND</div>
+                          <div className="text-xl font-bold"> {booking.servicePrice.toLocaleString()}.000 VND</div>
                         </div>
                       )}
                     </div>
@@ -818,14 +811,11 @@ const CareTaker = () => {
         );
       case 'profile':
         return (
-          <CareTakerProfile careTakerId={careTakerId} />
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h1 className="text-2xl font-bold mb-6">Thông tin cá nhân</h1>
+            <p>Trang thông tin cá nhân đang được phát triển...</p>
+          </div>
         );
-      
-      case 'dashboard':
-          return (
-            <DashboardCareTaker />
-       );
-        
       case 'results':
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -1255,59 +1245,81 @@ const CareTaker = () => {
         <div className="flex flex-col lg:flex-row">
           {/* Left Sidebar */}
           <div className="lg:w-1/4 mb-6 lg:mb-0 lg:mr-6">
-            <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-              {/* <div className="flex items-center mb-4">
-                <img src="/avatar.png" alt="User avatar" className="h-12 w-12 rounded-full mr-4" />
-                <div>
-                  <h2 className="font-bold text-xl">Xin chào, {userData.name}</h2>
-                  <p className="text-gray-500">Last login: {userData.lastLogin}</p>
-                </div>
-              </div> */}
-              <ul className="space-y-3">
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'profile' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+            <div>
+              <h2 className="text-[40px] leading-none font-semibold font-['SVN-Gilroy'] mb-3">Xin chào {userData.name}!</h2>
+              <div className="h-[1px] bg-gray-200 w-full"></div>
+
+              <nav className="mt-4">
+                <div
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'profile' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentPage('profile')}
                 >
-                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
-                  Thông tin cá nhân
-                </li>
+                  <span className={`mr-3 ${currentPage === 'profile' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faUserCircle} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Thông tin cá nhân</span>
+                </div>
 
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'dashboard' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
-                  onClick={() => setCurrentPage('dashboard')}
-                >
-                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
-                  Dashboard
-                </li>
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'appointments' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                <div
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'appointments' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentPage('appointments')}
                 >
-                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-3" />
-                  Lịch hẹn của tôi
-                </li>
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'calendar' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  <span className={`mr-3 ${currentPage === 'appointments' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faCalendarAlt} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch hẹn của tôi</span>
+                </div>
+
+                <div
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'calendar' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentPage('calendar')}
                 >
-                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-3" />
-                  Lịch làm việc
-                </li>
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'schedule' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  <span className={`mr-3 ${currentPage === 'calendar' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faCalendarWeek} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch làm việc</span>
+                </div>
+
+                <div
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'schedule' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentPage('schedule')}
                 >
-                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3" />
-                  Đăng ký lịch
-                </li>
-                <li
-                  className={`flex items-center cursor-pointer ${currentPage === 'results' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  <span className={`mr-3 ${currentPage === 'schedule' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faMapMarkerAlt} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Đăng ký lịch</span>
+                </div>
+
+                <div
+                  className={`flex items-center h-[40px] px-4 relative cursor-pointer ${
+                    currentPage === 'results' 
+                      ? 'text-[rgb(0,107,82)] bg-[rgb(0,107,82)]/10 border-l-4 border-[rgb(0,107,82)]' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
                   onClick={() => setCurrentPage('results')}
                 >
-                  <FontAwesomeIcon icon={faFileLines} className="mr-3" />
-                  Lịch sử thanh toán
-                </li>
-              </ul>
+                  <span className={`mr-3 ${currentPage === 'results' ? 'ml-[-2px]' : ''}`}>
+                    <FontAwesomeIcon icon={faFileLines} className="w-5" />
+                  </span>
+                  <span className="font-['SVN-Gilroy']">Lịch sử thanh toán</span>
+                </div>
+              </nav>
             </div>
           </div>
 

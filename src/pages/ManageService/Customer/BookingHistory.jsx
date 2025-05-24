@@ -100,7 +100,7 @@ const BookingDetailModal = ({ booking, onClose, onPaymentComplete }) => {
         console.log("Opening payment URL:", paymentUrl);
 
         // Mở URL thanh toán trong cửa sổ mới
-        const paymentWindow = window.open(paymentUrl, '_self');
+        const paymentWindow = window.open(paymentUrl, '_blank');
 
         // Kiểm tra xem cửa sổ có được mở thành công không
         if (!paymentWindow || paymentWindow.closed || typeof paymentWindow.closed === 'undefined') {

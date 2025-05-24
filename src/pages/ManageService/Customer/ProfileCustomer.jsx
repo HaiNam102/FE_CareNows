@@ -128,10 +128,10 @@ const ProfileCustomer = () => {
           const customerData = response.data.data;
           setUserData({
             name: customerData.nameOfCustomer || '',
-            gender: customerData.gender || '',
+            // gender: customerData.gender || '',
             phone: customerData.phoneNumber || '',
             email: customerData.email || '',
-            birthday: customerData.birthday || '',
+            // birthday: customerData.birthday || '',
             district: customerData.district || '',
             ward: customerData.ward || '',
             address: `${customerData.ward || ''}, ${customerData.district || ''}`,
@@ -146,8 +146,8 @@ const ProfileCustomer = () => {
           });
 
           setEditValues({
-            birthday: customerData.birthday || '',
-            gender: customerData.gender || '',
+            // birthday: customerData.birthday || '',
+            // gender: customerData.gender || '',
             phone: customerData.phoneNumber || '',
             email: customerData.email || '',
             address: `${customerData.ward || ''}, ${customerData.district || ''}`
@@ -236,7 +236,7 @@ const ProfileCustomer = () => {
                     {/* Right side - User Details */}
                     <div className="flex-1 pl-8">
                       <div className="grid grid-cols-2 gap-y-6 gap-x-8">
-                        <div>
+                        {/* <div>
                           <p className="text-gray-500 font-['SVN-Gilroy']">Ngày sinh</p>
                           <p className="mt-1 font-['SVN-Gilroy']">{userData.birthday}</p>
                         </div>
@@ -244,7 +244,7 @@ const ProfileCustomer = () => {
                         <div>
                           <p className="text-gray-500 font-['SVN-Gilroy']">Giới tính</p>
                           <p className="mt-1 font-['SVN-Gilroy']">{userData.gender}</p>
-                        </div>
+                        </div> */}
 
                         <div>
                           <p className="text-gray-500 font-['SVN-Gilroy']">Số điện thoại</p>
@@ -319,7 +319,7 @@ const ProfileCustomer = () => {
             </div>
 
             <div className="space-y-4">
-              <div>
+              {/* <div>
                 <label className="block text-gray-500 font-['SVN-Gilroy'] mb-1">Ngày sinh</label>
                 <input
                   type="text"
@@ -337,7 +337,7 @@ const ProfileCustomer = () => {
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className="w-full p-2 border rounded-lg outline-none focus:border-[rgb(0,107,82)]"
                 />
-              </div>
+              </div> */}
 
               <div>
                 <label className="block text-gray-500 font-['SVN-Gilroy'] mb-1">Số điện thoại</label>
