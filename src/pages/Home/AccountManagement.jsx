@@ -117,13 +117,11 @@ const AccountManagement = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Tên', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tham gia'];
+    const headers = ['Tên', 'Email','Trạng thái'];
     const rows = filteredUsers.map(user => [
-      user.name,
+      user.nameOfUser,
       user.email,
-      user.role,
-      user.status,
-      user.joinDate
+      user.status
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,'
       + headers.join(',') + '\n'
