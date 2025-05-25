@@ -117,13 +117,11 @@ const AccountManagement = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Tên', 'Email', 'Vai trò', 'Trạng thái', 'Ngày tham gia'];
+    const headers = ['Tên', 'Email','Trạng thái'];
     const rows = filteredUsers.map(user => [
-      user.name,
+      user.nameOfUser,
       user.email,
-      user.role,
-      user.status,
-      user.joinDate
+      user.status
     ]);
     let csvContent = 'data:text/csv;charset=utf-8,'
       + headers.join(',') + '\n'
@@ -173,12 +171,22 @@ const AccountManagement = () => {
     }
   };
 
-  const handleDeactivateUser = (user) => {
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === user.id ? { ...u, status: 'pending' } : u
-      )
-    );
+  const handleDeactivateUser = async (user) => {
+    try {
+      await fetch(`${API_BASE}/active/${user.accountId}?status=PENDING`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      setUsers(prev =>
+        prev.map(u =>
+          u.accountId === user.accountId ? { ...u, status: 'PENDING' } : u
+        )
+      );
+    } catch (e) {
+      console.error('Error activating user:', e);
+    }
   };
 
   return (

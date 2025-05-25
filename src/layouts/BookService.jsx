@@ -15,13 +15,13 @@ const BookService = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("Liên Chiểu"); // Mặc định là Hải Châu
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState([
-    new Date('2025-05-10'), 
-    new Date('2025-06-20') 
+    new Date('2025-05-10'),
+    new Date('2025-06-20')
   ]); // Mặc định ngày 20/03/2025 đến 30/03/2025
   const [searchInput, setSearchInput] = useState("");
   const [showCalendar, setShowCalendar] = useState(false);
   const navigate = useNavigate();
-  
+
   // Dropdown state and ref
   const dropdownRef = useRef(null);
   const [districtFilter, setDistrictFilter] = useState("");
@@ -33,7 +33,7 @@ const BookService = () => {
         setIsDistrictDropdownOpen(false);
       }
     }
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -66,15 +66,26 @@ const BookService = () => {
       const response = await api.get(url);
       console.log("API Response:", response.data);
       console.log("Request URL:", url);
-      
+
       // Chuyển hướng đến SearchResult với dữ liệu
-      navigate('/searchResult', { 
-        state: { 
+      navigate('/searchResult', {
+        state: {
           profiles: response.data.data,
           district: selectedDistrict,
           dateRange: selectedDateRange
-        } 
+        }
       });
+    } catch (error) {
+      console.error("Error fetching care takers:", error);
+    }
+  };
+
+  const fetchSearchCareTakers = async () => {
+    try {
+      const url = `/careTaker/getCareTakerSearchId/${searchInput}`;
+      const response = await api.get(url);
+      console.log("API Response:", response.data);
+      console.log("Request URL:", url);
     } catch (error) {
       console.error("Error fetching care takers:", error);
     }
@@ -83,6 +94,7 @@ const BookService = () => {
   // Cập nhật hàm handleSearch để gọi fetchCareTakers
   const handleSearch = () => {
     fetchCareTakers(); // Gọi hàm fetchCareTakers
+    fetchSearchCareTakers(); // Gọi hàm fetchSearchCareTakers nếu cần
   };
 
   // Hàm để mở Calendar
@@ -102,7 +114,7 @@ const BookService = () => {
   };
 
   // Filter districts based on input
-  const filteredDistricts = districts.filter(district => 
+  const filteredDistricts = districts.filter(district =>
     district.toLowerCase().includes(districtFilter.toLowerCase())
   );
 
@@ -136,7 +148,7 @@ const BookService = () => {
       {/* Main content area */}
       <div className="flex flex-col items-center gap-12 sm:gap-16 md:gap-20 sm:mb-16 w-full max-w-5xl px-2 sm:px-4 z-10">
         {/* Title section */}
-        <div className="flex flex-col items-center gap-6 sm:gap-8 mb-50"> 
+        <div className="flex flex-col items-center gap-6 sm:gap-8 mb-50">
           <div className="flex flex-col items-center">
             {/* Main title */}
             <div className="text-[62.11px] font-light text-white mb-2 text-center leading-[74.53px]" style={{ fontFamily: 'Playfair', fontWeight: '300' }}>
@@ -176,7 +188,7 @@ const BookService = () => {
                 <MapPin className="w-4 h-4 mr-2" />
                 <span>Địa điểm</span>
               </div>
-              
+
               {/* Dropdown button */}
               <button
                 type="button"
@@ -186,11 +198,11 @@ const BookService = () => {
                 <span className={`text-base ${selectedDistrict === "Quận" ? "text-gray-500" : "text-black font-medium"}`}>
                   {selectedDistrict}
                 </span>
-                <ChevronDown 
+                <ChevronDown
                   className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isDistrictDropdownOpen ? "transform rotate-180" : ""}`}
                 />
               </button>
-              
+
               {/* Dropdown menu */}
               {isDistrictDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1 z-20 bg-white shadow-lg rounded-lg w-full border border-gray-200 overflow-hidden">
@@ -208,16 +220,15 @@ const BookService = () => {
                       />
                     </div>
                   </div>
-                  
+
                   {/* District list */}
                   <div className="max-h-60 overflow-y-auto">
                     {filteredDistricts.length > 0 ? (
                       filteredDistricts.map((district) => (
                         <div
                           key={district}
-                          className={`p-3 text-black cursor-pointer hover:bg-emerald-50 transition-colors ${
-                            selectedDistrict === district ? "bg-emerald-100 font-medium" : ""
-                          }`}
+                          className={`p-3 text-black cursor-pointer hover:bg-emerald-50 transition-colors ${selectedDistrict === district ? "bg-emerald-100 font-medium" : ""
+                            }`}
                           onClick={() => handleDistrictSelect(district)}
                         >
                           {district}
@@ -240,7 +251,7 @@ const BookService = () => {
                   <Calendar className="w-3.5 h-3.5 mr-2" />
                   <span>Thời gian</span>
                 </div>
-                <div 
+                <div
                   className="relative flex items-center w-full cursor-pointer p-2 rounded hover:bg-gray-50 transition-colors"
                   onClick={openCalendar}
                 >
@@ -259,7 +270,7 @@ const BookService = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
-              <button 
+              <button
                 className="bg-emerald-400 rounded-full px-3 py-2 flex items-center ml-2 w-2/5 justify-center hover:bg-emerald-500 transition-colors"
                 onClick={handleSearch}
               >
@@ -277,9 +288,9 @@ const BookService = () => {
       {showCalendar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-4 max-w-3xl w-full mx-4">
-            <CalendarComponent 
-              onClose={() => setShowCalendar(false)} 
-              onSelectDateRange={handleDateRangeSelection} 
+            <CalendarComponent
+              onClose={() => setShowCalendar(false)}
+              onSelectDateRange={handleDateRangeSelection}
               initialDateRange={selectedDateRange}
             />
           </div>
