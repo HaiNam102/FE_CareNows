@@ -572,43 +572,6 @@ const CareTaker = () => {
     return days[dayOfWeek];
   };
 
-  // Thêm hàm xử lý click vào ngày trên calendar
-  const handleCalendarDayClick = async (date) => {
-    const dateStr = date.toLocaleDateString('en-CA');
-    // Không cho đăng ký ngày trong quá khứ
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const clicked = new Date(date);
-    clicked.setHours(0, 0, 0, 0);
-    if (clicked < today) {
-      toast.warn('Chỉ được đăng ký ngày từ hôm nay trở đi!');
-      return;
-    }
-    // Kiểm tra ngày đã đăng ký chưa
-    const existed = existingDates.includes(dateStr);
-    if (!existed) {
-      // Đăng ký ngày làm việc mới
-      try {
-        setScheduleSaving(true);
-        const token = localStorage.getItem('token');
-        const config = { headers: { 'Authorization': `Bearer ${token}` } };
-        await api.post('/calendar/create', { day: [dateStr] }, config);
-        toast.success('Đăng ký ngày làm việc thành công!');
-        fetchCareTakerCalendar();
-      } catch (error) {
-        toast.error('Có lỗi khi đăng ký ngày làm việc!');
-      } finally {
-        setScheduleSaving(false);
-      }
-    } else {
-      // Xác nhận xóa
-      const entry = calendarEntries.find(e => e.day === dateStr);
-      if (entry && window.confirm('Bạn có chắc muốn xóa ngày này khỏi lịch làm việc?')) {
-        handleDeleteCalendarEntry(entry.calendarId);
-      }
-    }
-  };
-
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -672,8 +635,6 @@ const CareTaker = () => {
                 className={`h-28 p-1 border relative overflow-hidden ${
                   isToday ? 'bg-blue-50 border-blue-500' : ''
                 } ${isScheduled ? 'bg-teal-50' : ''}`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleCalendarDayClick(day)}
               >
                 <div className="flex justify-between">
                   <span className={`font-semibold ${isToday ? 'text-blue-600' : ''}`}>

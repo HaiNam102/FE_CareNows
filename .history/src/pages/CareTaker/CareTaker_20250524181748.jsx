@@ -9,7 +9,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import CareTakerProfile from './CareTakerProfile';
 import DashboardCareTaker from './DashboardCareTaker';
-import { LayoutDashboard, ArrowRightLeft, CalendarCheck2, SquarePen } from 'lucide-react';
 
 // Đọc currentPage từ localStorage nếu có
 const getInitialPage = () => {
@@ -41,9 +40,6 @@ const CareTaker = () => {
   const [deletingCalendar, setDeletingCalendar] = useState(false);
   const [careTakerId, setCareTakerId] = useState(null);
   const [processingBookingId, setProcessingBookingId] = useState(null);
-  const [reloadBookings, setReloadBookings] = useState(false);
-  const [lastActionBookingId, setLastActionBookingId] = useState(null);
-  const [processingCompleteId, setProcessingCompleteId] = useState(null);
 
   useEffect(() => {
     if (currentPage === 'appointments') {
@@ -76,8 +72,7 @@ const CareTaker = () => {
     } catch (error) {
       console.error('Error decoding token:', error);
     }
-  // eslint-disable-next-line
-  }, [currentPage, currentMonth, reloadBookings]);
+  }, [currentPage, currentMonth]);
 
   // Khi chuyển tab, lưu vào localStorage
   useEffect(() => {
@@ -88,18 +83,23 @@ const CareTaker = () => {
     try {
       setLoading(true);
       const response = await api.get('/booking/caretaker');
+      console.log("Response data:", response.data.data);
       if (response.data.data && Array.isArray(response.data.data)) {
         const enhancedData = response.data.data.map((booking, index) => ({
           ...booking,
           id: booking.bookingId || index,
           status: booking.serviceProgress || (index % 3 === 0 ? 'PENDING' : index % 3 === 1 ? 'ACCEPT' : 'REJECT')
         }));
-        setBookings(enhancedData.reverse());
+
+        console.log("Enhanced bookings:", enhancedData);
+        setBookings(enhancedData);
       } else {
+        console.log("Response is not an array or is empty");
         setBookings([]);
       }
       setLoading(false);
     } catch (err) {
+      console.error('Error fetching bookings:', err);
       setError('Không thể tải dữ liệu lịch hẹn. Vui lòng thử lại sau.');
       setLoading(false);
     }
@@ -139,11 +139,15 @@ const CareTaker = () => {
     setProcessingBookingId(bookingId);
     try {
       await api.put(`/booking/${bookingId}/status?status=ACCEPT`);
+      setBookings(prevBookings =>
+        prevBookings.map(booking =>
+          booking.bookingId === bookingId ? { ...booking, serviceProgress: 'ACCEPT' } : booking
+        )
+      );
       toast.success('Đã xác nhận đơn thành công');
-      setLastActionBookingId(bookingId);
       setActiveTab('accepted');
-      setReloadBookings(prev => !prev);
     } catch (error) {
+      console.error('Error accepting booking:', error);
       toast.error('Có lỗi xảy ra khi xác nhận đơn. Vui lòng thử lại.');
     } finally {
       setProcessingBookingId(null);
@@ -154,11 +158,15 @@ const CareTaker = () => {
     setProcessingBookingId(bookingId);
     try {
       await api.put(`/booking/${bookingId}/status?status=REJECT`);
+      setBookings(prevBookings =>
+        prevBookings.map(booking =>
+          booking.bookingId === bookingId ? { ...booking, serviceProgress: 'REJECT' } : booking
+        )
+      );
       toast.success('Đã từ chối đơn thành công');
-      setLastActionBookingId(bookingId);
       setActiveTab('rejected');
-      setReloadBookings(prev => !prev);
     } catch (error) {
+      console.error('Error rejecting booking:', error);
       toast.error('Có lỗi xảy ra khi từ chối đơn. Vui lòng thử lại.');
     } finally {
       setProcessingBookingId(null);
@@ -399,7 +407,6 @@ const CareTaker = () => {
   };
 
   const handleCompleteBooking = async (bookingId) => {
-    setProcessingCompleteId(bookingId);
     try {
       // Get the authentication token from localStorage
       const token = localStorage.getItem('token');
@@ -426,11 +433,9 @@ const CareTaker = () => {
       
       // Switch to completed tab to show the booking
       setActiveTab('completed');
-      setLastActionBookingId(bookingId);
     } catch (error) {
+      console.error('Error completing booking:', error);
       toast.error('Có lỗi xảy ra khi hoàn thành đơn. Vui lòng thử lại.');
-    } finally {
-      setProcessingCompleteId(null);
     }
   };
 
@@ -572,43 +577,6 @@ const CareTaker = () => {
     return days[dayOfWeek];
   };
 
-  // Thêm hàm xử lý click vào ngày trên calendar
-  const handleCalendarDayClick = async (date) => {
-    const dateStr = date.toLocaleDateString('en-CA');
-    // Không cho đăng ký ngày trong quá khứ
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const clicked = new Date(date);
-    clicked.setHours(0, 0, 0, 0);
-    if (clicked < today) {
-      toast.warn('Chỉ được đăng ký ngày từ hôm nay trở đi!');
-      return;
-    }
-    // Kiểm tra ngày đã đăng ký chưa
-    const existed = existingDates.includes(dateStr);
-    if (!existed) {
-      // Đăng ký ngày làm việc mới
-      try {
-        setScheduleSaving(true);
-        const token = localStorage.getItem('token');
-        const config = { headers: { 'Authorization': `Bearer ${token}` } };
-        await api.post('/calendar/create', { day: [dateStr] }, config);
-        toast.success('Đăng ký ngày làm việc thành công!');
-        fetchCareTakerCalendar();
-      } catch (error) {
-        toast.error('Có lỗi khi đăng ký ngày làm việc!');
-      } finally {
-        setScheduleSaving(false);
-      }
-    } else {
-      // Xác nhận xóa
-      const entry = calendarEntries.find(e => e.day === dateStr);
-      if (entry && window.confirm('Bạn có chắc muốn xóa ngày này khỏi lịch làm việc?')) {
-        handleDeleteCalendarEntry(entry.calendarId);
-      }
-    }
-  };
-
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -672,8 +640,6 @@ const CareTaker = () => {
                 className={`h-28 p-1 border relative overflow-hidden ${
                   isToday ? 'bg-blue-50 border-blue-500' : ''
                 } ${isScheduled ? 'bg-teal-50' : ''}`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleCalendarDayClick(day)}
               >
                 <div className="flex justify-between">
                   <span className={`font-semibold ${isToday ? 'text-blue-600' : ''}`}>
@@ -770,7 +736,7 @@ const CareTaker = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {sortedBookings.map((booking) => (
+                {filteredBookings.map((booking) => (
                   <div key={booking.id} className="bg-white rounded-lg shadow-md p-4">
                     <div className="border-b pb-3 mb-4">
                       <h3 className="font-bold">Đơn hàng của {booking.customerName}</h3>
@@ -825,52 +791,34 @@ const CareTaker = () => {
                     {activeTab === 'pending' && (
                       <div className="mt-4 flex justify-end space-x-3">
                         <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
-                          onClick={() => handleShowRecipientDetails(booking.id)}
-                        >
-                          Xem chi tiết
-                        </button>
-                        <button
                           className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium"
                           onClick={() => handleAcceptBooking(booking.id)}
-                          disabled={processingBookingId === booking.id}
                         >
-                          {processingBookingId === booking.id ? 'Đang xử lý...' : 'Xác nhận đơn'}
+                          Xác nhận đơn
                         </button>
                         <button
                           className="px-4 py-2 bg-white text-red-500 border border-red-500 rounded-md font-medium"
                           onClick={() => handleRejectBooking(booking.id)}
-                          disabled={processingBookingId === booking.id}
                         >
-                          {processingBookingId === booking.id ? 'Đang xử lý...' : 'Từ chối đơn'}
+                          Từ chối đơn
                         </button>
                       </div>
                     )}
 
                     {activeTab === 'accepted' && (
                       <div className="mt-4 flex justify-end space-x-3">
-                        <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
-                          onClick={() => handleShowRecipientDetails(booking.id)}
-                        >
+                        <button className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium" onClick={() => handleShowRecipientDetails(booking.id)}>
                           Xem chi tiết
                         </button>
-                        <button
-                          className="px-4 py-2 bg-green-500 text-white rounded-md font-medium"
-                          onClick={() => handleCompleteBooking(booking.id)}
-                          disabled={processingCompleteId === booking.id}
-                        >
-                          {processingCompleteId === booking.id ? 'Đang xử lý...' : 'Hoàn thành'}
+                        <button className="px-4 py-2 bg-green-500 text-white rounded-md font-medium" onClick={() => handleCompleteBooking(booking.id)}>
+                          Hoàn thành
                         </button>
                       </div>
                     )}
 
                     {activeTab === 'completed' && (
-                      <div className="mt-4 flex justify-end space-x-3">
-                        <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
-                          onClick={() => handleShowRecipientDetails(booking.id)}
-                        >
+                      <div className="mt-4 flex justify-end">
+                        <button className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium" onClick={() => handleShowRecipientDetails(booking.id)}>
                           Xem chi tiết
                         </button>
                       </div>
@@ -1158,61 +1106,84 @@ const CareTaker = () => {
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h1 className="text-2xl font-bold mb-4">Lịch làm việc</h1>
+            
             <p className="text-gray-600 mb-4">
-              Quản lý và đăng ký lịch làm việc của bạn. Click vào ngày để đăng ký hoặc hủy đăng ký ngày làm việc. Ngày có màu xanh nhạt là đã đăng ký, cam là có cuộc hẹn, xanh dương là hôm nay.
+              Quản lý lịch làm việc và xem các cuộc hẹn đã được xác nhận. Ngày có màu xanh nhạt là những ngày bạn đã đăng ký có thể làm việc.
             </p>
-            {/* Calendar component */}
+            
             {loadingCalendar ? (
               <div className="text-center py-8">
                 <p>Đang tải lịch làm việc...</p>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-2/3">
-                  {renderCalendar()} {/* Calendar đã có logic highlight ngày làm việc, ngày có booking, hôm nay */}
-                </div>
-                <div className="md:w-1/3">
-                  <h2 className="text-lg font-semibold mb-3">Ngày làm việc đã đăng ký</h2>
-                  <div className="border p-4 rounded-lg bg-gray-50 max-h-[350px] overflow-y-auto">
-                    {calendarEntries.length > 0 ? (
-                      (() => {
-                        // Chỉ hiển thị các ngày từ hôm nay trở đi
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const futureEntries = calendarEntries.filter(entry => {
-                          const entryDate = new Date(entry.day);
-                          entryDate.setHours(0, 0, 0, 0);
-                          return entryDate >= today;
-                        });
-                        if (futureEntries.length === 0) {
-                          return <div className="flex items-center justify-center h-[100px] text-gray-500">Không có ngày làm việc nào trong tương lai</div>;
-                        }
-                        return (
-                          <ul>
-                            {futureEntries.map(entry => (
-                              <li key={entry.calendarId} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                                <span>{new Date(entry.day).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+              <div>
+                {renderCalendar()}
+                
+                <div className="mt-8 border-t pt-4">
+                  <h2 className="text-lg font-semibold mb-4">Cập nhật lịch làm việc</h2>
+                  <p className="text-gray-600 mb-4">
+                    Sử dụng lịch dưới đây để thêm hoặc xóa ngày làm việc của bạn.
+                  </p>
+                  
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/2 mb-6 md:mb-0 md:pr-4">
+                      <div className="border p-4 rounded-lg bg-gray-50">
+                        <DatePicker
+                          inline
+                          minDate={new Date()}
+                          highlightDates={[
+                            ...existingDates.map(dateStr => new Date(dateStr)),
+                            ...selectedDates.map(dateStr => new Date(dateStr))
+                          ]}
+                          onSelect={(date) => handleDateSelect(date)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="mt-2 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-500 mr-2"></div>
+                          <span>Ngày đã đăng ký trước đó</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="md:w-1/2 md:pl-4">
+                      <h2 className="text-lg font-semibold mb-3">Ngày đã chọn</h2>
+                      <div className="border p-4 rounded-lg bg-gray-50 min-h-[300px]">
+                        {selectedDates.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedDates.map((dateStr) => (
+                              <div key={dateStr} className="flex justify-between items-center border-b pb-2">
+                                <div className="flex items-center">
+                                  <FontAwesomeIcon icon={faCalendarCheck} className="text-teal-500 mr-2" />
+                                  <span>{new Date(dateStr).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                                </div>
                                 <button
-                                  className="p-2 text-red-500 hover:bg-red-50 rounded-full"
-                                  onClick={() => handleDeleteCalendarEntry(entry.calendarId)}
-                                  disabled={deletingCalendar}
-                                  title="Xóa ngày này"
+                                  className="text-red-500"
+                                  onClick={() => setSelectedDates(selectedDates.filter(d => d !== dateStr))}
                                 >
-                                  <FontAwesomeIcon icon={faTrash} />
+                                  <FontAwesomeIcon icon={faTimes} />
                                 </button>
-                              </li>
+                              </div>
                             ))}
-                          </ul>
-                        );
-                      })()
-                    ) : (
-                      <div className="flex items-center justify-center h-[100px] text-gray-500">Chưa có ngày làm việc nào được đăng ký</div>
-                    )}
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2 text-sm">
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>Ngày làm việc đã đăng ký</div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>Cuộc hẹn đã xác nhận</div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>Hôm nay</div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500">
+                            <p>Chưa có ngày nào được chọn</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6">
+                        <button
+                          className="px-6 py-3 bg-teal-500 text-white rounded-md font-medium flex items-center justify-center w-full"
+                          onClick={handleSaveSchedule}
+                          disabled={scheduleSaving}
+                        >
+                          {scheduleSaving ? 'Đang lưu...' : 'Cập nhật lịch làm việc'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1296,16 +1267,6 @@ const CareTaker = () => {
     );
   };
 
-  const sortedBookings = React.useMemo(() => {
-    if (!lastActionBookingId) return filteredBookings;
-    const idx = filteredBookings.findIndex(b => b.id === lastActionBookingId || b.bookingId === lastActionBookingId);
-    if (idx === -1) return filteredBookings;
-    const arr = filteredBookings.slice();
-    const [item] = arr.splice(idx, 1);
-    arr.unshift(item);
-    return arr;
-  }, [filteredBookings, lastActionBookingId]);
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
@@ -1321,46 +1282,48 @@ const CareTaker = () => {
                   <p className="text-gray-500">Last login: {userData.lastLogin}</p>
                 </div>
               </div> */}
-              <ul className="space-y-3 text-base md:text-lg">
+              <ul className="space-y-3">
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'profile' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('profile')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <FontAwesomeIcon icon={faUserCircle} className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
                   Thông tin cá nhân
                 </li>
 
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'dashboard' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('dashboard')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <LayoutDashboard className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
                   Dashboard
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'appointments' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('appointments')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <CalendarCheck2 className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-3" />
                   Lịch hẹn của tôi
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'calendar' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('calendar')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-3" />
                   Lịch làm việc
+                </li>
+                <li
+                  className={`flex items-center cursor-pointer ${currentPage === 'schedule' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  onClick={() => setCurrentPage('schedule')}
+                >
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3" />
+                  Đăng ký lịch
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'results' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('results')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <ArrowRightLeft className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faFileLines} className="mr-3" />
                   Lịch sử thanh toán
                 </li>
               </ul>

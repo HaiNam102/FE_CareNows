@@ -9,7 +9,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import CareTakerProfile from './CareTakerProfile';
 import DashboardCareTaker from './DashboardCareTaker';
-import { LayoutDashboard, ArrowRightLeft, CalendarCheck2, SquarePen } from 'lucide-react';
 
 // Đọc currentPage từ localStorage nếu có
 const getInitialPage = () => {
@@ -572,43 +571,6 @@ const CareTaker = () => {
     return days[dayOfWeek];
   };
 
-  // Thêm hàm xử lý click vào ngày trên calendar
-  const handleCalendarDayClick = async (date) => {
-    const dateStr = date.toLocaleDateString('en-CA');
-    // Không cho đăng ký ngày trong quá khứ
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const clicked = new Date(date);
-    clicked.setHours(0, 0, 0, 0);
-    if (clicked < today) {
-      toast.warn('Chỉ được đăng ký ngày từ hôm nay trở đi!');
-      return;
-    }
-    // Kiểm tra ngày đã đăng ký chưa
-    const existed = existingDates.includes(dateStr);
-    if (!existed) {
-      // Đăng ký ngày làm việc mới
-      try {
-        setScheduleSaving(true);
-        const token = localStorage.getItem('token');
-        const config = { headers: { 'Authorization': `Bearer ${token}` } };
-        await api.post('/calendar/create', { day: [dateStr] }, config);
-        toast.success('Đăng ký ngày làm việc thành công!');
-        fetchCareTakerCalendar();
-      } catch (error) {
-        toast.error('Có lỗi khi đăng ký ngày làm việc!');
-      } finally {
-        setScheduleSaving(false);
-      }
-    } else {
-      // Xác nhận xóa
-      const entry = calendarEntries.find(e => e.day === dateStr);
-      if (entry && window.confirm('Bạn có chắc muốn xóa ngày này khỏi lịch làm việc?')) {
-        handleDeleteCalendarEntry(entry.calendarId);
-      }
-    }
-  };
-
   const renderCalendar = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -672,8 +634,6 @@ const CareTaker = () => {
                 className={`h-28 p-1 border relative overflow-hidden ${
                   isToday ? 'bg-blue-50 border-blue-500' : ''
                 } ${isScheduled ? 'bg-teal-50' : ''}`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleCalendarDayClick(day)}
               >
                 <div className="flex justify-between">
                   <span className={`font-semibold ${isToday ? 'text-blue-600' : ''}`}>
@@ -825,7 +785,7 @@ const CareTaker = () => {
                     {activeTab === 'pending' && (
                       <div className="mt-4 flex justify-end space-x-3">
                         <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
+                          className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium"
                           onClick={() => handleShowRecipientDetails(booking.id)}
                         >
                           Xem chi tiết
@@ -849,10 +809,7 @@ const CareTaker = () => {
 
                     {activeTab === 'accepted' && (
                       <div className="mt-4 flex justify-end space-x-3">
-                        <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
-                          onClick={() => handleShowRecipientDetails(booking.id)}
-                        >
+                        <button className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium" onClick={() => handleShowRecipientDetails(booking.id)}>
                           Xem chi tiết
                         </button>
                         <button
@@ -867,10 +824,7 @@ const CareTaker = () => {
 
                     {activeTab === 'completed' && (
                       <div className="mt-4 flex justify-end space-x-3">
-                        <button
-                          className="px-4 py-2 text-teal-500 bg-white rounded-md font-medium hover:bg-teal-50 transition-colors"
-                          onClick={() => handleShowRecipientDetails(booking.id)}
-                        >
+                        <button className="px-4 py-2 bg-teal-500 text-white rounded-md font-medium" onClick={() => handleShowRecipientDetails(booking.id)}>
                           Xem chi tiết
                         </button>
                       </div>
@@ -1158,61 +1112,84 @@ const CareTaker = () => {
         return (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h1 className="text-2xl font-bold mb-4">Lịch làm việc</h1>
+            
             <p className="text-gray-600 mb-4">
-              Quản lý và đăng ký lịch làm việc của bạn. Click vào ngày để đăng ký hoặc hủy đăng ký ngày làm việc. Ngày có màu xanh nhạt là đã đăng ký, cam là có cuộc hẹn, xanh dương là hôm nay.
+              Quản lý lịch làm việc và xem các cuộc hẹn đã được xác nhận. Ngày có màu xanh nhạt là những ngày bạn đã đăng ký có thể làm việc.
             </p>
-            {/* Calendar component */}
+            
             {loadingCalendar ? (
               <div className="text-center py-8">
                 <p>Đang tải lịch làm việc...</p>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="md:w-2/3">
-                  {renderCalendar()} {/* Calendar đã có logic highlight ngày làm việc, ngày có booking, hôm nay */}
-                </div>
-                <div className="md:w-1/3">
-                  <h2 className="text-lg font-semibold mb-3">Ngày làm việc đã đăng ký</h2>
-                  <div className="border p-4 rounded-lg bg-gray-50 max-h-[350px] overflow-y-auto">
-                    {calendarEntries.length > 0 ? (
-                      (() => {
-                        // Chỉ hiển thị các ngày từ hôm nay trở đi
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const futureEntries = calendarEntries.filter(entry => {
-                          const entryDate = new Date(entry.day);
-                          entryDate.setHours(0, 0, 0, 0);
-                          return entryDate >= today;
-                        });
-                        if (futureEntries.length === 0) {
-                          return <div className="flex items-center justify-center h-[100px] text-gray-500">Không có ngày làm việc nào trong tương lai</div>;
-                        }
-                        return (
-                          <ul>
-                            {futureEntries.map(entry => (
-                              <li key={entry.calendarId} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                                <span>{new Date(entry.day).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+              <div>
+                {renderCalendar()}
+                
+                <div className="mt-8 border-t pt-4">
+                  <h2 className="text-lg font-semibold mb-4">Cập nhật lịch làm việc</h2>
+                  <p className="text-gray-600 mb-4">
+                    Sử dụng lịch dưới đây để thêm hoặc xóa ngày làm việc của bạn.
+                  </p>
+                  
+                  <div className="flex flex-col md:flex-row">
+                    <div className="md:w-1/2 mb-6 md:mb-0 md:pr-4">
+                      <div className="border p-4 rounded-lg bg-gray-50">
+                        <DatePicker
+                          inline
+                          minDate={new Date()}
+                          highlightDates={[
+                            ...existingDates.map(dateStr => new Date(dateStr)),
+                            ...selectedDates.map(dateStr => new Date(dateStr))
+                          ]}
+                          onSelect={(date) => handleDateSelect(date)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="mt-2 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-500 mr-2"></div>
+                          <span>Ngày đã đăng ký trước đó</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="md:w-1/2 md:pl-4">
+                      <h2 className="text-lg font-semibold mb-3">Ngày đã chọn</h2>
+                      <div className="border p-4 rounded-lg bg-gray-50 min-h-[300px]">
+                        {selectedDates.length > 0 ? (
+                          <div className="space-y-2">
+                            {selectedDates.map((dateStr) => (
+                              <div key={dateStr} className="flex justify-between items-center border-b pb-2">
+                                <div className="flex items-center">
+                                  <FontAwesomeIcon icon={faCalendarCheck} className="text-teal-500 mr-2" />
+                                  <span>{new Date(dateStr).toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}</span>
+                                </div>
                                 <button
-                                  className="p-2 text-red-500 hover:bg-red-50 rounded-full"
-                                  onClick={() => handleDeleteCalendarEntry(entry.calendarId)}
-                                  disabled={deletingCalendar}
-                                  title="Xóa ngày này"
+                                  className="text-red-500"
+                                  onClick={() => setSelectedDates(selectedDates.filter(d => d !== dateStr))}
                                 >
-                                  <FontAwesomeIcon icon={faTrash} />
+                                  <FontAwesomeIcon icon={faTimes} />
                                 </button>
-                              </li>
+                              </div>
                             ))}
-                          </ul>
-                        );
-                      })()
-                    ) : (
-                      <div className="flex items-center justify-center h-[100px] text-gray-500">Chưa có ngày làm việc nào được đăng ký</div>
-                    )}
-                  </div>
-                  <div className="mt-4 flex flex-col gap-2 text-sm">
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>Ngày làm việc đã đăng ký</div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>Cuộc hẹn đã xác nhận</div>
-                    <div className="flex items-center"><div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>Hôm nay</div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-500">
+                            <p>Chưa có ngày nào được chọn</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-6">
+                        <button
+                          className="px-6 py-3 bg-teal-500 text-white rounded-md font-medium flex items-center justify-center w-full"
+                          onClick={handleSaveSchedule}
+                          disabled={scheduleSaving}
+                        >
+                          {scheduleSaving ? 'Đang lưu...' : 'Cập nhật lịch làm việc'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1321,46 +1298,48 @@ const CareTaker = () => {
                   <p className="text-gray-500">Last login: {userData.lastLogin}</p>
                 </div>
               </div> */}
-              <ul className="space-y-3 text-base md:text-lg">
+              <ul className="space-y-3">
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'profile' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('profile')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <FontAwesomeIcon icon={faUserCircle} className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
                   Thông tin cá nhân
                 </li>
 
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'dashboard' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('dashboard')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <LayoutDashboard className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faUserCircle} className="mr-3" />
                   Dashboard
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'appointments' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('appointments')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <CalendarCheck2 className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faCalendarAlt} className="mr-3" />
                   Lịch hẹn của tôi
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'calendar' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('calendar')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faCalendarWeek} className="mr-3" />
                   Lịch làm việc
+                </li>
+                <li
+                  className={`flex items-center cursor-pointer ${currentPage === 'schedule' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
+                  onClick={() => setCurrentPage('schedule')}
+                >
+                  <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3" />
+                  Đăng ký lịch
                 </li>
                 <li
                   className={`flex items-center cursor-pointer ${currentPage === 'results' ? 'text-teal-500 font-medium' : 'text-gray-600'}`}
                   onClick={() => setCurrentPage('results')}
-                  style={{ padding: '14px 0' }}
                 >
-                  <ArrowRightLeft className="mr-4 w-6 h-6" />
+                  <FontAwesomeIcon icon={faFileLines} className="mr-3" />
                   Lịch sử thanh toán
                 </li>
               </ul>
