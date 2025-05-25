@@ -171,12 +171,22 @@ const AccountManagement = () => {
     }
   };
 
-  const handleDeactivateUser = (user) => {
-    setUsers(prev =>
-      prev.map(u =>
-        u.id === user.id ? { ...u, status: 'pending' } : u
-      )
-    );
+  const handleDeactivateUser = async (user) => {
+    try {
+      await fetch(`${API_BASE}/active/${user.accountId}?status=PENDING`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      setUsers(prev =>
+        prev.map(u =>
+          u.accountId === user.accountId ? { ...u, status: 'PENDING' } : u
+        )
+      );
+    } catch (e) {
+      console.error('Error activating user:', e);
+    }
   };
 
   return (
