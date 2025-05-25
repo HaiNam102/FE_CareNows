@@ -575,15 +575,6 @@ const CareTaker = () => {
   // Thêm hàm xử lý click vào ngày trên calendar
   const handleCalendarDayClick = async (date) => {
     const dateStr = date.toLocaleDateString('en-CA');
-    // Không cho đăng ký ngày trong quá khứ
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const clicked = new Date(date);
-    clicked.setHours(0, 0, 0, 0);
-    if (clicked < today) {
-      toast.warn('Chỉ được đăng ký ngày từ hôm nay trở đi!');
-      return;
-    }
     // Kiểm tra ngày đã đăng ký chưa
     const existed = existingDates.includes(dateStr);
     if (!existed) {
