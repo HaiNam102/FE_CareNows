@@ -32,7 +32,7 @@ const SignUpClient = () => {
     careRecipient: {
       name: "",
       gender: "",
-      phoneNumber: "",
+      // phoneNumber: "",
       yearOld: "",
       specialDetail: ""
     }
@@ -51,7 +51,7 @@ const SignUpClient = () => {
     careRecipient: {
       name: "",
       gender: "",
-      phoneNumber: "",
+      // phoneNumber: "",
       yearOld: "",
       specialDetail: ""
     }
@@ -121,7 +121,7 @@ const SignUpClient = () => {
         userName: formData.username,
         password: formData.password,
         email: formData.email,
-        phoneNumber: formData.phone,
+        // phoneNumber: formData.phone,
         nameOfUser: formData.name,
         city: "Đà Nẵng",
         district: formData.district,
@@ -135,7 +135,7 @@ const SignUpClient = () => {
           gender: formData.careRecipient.gender,
           yearOld: parseInt(formData.careRecipient.yearOld),
           specialDetail: formData.careRecipient.specialDetail || "",
-          phoneNumber: formData.careRecipient.phoneNumber || ""
+          // phoneNumber: formData.careRecipient.phoneNumber || ""
         }
       };
 
@@ -422,7 +422,7 @@ const SignUpClient = () => {
                 error={errors.careRecipient.yearOld}
               />
             </div>
-
+{/* 
             <FormInput
               label="Số điện thoại"
               type="tel"
@@ -431,7 +431,7 @@ const SignUpClient = () => {
               onChange={handleCareRecipientChange}
               placeholder="Nhập số điện thoại"
               error={errors.careRecipient.phoneNumber}
-            />
+            /> */}
 
             <div>
               <label className="block text-[14px] font-medium text-gray-700 mb-1">

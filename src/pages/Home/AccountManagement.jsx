@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Logo from '../../assets/images/Logo.png';
-import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, Upload, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, MoreHorizontal } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx'; // Import thư viện xlsx
 
 // Navigation items
 const navs = [
@@ -95,7 +96,7 @@ const AccountManagement = () => {
       const lowercasedSearch = searchTerm.toLowerCase();
       result = result.filter(
         user =>
-          user.name.toLowerCase().includes(lowercasedSearch) ||
+          user.nameOfUser.toLowerCase().includes(lowercasedSearch) ||
           user.email.toLowerCase().includes(lowercasedSearch)
       );
     }
@@ -116,23 +117,28 @@ const AccountManagement = () => {
     setSearchTerm(e.target.value);
   };
 
-  const exportToCSV = () => {
-    const headers = ['Tên', 'Email','Trạng thái'];
-    const rows = filteredUsers.map(user => [
-      user.nameOfUser,
-      user.email,
-      user.status
-    ]);
-    let csvContent = 'data:text/csv;charset=utf-8,'
-      + headers.join(',') + '\n'
-      + rows.map(e => e.join(',')).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'danh_sach_tai_khoan.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const exportToXLSX = () => {
+    // Định nghĩa tiêu đề cho file Excel
+    const headers = ['Tên', 'Email', 'Vai trò', 'Trạng thái'];
+
+    // Chuyển đổi dữ liệu người dùng thành định dạng phù hợp cho Excel
+    const rows = filteredUsers.map(user => ({
+      Tên: user.nameOfUser,
+      Email: user.email,
+      'Vai trò': user.role,
+      'Trạng thái': user.status === 'ACTIVE' ? 'Hoạt động' :
+                    user.status === 'INACTIVE' ? 'Đã khóa' : 'Chờ duyệt'
+    }));
+
+    // Tạo worksheet từ dữ liệu
+    const worksheet = XLSX.utils.json_to_sheet(rows, { header: headers });
+
+    // Tạo workbook và thêm worksheet vào
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Danh sách tài khoản');
+
+    // Xuất file Excel
+    XLSX.writeFile(workbook, 'danh_sach_tai_khoan.xlsx');
   };
 
   const handleBlockUser = async (user) => {
@@ -185,7 +191,7 @@ const AccountManagement = () => {
         )
       );
     } catch (e) {
-      console.error('Error activating user:', e);
+      console.error('Error deactivating user:', e);
     }
   };
 
@@ -414,26 +420,10 @@ const AccountManagement = () => {
                   color: '#1A1A1A',
                   cursor: 'pointer'
                 }}
-                onClick={exportToCSV}
+                onClick={exportToXLSX}
               >
                 <Download size={16} style={{ marginRight: 8 }} />
                 Xuất file
-              </div>
-
-              {/* Import Button */}
-              <div style={{
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                padding: '0 16px',
-                border: '0.75px solid #A6A6A6',
-                borderRadius: 50,
-                fontSize: 13,
-                color: '#1A1A1A',
-                cursor: 'pointer'
-              }}>
-                <Upload size={16} style={{ marginRight: 8 }} />
-                Nhập file
               </div>
             </div>
           </div>
@@ -527,7 +517,7 @@ const AccountManagement = () => {
                               color: '#D73B29',
                               textAlign: 'left',
                               cursor: user.status === 'INACTIVE' ? 'not-allowed' : 'pointer',
-                              opacity: user.status === 'INACTIVE' ? 0.5 : 1 // Làm mờ chữ "Đã chặn"
+                              opacity: user.status === 'INACTIVE' ? 0.5 : 1
                             }}
                             onClick={() => {
                               handleBlockUser(user);
@@ -537,7 +527,6 @@ const AccountManagement = () => {
                           >
                             {user.status === 'INACTIVE' ? 'Đã chặn' : 'Chặn tài khoản'}
                           </button>
-                          {/* Nút mở chặn */}
                           {user.status === 'INACTIVE' && (
                             <button
                               style={{
@@ -559,7 +548,6 @@ const AccountManagement = () => {
                           )}
                         </>
                       )}
-                      {/* Chuyên viên: chặn, kích hoạt, hủy kích hoạt */}
                       {user.role === 'Chuyên viên' && (
                         <>
                           <button
@@ -571,7 +559,7 @@ const AccountManagement = () => {
                               color: '#D73B29',
                               textAlign: 'left',
                               cursor: user.status === 'INACTIVE' ? 'not-allowed' : 'pointer',
-                              opacity: user.status === 'INACTIVE' ? 0.5 : 1 // Làm mờ chữ "Đã chặn"
+                              opacity: user.status === 'INACTIVE' ? 0.5 : 1
                             }}
                             onClick={() => {
                               handleBlockUser(user);
