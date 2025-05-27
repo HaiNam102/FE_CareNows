@@ -30,7 +30,8 @@
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",
     "web-vitals": "^2.1.4",
-    "wow.js": "^1.2.2"
+    "wow.js": "^1.2.2",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "react-scripts start",
