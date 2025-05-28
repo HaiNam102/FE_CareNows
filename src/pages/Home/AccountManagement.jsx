@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Logo from '../../assets/images/Logo.png';
-import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Users, Settings2, LogOut, Search, Filter, Download, MoreHorizontal, Edit } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import * as XLSX from 'xlsx'; // Import thư viện xlsx
+import * as XLSX from 'xlsx';
 
 // Navigation items
 const navs = [
@@ -25,6 +25,9 @@ const AccountManagement = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [actionMenuUserId, setActionMenuUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showEditPricePopup, setShowEditPricePopup] = useState(false); // State cho popup
+  const [selectedUser, setSelectedUser] = useState(null); // User được chọn để sửa giá
+  const [newPrice, setNewPrice] = useState(''); // Giá mới nhập
   const pageSize = 10;
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -79,7 +82,8 @@ const AccountManagement = () => {
               avatarSamples.length
             )
             ],
-          role: role
+          role: role,
+          price: role === "Chuyên viên" ? (u.price || "8000") : null
         }));
         setUsers(mapped);
       } catch (e) {
@@ -118,26 +122,20 @@ const AccountManagement = () => {
   };
 
   const exportToXLSX = () => {
-    // Định nghĩa tiêu đề cho file Excel
-    const headers = ['Tên', 'Email', 'Vai trò', 'Trạng thái'];
+    const headers = activeTab === 'customer' ? ['Tên', 'Email', 'Vai trò', 'Trạng thái'] : ['Tên', 'Giá', 'Email', 'Vai trò', 'Trạng thái'];
 
-    // Chuyển đổi dữ liệu người dùng thành định dạng phù hợp cho Excel
     const rows = filteredUsers.map(user => ({
       Tên: user.nameOfUser,
+      ...(activeTab === 'specialist' && { Giá: user.price || '' }),
       Email: user.email,
       'Vai trò': user.role,
       'Trạng thái': user.status === 'ACTIVE' ? 'Hoạt động' :
                     user.status === 'INACTIVE' ? 'Đã khóa' : 'Chờ duyệt'
     }));
 
-    // Tạo worksheet từ dữ liệu
     const worksheet = XLSX.utils.json_to_sheet(rows, { header: headers });
-
-    // Tạo workbook và thêm worksheet vào
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Danh sách tài khoản');
-
-    // Xuất file Excel
     XLSX.writeFile(workbook, 'danh_sach_tai_khoan.xlsx');
   };
 
@@ -192,6 +190,42 @@ const AccountManagement = () => {
       );
     } catch (e) {
       console.error('Error deactivating user:', e);
+    }
+  };
+
+  const handleEditPrice = async (user) => {
+    setSelectedUser(user);
+    setNewPrice(user.price || '8000');
+    setShowEditPricePopup(true);
+    setActionMenuUserId(null);
+  };
+
+  const handleSavePrice = async () => {
+    if (selectedUser && newPrice && !isNaN(newPrice)) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/careTaker/price/${selectedUser.accountId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ price: newPrice })
+        });
+        const data = await response.json();
+        if (data.code === 1012) { // Giả sử 1012 là mã thành công dựa trên API
+          setUsers(prev =>
+            prev.map(u =>
+              u.accountId === selectedUser.accountId ? { ...u, price: newPrice } : u
+            )
+          );
+          setShowEditPricePopup(false);
+          setSelectedUser(null);
+          setNewPrice('');
+        } else {
+          console.error('Failed to update price:', data.message);
+        }
+      } catch (e) {
+        console.error('Error updating price:', e);
+      }
     }
   };
 
@@ -255,7 +289,6 @@ const AccountManagement = () => {
 
       {/* Main Content */}
       <div style={{ flex: 1, padding: 24 }}>
-        {/* Top area with notification and display buttons */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
           <div style={{ display: 'flex', gap: 16 }}>
             <div style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid #E0E0E0', cursor: 'pointer' }}>
@@ -284,16 +317,13 @@ const AccountManagement = () => {
           </div>
         </div>
 
-        {/* Account Management Content */}
         <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '0.75px solid #A6A6A6' }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1A1A1A', marginBottom: 12 }}>Quản lý tài khoản</h1>
             <p style={{ fontSize: 14, color: '#737373' }}>Xem và quản lý tất cả tài khoản người dùng</p>
           </div>
 
-          {/* Tabs + Actions Row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-            {/* Tabs */}
             <div style={{ display: 'flex' }}>
               <div
                 onClick={() => setActiveTab('customer')}
@@ -326,9 +356,7 @@ const AccountManagement = () => {
               </div>
             </div>
 
-            {/* Actions */}
             <div style={{ display: 'flex', gap: 12 }}>
-              {/* Search */}
               <div style={{ position: 'relative', width: 250 }}>
                 <input
                   placeholder="Tìm kiếm tài khoản"
@@ -350,7 +378,6 @@ const AccountManagement = () => {
                 </span>
               </div>
 
-              {/* Filter Button */}
               <div
                 style={{
                   height: 40,
@@ -368,7 +395,6 @@ const AccountManagement = () => {
               >
                 <Filter size={16} style={{ marginRight: 8 }} />
                 Bộ lọc
-                {/* Hiện filter popup nếu showFilter 'ACTIVE' */}
                 {showFilter && (
                   <div
                     style={{
@@ -407,7 +433,6 @@ const AccountManagement = () => {
                 )}
               </div>
 
-              {/* Export Button */}
               <div
                 style={{
                   height: 40,
@@ -428,18 +453,16 @@ const AccountManagement = () => {
             </div>
           </div>
 
-          {/* Users Table */}
           <div style={{ border: '0.75px solid #A6A6A6', borderRadius: 12 }}>
-            {/* Table Header */}
             <div style={{ display: 'flex', background: '#F9F9F9', padding: '12px 16px', borderBottom: '0.75px solid #A6A6A6' }}>
               <div style={{ flex: 3, fontSize: 14, fontWeight: 500, color: '#737373' }}>Tên người dùng</div>
+              {activeTab === 'specialist' && <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Giá</div>}
               <div style={{ flex: 2, fontSize: 14, fontWeight: 500, color: '#737373' }}>Email</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Vai trò</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373' }}>Trạng thái</div>
               <div style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#737373', textAlign: 'center' }}>Thao tác</div>
             </div>
 
-            {/* Table Rows */}
             {paginatedUsers.map((user) => (
               <div key={user.userId} style={{ display: 'flex', padding: '12px 16px', borderBottom: '0.75px solid #E6E6E6', alignItems: 'center' }}>
                 <div style={{ flex: 3, display: 'flex', alignItems: 'center' }}>
@@ -455,6 +478,7 @@ const AccountManagement = () => {
                   }} />
                   <div style={{ fontSize: 14, fontWeight: 500, color: '#1A1A1A' }}>{user.nameOfUser}</div>
                 </div>
+                {activeTab === 'specialist' && <div style={{ flex: 1, fontSize: 14, color: '#1A1A1A' }}>{user.price ? `${user.price} VNĐ` : '8000 VNĐ'}</div>}
                 <div style={{ flex: 2, fontSize: 14, color: '#1A1A1A' }}>{user.email}</div>
                 <div style={{ flex: 1, fontSize: 14, color: '#1A1A1A' }}>{user.role}</div>
                 <div style={{ flex: 1 }}>
@@ -490,7 +514,6 @@ const AccountManagement = () => {
                   >
                     <MoreHorizontal size={16} color="#737373" />
                   </div>
-                  {/* Hiện menu thao tác nếu đúng user */}
                   {actionMenuUserId === user.userId && (
                     <div
                       style={{
@@ -605,6 +628,20 @@ const AccountManagement = () => {
                           >
                             Hủy kích hoạt
                           </button>
+                          <button
+                            style={{
+                              width: '100%',
+                              padding: '10px 16px',
+                              background: 'none',
+                              border: 'none',
+                              color: '#1A1A1A',
+                              textAlign: 'left',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleEditPrice(user)}
+                          >
+                            <Edit size={16} style={{ marginRight: 8 }} /> Sửa giá
+                          </button>
                         </>
                       )}
                     </div>
@@ -614,10 +651,8 @@ const AccountManagement = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Previous Page Button */}
               <div
                 style={{
                   width: 32,
@@ -636,7 +671,6 @@ const AccountManagement = () => {
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
               </div>
-              {/* Page Numbers */}
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                 <div
                   key={page}
@@ -658,7 +692,6 @@ const AccountManagement = () => {
                   {page}
                 </div>
               ))}
-              {/* Next Page Button */}
               <div
                 style={{
                   width: 32,
@@ -680,6 +713,73 @@ const AccountManagement = () => {
             </div>
           </div>
         </div>
+
+        {/* Popup để sửa giá */}
+        {showEditPricePopup && selectedUser && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: '#fff',
+              padding: 20,
+              borderRadius: 8,
+              width: 300,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 10 }}>Sửa giá dịch vụ cho {selectedUser.nameOfUser}</h2>
+              <input
+                type="number"
+                value={newPrice}
+                onChange={(e) => setNewPrice(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: 8,
+                  marginBottom: 10,
+                  border: '1px solid #A6A6A6',
+                  borderRadius: 4,
+                  fontSize: 14
+                }}
+                placeholder="Nhập giá mới (VNĐ)"
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  onClick={() => setShowEditPricePopup(false)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#fff',
+                    border: '1px solid #A6A6A6',
+                    borderRadius: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleSavePrice}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#C6E76D',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    color: '#1A1A1A'
+                  }}
+                >
+                  Lưu
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
