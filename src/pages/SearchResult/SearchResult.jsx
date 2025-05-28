@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Calendar, MapPin, ChevronDown, Search, X } from 'lucide-react';
+import { Calendar, MapPin, ChevronDown, Search, X, RotateCcw } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 import ProfilePage from '../ProfilePage/ProfilePage';
 import api from '../../services/api';
@@ -31,9 +31,11 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 // SearchFilters Component
 const SearchFilters = ({
     onSearch,
+    onResetFilters,
     district,
     dateRange,
     setDistrict,
+    setDateRange,
     openCareTakerTypeModal,
     openDistrictModal,
     openServiceHoursModal,
@@ -49,25 +51,57 @@ const SearchFilters = ({
     setSelectedCareTakerType,
     selectedServiceHours,
     setSelectedServiceHours,
-    openCalendarModal
+    openCalendarModal,
+    searchTerm,
+    setSearchTerm
 }) => {
     const districts = [
         'Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Liên Chiểu', 'Cẩm Lệ', 'Hòa Vang'
     ];
 
     const displayDateRange = () => {
-        if (!dateRange) return "Chọn thời gian";
-        if (Array.isArray(dateRange)) {
-            const formatDate = (date) => {
-                if (!date) return "";
-                if (typeof date === 'string') {
-                    date = new Date(date);
-                }
-                return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-            };
-            return `${formatDate(dateRange[0])} - ${formatDate(dateRange[1])}`;
-        }
-        return "Chọn thời gian";
+        if (!dateRange || !dateRange[0] || !dateRange[1]) return "Chọn thời gian";
+        const formatDate = (date) => {
+            if (!date) return "";
+            if (typeof date === 'string') {
+                date = new Date(date);
+            }
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        };
+        return `${formatDate(dateRange[0])} - ${formatDate(dateRange[1])}`;
+    };
+
+    const displayCareTakerType = () => {
+        if (selectedCareTakerType.length === 0) return "Loại bảo mẫu";
+        return selectedCareTakerType.length === 1
+            ? selectedCareTakerType[0]
+            : `Loại bảo mẫu (${selectedCareTakerType.length})`;
+    };
+
+    const displayGender = () => {
+        if (!selectedGender) return "Giới tính";
+        return selectedGender === "male" ? "Nam" : "Nữ";
+    };
+
+    const displayDistrict = () => {
+        return district || "Chọn địa điểm";
+    };
+
+    const displayRating = () => {
+        if (selectedRating.length === 0) return "Chuyên viên 5*";
+        return selectedRating.length === 1
+            ? selectedRating[0]
+            : `Sao (${selectedRating.length})`;
+    };
+
+    const displayExperience = () => {
+        if (!experienceYears) return "Năm kinh nghiệm";
+        return experienceYears;
+    };
+
+    const displayServiceHours = () => {
+        if (!selectedServiceHours) return "Giờ dịch vụ";
+        return selectedServiceHours;
     };
 
     return (
@@ -81,7 +115,7 @@ const SearchFilters = ({
                     <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                     <div className="flex items-center">
                         <MapPin className="mr-2 h-[17px] w-[17px] stroke-[1.5]" />
-                        <span className="text-[16px]">{district || "Chọn địa điểm"}</span>
+                        <span className="text-[16px]">{displayDistrict()}</span>
                     </div>
                 </div>
             </div>
@@ -92,7 +126,7 @@ const SearchFilters = ({
                         className={`border rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors ${selectedCareTakerType.length > 0 ? 'border-[#99f8dc]' : 'border-gray-300'}`}
                         onClick={openCareTakerTypeModal}
                     >
-                        Loại bảo mẫu
+                        {displayCareTakerType()}
                     </button>
 
                     <div className="relative">
@@ -119,28 +153,30 @@ const SearchFilters = ({
                         className={`border rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors ${selectedRating.length > 0 ? 'border-[#99f8dc]' : 'border-gray-300'}`}
                         onClick={openRatingModal}
                     >
-                        Chuyên viên 5*
+                        {displayRating()}
                     </button>
 
                     <button
                         className={`border rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors ${experienceYears ? 'border-[#99f8dc]' : 'border-gray-300'}`}
                         onClick={openExperienceModal}
                     >
-                        Năm kinh nghiệm
+                        {displayExperience()}
                     </button>
 
                     <button
                         className={`border rounded-full px-6 py-2.5 text-gray-700 whitespace-nowrap hover:border-[#00a37d] transition-colors ${selectedServiceHours ? 'border-[#99f8dc]' : 'border-gray-300'}`}
                         onClick={openServiceHoursModal}
                     >
-                        Giờ dịch vụ
+                        {displayServiceHours()}
                     </button>
 
                     <div className="relative flex-shrink-0">
                         <div className="absolute inset-0 rounded-full border-2 border-[#00a37d]"></div>
                         <input
                             type="text"
-                            placeholder="Tên bảo mẫu/Url"
+                            placeholder="ID bảo mẫu"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="relative w-[200px] px-4 py-2.5 rounded-full border border-black bg-transparent outline-none text-gray-700"
                         />
                     </div>
@@ -151,6 +187,13 @@ const SearchFilters = ({
                     >
                         <Search className="mr-2 h-4 w-4" /> Tìm kiếm
                     </button>
+
+                    {/* <button
+                        className="flex-shrink-0 border border-gray-300 rounded-full px-4 py-2.5 flex items-center whitespace-nowrap hover:border-[#00a37d] transition-colors"
+                        onClick={onResetFilters}
+                    >
+                        <RotateCcw className="mr-2 h-4 w-4 text-gray-700" /> Đặt lại
+                    </button> */}
                 </div>
             </div>
         </div>
@@ -192,6 +235,7 @@ const SearchResult = () => {
     const [experienceYears, setExperienceYears] = useState('');
     const [selectedCareTakerType, setSelectedCareTakerType] = useState([]);
     const [selectedServiceHours, setSelectedServiceHours] = useState('');
+    const [searchTerm, setSearchTerm] = useState(''); // Thêm state cho tìm kiếm tên/URL
     const itemsPerPage = 8;
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -200,16 +244,16 @@ const SearchResult = () => {
     ];
 
     const careTakerTypes = [
-        { label: 'Chăm sóc bệnh mãn tính (tiểu đường, huyết áp)', value: 'Chăm sóc bệnh mãn tính' },
-        { label: 'Chăm sóc hậu phẫu', value: 'Chăm sóc hậu phẫu' },
-        { label: 'Trẻ cần phục hồi chức năng', value: 'Trẻ cần phục hồi chức năng' },
-        { label: 'Trẻ đặc biệt (tự kỷ, khuyết tật...)', value: 'Trẻ đặc biệt' },
-        { label: 'Phục hồi chức năng', value: 'Phục hồi chức năng' },
-        { label: 'Do sinh hiệu cơ bản', value: 'Do sinh hiệu cơ bản' },
-        { label: 'Hỗ trợ oxy (mặt nạ, ống thông mũi)', value: 'Hỗ trợ oxy' },
-        { label: 'Chăm sóc vết thương', value: 'Chăm sóc vết thương' },
-        { label: 'Dùng máy theo dõi (máy đo SpO2, máy theo dõi tim)', value: 'Dùng máy theo dõi' },
-        { label: 'Thao tác sonde (sonde tiểu, sonde da dày)', value: 'Thao tác sonde' }
+        { label: 'Chăm sóc bệnh mãn tính (diabetes, blood pressure)', value: 'Chăm sóc bệnh mãn tính' },
+        { label: 'Chăm sóc hậu phẫu(Postoperative care)', value: 'Chăm sóc hậu phẫu' },
+        { label: 'Trẻ cần phục hồi chức năng(Children need rehabilitation)', value: 'Trẻ cần phục hồi chức năng' },
+        { label: 'Trẻ đặc biệt (Special Needs Children)', value: 'Trẻ đặc biệt' },
+        { label: 'Phục hồi chức năng(Functional Rehabilitation)', value: 'Phục hồi chức năng' },
+        { label: 'Do sinh hiệu cơ bản(Basic Vital Signs Monitoring)', value: 'Do sinh hiệu cơ bản' },
+        { label: 'Hỗ trợ oxy (Oxygen Support)', value: 'Hỗ trợ oxy' },
+        { label: 'Chăm sóc vết thương(Wound Care)', value: 'Chăm sóc vết thương' },
+        { label: 'Dùng máy theo dõi (Using a Monitoring Device)', value: 'Dùng máy theo dõi' },
+        { label: 'Thao tác sonde (urinary catheter, gastric tube)', value: 'Thao tác sonde' }
     ];
 
     const experienceOptions = [
@@ -222,7 +266,7 @@ const SearchResult = () => {
     ];
 
     const serviceHoursRanges = [
-        '100K - 200K/ngày',
+        '10K - 200K/ngày',
         '200K - 300K/ngày',
         '300K - 400K/ngày',
         '400K - 500K/ngày',
@@ -260,7 +304,8 @@ const SearchResult = () => {
     };
 
     const handleDistrictSelectAll = () => {
-        setDistrict(districts.length === 1 && district === districts[0] ? '' : districts[0]);
+        setDistrict('');
+        setIsDistrictModalOpen(false);
     };
 
     const handleServiceHoursChange = (range) => {
@@ -269,11 +314,8 @@ const SearchResult = () => {
     };
 
     const handleServiceHoursSelectAll = () => {
-        if (selectedServiceHours) {
-            setSelectedServiceHours('');
-        } else {
-            setSelectedServiceHours(serviceHoursRanges[0]);
-        }
+        setSelectedServiceHours('');
+        setIsServiceHoursModalOpen(false);
     };
 
     const handleExperienceChange = (exp) => {
@@ -282,11 +324,8 @@ const SearchResult = () => {
     };
 
     const handleExperienceSelectAll = () => {
-        if (experienceYears) {
-            setExperienceYears('');
-        } else {
-            setExperienceYears(experienceOptions[0]);
-        }
+        setExperienceYears('');
+        setIsExperienceModalOpen(false);
     };
 
     const handleRatingChange = (rating) => {
@@ -305,9 +344,24 @@ const SearchResult = () => {
         setSelectedRating([]);
     };
 
+    const handleResetFilters = () => {
+        setSelectedCareTakerType([]);
+        setSelectedGender('');
+        setDistrict('');
+        setSelectedRating([]);
+        setExperienceYears('');
+        setSelectedServiceHours('');
+        setSearchTerm('');
+        setDateRange([new Date('2025-03-20'), new Date('2025-03-30')]);
+        localStorage.removeItem('selectedDistrict');
+        localStorage.removeItem('selectedDateRange');
+    };
+
     useEffect(() => {
         if (district) {
             localStorage.setItem('selectedDistrict', district);
+        } else {
+            localStorage.removeItem('selectedDistrict');
         }
         if (dateRange) {
             localStorage.setItem('selectedDateRange', JSON.stringify(dateRange));
@@ -348,6 +402,15 @@ const SearchResult = () => {
     useEffect(() => {
         let filtered = [...profiles];
 
+        // Filter by search term (name or URL)
+        if (searchTerm) {
+            const lowercasedSearch = searchTerm.toLowerCase();
+            filtered = filtered.filter(profile =>
+                profile.nameOfCareTaker.toLowerCase().includes(lowercasedSearch) ||
+                (profile.url && profile.url.toLowerCase().includes(lowercasedSearch))
+            );
+        }
+
         // Filter by gender
         if (selectedGender) {
             filtered = filtered.filter(profile => 
@@ -385,7 +448,7 @@ const SearchResult = () => {
         if (selectedServiceHours) {
             filtered = filtered.filter(profile => {
                 const price = parseInt(profile.servicePrice);
-                if (selectedServiceHours === '100K - 200K/ngày') return price >= 100000 && price <= 200000;
+                if (selectedServiceHours === '10K - 200K/ngày') return price >= 10000 && price <= 200000;
                 if (selectedServiceHours === '200K - 300K/ngày') return price > 200000 && price <= 300000;
                 if (selectedServiceHours === '300K - 400K/ngày') return price > 300000 && price <= 400000;
                 if (selectedServiceHours === '400K - 500K/ngày') return price > 400000 && price <= 500000;
@@ -397,7 +460,7 @@ const SearchResult = () => {
         filtered.sort((a, b) => b.rating - a.rating);
         setFilteredProfiles(filtered);
         setCurrentPage(1);
-    }, [selectedGender, selectedRating, experienceYears, selectedCareTakerType, selectedServiceHours, profiles]);
+    }, [searchTerm, selectedGender, selectedRating, experienceYears, selectedCareTakerType, selectedServiceHours, profiles]);
 
     const totalPages = Math.ceil(filteredProfiles.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -470,7 +533,7 @@ const SearchResult = () => {
 
     const formatPrice = (price) => {
         if (!price) return '0';
-        const numPrice = parseInt(price.replace(/\D/g, ''));
+        const numPrice = parseInt(price.toString().replace(/\D/g, ''));
         return numPrice.toLocaleString('vi-VN').replace(/\./g, '.');
     };
 
@@ -493,14 +556,14 @@ const SearchResult = () => {
                 <div className="relative z-10 flex flex-col items-center gap-3 w-full">
                     <div className="self-stretch text-black text-2xl font-semibold">{profile.nameOfCareTaker}</div>
                     <div className="text-[#8C8C8C] text-lg self-stretch text-left">
-  {profile.experienceYear} năm kinh nghiệm
-</div>
+                        {profile.experienceYear} năm kinh nghiệm
+                    </div>
 
-<img
-  className="w-36 h-36 rounded-full object-cover object-center"
-  src={profile.imgProfile}
-  alt={profile.nameOfCareTaker}
-/>
+                    <img
+                        className="w-36 h-36 rounded-full object-cover object-center"
+                        src={profile.imgProfile}
+                        alt={profile.nameOfCareTaker}
+                    />
 
                     <div className="self-stretch text-[#8C8C8C] text-sm">📍 {profile.ward} - {profile.district}</div>
                     <div className="self-stretch flex justify-between items-center">
@@ -532,9 +595,11 @@ const SearchResult = () => {
             <div className="h-[140px]">
                 <SearchFilters
                     onSearch={handleSearch}
+                    onResetFilters={handleResetFilters}
                     district={district}
                     dateRange={dateRange}
                     setDistrict={setDistrict}
+                    setDateRange={setDateRange}
                     openCareTakerTypeModal={() => setIsCareTakerTypeModalOpen(true)}
                     openDistrictModal={() => setIsDistrictModalOpen(true)}
                     openServiceHoursModal={() => setIsServiceHoursModalOpen(true)}
@@ -551,6 +616,8 @@ const SearchResult = () => {
                     selectedServiceHours={selectedServiceHours}
                     setSelectedServiceHours={setSelectedServiceHours}
                     openCalendarModal={() => setIsCalendarOpen(true)}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
                 />
             </div>
             <div className="w-full">
@@ -607,12 +674,12 @@ const SearchResult = () => {
                 title="Chọn Quận"
             >
                 <div className="grid grid-cols-2 gap-4">
-                    {/* <button
+                    <button
                         className={`p-2 rounded-lg ${!district ? 'bg-[#00a37d] text-white' : 'bg-gray-100'}`}
                         onClick={handleDistrictSelectAll}
                     >
                         Tất cả
-                    </button> */}
+                    </button>
                     {districts.map(d => (
                         <button
                             key={d}
